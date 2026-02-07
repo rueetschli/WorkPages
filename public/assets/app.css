@@ -149,6 +149,9 @@ img {
     flex: 0 0 auto;
     margin-left: auto;
     padding-left: var(--space-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
 }
 
 .user-badge {
@@ -162,6 +165,27 @@ img {
     padding: var(--space-xs) var(--space-md);
     border-radius: var(--radius-lg);
     letter-spacing: 0.2px;
+}
+
+.user-role-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.logout-link {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-light);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    transition: color 0.12s, background 0.12s;
+}
+.logout-link:hover {
+    color: var(--color-error);
+    background: var(--color-error-bg);
+    text-decoration: none;
 }
 
 /* ── App body: sidebar + main ─────────────────────────────────── */

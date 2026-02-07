@@ -6,7 +6,7 @@ class HomeController
 {
     public function index(): void
     {
-        $pageTitle = 'Home';
+        $pageTitle   = 'Home';
         $contentView = APP_DIR . '/views/home.php';
         require APP_DIR . '/views/layout.php';
     }

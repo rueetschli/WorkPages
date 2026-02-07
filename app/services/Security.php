@@ -80,4 +80,86 @@ class Security
     {
         return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
+
+    // ── Authentication helpers ──────────────────────────────────────
+
+    /**
+     * Require an authenticated session. Redirects to login if not logged in.
+     */
+    public static function requireLogin(): void
+    {
+        if (empty($_SESSION['user_id'])) {
+            $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
+            header('Location: ' . $baseUrl . '/?r=login');
+            exit;
+        }
+    }
+
+    /**
+     * Check whether the current session belongs to an authenticated user.
+     */
+    public static function isLoggedIn(): bool
+    {
+        return !empty($_SESSION['user_id']);
+    }
+
+    /**
+     * Return the full user row from the database for the currently logged-in user.
+     * Returns null if not logged in or user no longer exists.
+     * Result is cached per request.
+     */
+    public static function currentUser(): ?array
+    {
+        static $cache = null;
+        static $cachedId = null;
+
+        if (empty($_SESSION['user_id'])) {
+            return null;
+        }
+
+        $id = (int) $_SESSION['user_id'];
+
+        if ($cache !== null && $cachedId === $id) {
+            return $cache;
+        }
+
+        $cache = User::findById($id);
+        $cachedId = $id;
+        return $cache;
+    }
+
+    /**
+     * Check whether the logged-in user has the given role.
+     * Accepts a single role string or an array of roles (any match = true).
+     *
+     * @param string|string[] $role
+     */
+    public static function hasRole(string|array $role): bool
+    {
+        $sessionRole = $_SESSION['user_role'] ?? null;
+        if ($sessionRole === null) {
+            return false;
+        }
+
+        if (is_array($role)) {
+            return in_array($sessionRole, $role, true);
+        }
+
+        return $sessionRole === $role;
+    }
+
+    /**
+     * Require a specific role. Sends 403 if the user does not match.
+     *
+     * @param string|string[] $role
+     */
+    public static function requireRole(string|array $role): void
+    {
+        self::requireLogin();
+        if (!self::hasRole($role)) {
+            http_response_code(403);
+            echo 'Access denied.';
+            exit;
+        }
+    }
 }

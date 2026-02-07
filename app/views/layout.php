@@ -6,9 +6,11 @@
  *   $pageTitle   - string, used in <title> and header
  *   $contentView - string, path to the view file rendered inside the main area
  */
-$appName = $GLOBALS['config']['APP_NAME'] ?? 'Work Pages';
-$baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
+$appName      = $GLOBALS['config']['APP_NAME'] ?? 'Work Pages';
+$baseUrl      = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 $currentRoute = $_GET['r'] ?? 'home';
+$userName     = Security::esc($_SESSION['user_name'] ?? '');
+$userRole     = Security::esc($_SESSION['user_role'] ?? '');
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -28,11 +30,13 @@ $currentRoute = $_GET['r'] ?? 'home';
     <div class="header-center">
         <form class="search-form" action="<?= Security::esc($baseUrl) ?>/" method="get">
             <input type="hidden" name="r" value="search">
-            <input type="text" name="q" placeholder="Search pages and tasks..." class="search-input" aria-label="Search">
+            <input type="text" name="q" placeholder="Seiten und Aufgaben suchen..." class="search-input" aria-label="Suche">
         </form>
     </div>
     <div class="header-right">
-        <span class="user-badge">Demo User</span>
+        <span class="user-badge"><?= $userName ?></span>
+        <span class="user-role-label"><?= $userRole ?></span>
+        <a href="<?= Security::esc($baseUrl) ?>/?r=logout" class="logout-link">Abmelden</a>
     </div>
 </header>
 
@@ -40,7 +44,7 @@ $currentRoute = $_GET['r'] ?? 'home';
 <div class="app-body">
 
     <!-- Sidebar navigation -->
-    <nav class="sidebar" aria-label="Main navigation">
+    <nav class="sidebar" aria-label="Hauptnavigation">
         <ul class="nav-list">
             <li>
                 <a href="<?= Security::esc($baseUrl) ?>/?r=home"
@@ -76,7 +80,7 @@ $currentRoute = $_GET['r'] ?? 'home';
 
         <div class="sidebar-footer">
             <span class="sidebar-label">Workspace</span>
-            <span class="workspace-name">Demo</span>
+            <span class="workspace-name"><?= Security::esc($GLOBALS['config']['APP_NAME'] ?? 'Work Pages') ?></span>
         </div>
     </nav>
 
