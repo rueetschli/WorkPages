@@ -59,6 +59,12 @@ $userRole     = Security::esc($_SESSION['user_role'] ?? '');
                 </a>
             </li>
             <li>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=tasks"
+                   class="nav-link <?= in_array($currentRoute, ['tasks', 'task_view', 'task_create', 'task_edit'], true) ? 'active' : '' ?>">
+                    <span class="nav-icon">&#9745;</span> Tasks
+                </a>
+            </li>
+            <li>
                 <a href="<?= Security::esc($baseUrl) ?>/?r=board"
                    class="nav-link <?= $currentRoute === 'board' ? 'active' : '' ?>">
                     <span class="nav-icon">&#9638;</span> Board
