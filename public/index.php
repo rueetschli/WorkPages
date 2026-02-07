@@ -18,6 +18,7 @@ define('CONFIG_DIR', ROOT_DIR . '/config');
 require_once APP_DIR . '/services/Logger.php';
 require_once APP_DIR . '/services/DB.php';
 require_once APP_DIR . '/services/Security.php';
+require_once APP_DIR . '/models/User.php';
 
 // ── Configuration ───────────────────────────────────────────────────
 $configFile = CONFIG_DIR . '/config.php';
@@ -41,8 +42,6 @@ Security::initSession();
 
 // ── Database (lazy) ─────────────────────────────────────────────────
 // Store config so DB::connect() can be called on first use by controllers.
-// This allows routes that do not need the DB (e.g. login in AP1) to work
-// even when the database is temporarily unavailable.
 DB::setConfig($config);
 
 // ── Make config available to controllers/views ──────────────────────
@@ -51,16 +50,26 @@ $GLOBALS['config'] = $config;
 // ── Routing ─────────────────────────────────────────────────────────
 $route = $_GET['r'] ?? 'home';
 
+// Routes that do NOT require authentication
+$publicRoutes = ['login', 'setup'];
+
 // Allowed routes mapped to controller files and methods
 $routes = [
-    'home'  => ['controller' => 'HomeController',  'action' => 'index'],
-    'login' => ['controller' => 'AuthController',  'action' => 'login'],
+    'home'   => ['controller' => 'HomeController', 'action' => 'index'],
+    'login'  => ['controller' => 'AuthController', 'action' => 'login'],
+    'logout' => ['controller' => 'AuthController', 'action' => 'logout'],
+    'setup'  => ['controller' => 'AuthController', 'action' => 'setup'],
 ];
 
 if (!isset($routes[$route])) {
     http_response_code(404);
     require APP_DIR . '/views/404.php';
     exit;
+}
+
+// Enforce authentication on protected routes
+if (!in_array($route, $publicRoutes, true)) {
+    Security::requireLogin();
 }
 
 $entry = $routes[$route];

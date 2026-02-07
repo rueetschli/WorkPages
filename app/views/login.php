@@ -1,9 +1,14 @@
 <?php
 /**
  * Login view - standalone layout (no sidebar).
+ *
+ * Variables expected:
+ *   $error     - string|null, error message to display
+ *   $pageTitle - string, page title
  */
 $appName = $GLOBALS['config']['APP_NAME'] ?? 'Work Pages';
 $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
+$emailValue = Security::esc(trim($_POST['email'] ?? ''));
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -18,7 +23,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 <div class="login-container">
     <div class="login-card">
         <h1 class="login-title"><?= Security::esc($appName) ?></h1>
-        <p class="login-subtitle">Sign in to your workspace</p>
+        <p class="login-subtitle">Anmelden</p>
 
         <?php if (!empty($error)): ?>
             <div class="alert alert-error"><?= Security::esc($error) ?></div>
@@ -28,21 +33,20 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
             <?= Security::csrfField() ?>
 
             <div class="form-group">
-                <label for="email">Email</label>
+                <label for="email">E-Mail</label>
                 <input type="email" id="email" name="email" required autofocus
-                       placeholder="you@company.com" class="form-input">
+                       value="<?= $emailValue ?>"
+                       placeholder="name@firma.ch" class="form-input">
             </div>
 
             <div class="form-group">
-                <label for="password">Password</label>
+                <label for="password">Passwort</label>
                 <input type="password" id="password" name="password" required
-                       placeholder="Your password" class="form-input">
+                       placeholder="Ihr Passwort" class="form-input">
             </div>
 
-            <button type="submit" class="btn btn-primary btn-block">Login</button>
+            <button type="submit" class="btn btn-primary btn-block">Anmelden</button>
         </form>
-
-        <p class="login-footer-note">Authentication will be implemented in AP2.</p>
     </div>
 </div>
 
