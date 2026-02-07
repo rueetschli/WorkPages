@@ -1,0 +1,25 @@
+<?php
+/**
+ * Work Pages - Configuration
+ *
+ * Copy this file to config.php and adjust the values.
+ */
+
+return [
+    // Database
+    'DB_HOST'   => 'localhost',
+    'DB_NAME'   => 'workpages',
+    'DB_USER'   => 'root',
+    'DB_PASS'   => '',
+    'DB_CHARSET'=> 'utf8mb4',
+
+    // Application
+    'BASE_URL'  => 'http://localhost/public',
+    'APP_KEY'   => 'CHANGE-ME-to-a-random-string-of-at-least-32-chars',
+    'APP_NAME'  => 'Work Pages',
+    'APP_ENV'   => 'production', // 'development' shows errors in browser
+
+    // Paths (normally no changes needed)
+    'LOG_FILE'  => __DIR__ . '/../storage/logs/app.log',
+    'UPLOAD_DIR'=> __DIR__ . '/../storage/uploads',
+];
