@@ -1,0 +1,22 @@
+# Work Pages
+
+# Local config (contains credentials)
+config/config.php
+
+# Storage (runtime data)
+storage/logs/*
+storage/uploads/*
+storage/cache/*
+!storage/logs/.gitkeep
+!storage/uploads/.gitkeep
+!storage/cache/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
