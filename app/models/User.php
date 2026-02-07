@@ -48,4 +48,14 @@ class User
         $row = DB::fetch('SELECT COUNT(*) AS cnt FROM users');
         return (int) ($row['cnt'] ?? 0);
     }
+
+    /**
+     * Get all users eligible for task ownership (admin + member, not viewer).
+     */
+    public static function allForDropdown(): array
+    {
+        return DB::fetchAll(
+            "SELECT id, name, email, role FROM users WHERE role IN ('admin', 'member') ORDER BY name ASC"
+        );
+    }
 }

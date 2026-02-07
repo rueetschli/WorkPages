@@ -19,6 +19,12 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
         <p class="card-desc">Create and browse knowledge pages with embedded tasks.</p>
     </a>
 
+    <a href="<?= Security::esc($baseUrl) ?>/?r=tasks" class="card">
+        <div class="card-icon">&#9745;</div>
+        <h3 class="card-title">Tasks</h3>
+        <p class="card-desc">Aufgaben erstellen, verwalten und nachverfolgen.</p>
+    </a>
+
     <a href="<?= Security::esc($baseUrl) ?>/?r=board" class="card">
         <div class="card-icon">&#9638;</div>
         <h3 class="card-title">Board</h3>
@@ -33,10 +39,39 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 
 </div>
 
-<!-- Placeholder sections for future APs -->
+<!-- Recent tasks -->
+<?php
+    $recentTasks = Task::all();
+    $recentTasks = array_slice($recentTasks, 0, 5);
+?>
 <section class="section-block">
-    <h2>My Tasks</h2>
-    <p class="placeholder-text">Task overview will be available after AP4.</p>
+    <h2>Aktuelle Aufgaben</h2>
+    <?php if (empty($recentTasks)): ?>
+        <p class="placeholder-text">Noch keine Aufgaben vorhanden.</p>
+    <?php else: ?>
+        <table class="pages-table" style="margin: 0 calc(-1 * var(--space-lg)); width: calc(100% + 2 * var(--space-lg));">
+            <tbody>
+            <?php foreach ($recentTasks as $rt): ?>
+                <tr>
+                    <td>
+                        <a href="<?= Security::esc($baseUrl) ?>/?r=task_view&amp;id=<?= (int) $rt['id'] ?>" class="page-link">
+                            <?= Security::esc($rt['title']) ?>
+                        </a>
+                    </td>
+                    <td>
+                        <span class="status-badge status-<?= Security::esc($rt['status']) ?>">
+                            <?= Security::esc(Task::STATUS_LABELS[$rt['status']] ?? $rt['status']) ?>
+                        </span>
+                    </td>
+                    <td class="text-muted"><?= Security::esc($rt['owner_name'] ?? '') ?></td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+        <p style="margin-top: var(--space-md);">
+            <a href="<?= Security::esc($baseUrl) ?>/?r=tasks">Alle Aufgaben anzeigen &rarr;</a>
+        </p>
+    <?php endif; ?>
 </section>
 
 <section class="section-block">
