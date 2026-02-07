@@ -19,6 +19,9 @@ require_once APP_DIR . '/services/Logger.php';
 require_once APP_DIR . '/services/DB.php';
 require_once APP_DIR . '/services/Security.php';
 require_once APP_DIR . '/models/User.php';
+require_once APP_DIR . '/models/Page.php';
+require_once APP_DIR . '/models/Activity.php';
+require_once APP_DIR . '/services/Markdown.php';
 
 // ── Configuration ───────────────────────────────────────────────────
 $configFile = CONFIG_DIR . '/config.php';
@@ -55,10 +58,15 @@ $publicRoutes = ['login', 'setup'];
 
 // Allowed routes mapped to controller files and methods
 $routes = [
-    'home'   => ['controller' => 'HomeController', 'action' => 'index'],
-    'login'  => ['controller' => 'AuthController', 'action' => 'login'],
-    'logout' => ['controller' => 'AuthController', 'action' => 'logout'],
-    'setup'  => ['controller' => 'AuthController', 'action' => 'setup'],
+    'home'        => ['controller' => 'HomeController', 'action' => 'index'],
+    'login'       => ['controller' => 'AuthController', 'action' => 'login'],
+    'logout'      => ['controller' => 'AuthController', 'action' => 'logout'],
+    'setup'       => ['controller' => 'AuthController', 'action' => 'setup'],
+    'pages'       => ['controller' => 'PageController', 'action' => 'index'],
+    'page_view'   => ['controller' => 'PageController', 'action' => 'view'],
+    'page_create' => ['controller' => 'PageController', 'action' => 'create'],
+    'page_edit'   => ['controller' => 'PageController', 'action' => 'edit'],
+    'page_delete' => ['controller' => 'PageController', 'action' => 'delete'],
 ];
 
 if (!isset($routes[$route])) {

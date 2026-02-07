@@ -54,7 +54,7 @@ $userRole     = Security::esc($_SESSION['user_role'] ?? '');
             </li>
             <li>
                 <a href="<?= Security::esc($baseUrl) ?>/?r=pages"
-                   class="nav-link <?= $currentRoute === 'pages' ? 'active' : '' ?>">
+                   class="nav-link <?= in_array($currentRoute, ['pages', 'page_view', 'page_create', 'page_edit'], true) ? 'active' : '' ?>">
                     <span class="nav-icon">&#9783;</span> Pages
                 </a>
             </li>
@@ -77,6 +77,36 @@ $userRole     = Security::esc($_SESSION['user_role'] ?? '');
                 </a>
             </li>
         </ul>
+
+        <?php
+            $__pageTree = Page::getTree();
+            if (!empty($__pageTree)):
+        ?>
+        <div class="sidebar-pages">
+            <span class="sidebar-label">Seiten</span>
+            <?php
+            $__currentSlug = $_GET['slug'] ?? '';
+            function renderPageTree(array $nodes, string $baseUrl, string $currentSlug, int $depth = 0): void {
+                echo '<ul class="page-tree' . ($depth === 0 ? ' page-tree-root' : '') . '">';
+                foreach ($nodes as $node) {
+                    $isActive = ($currentSlug === $node['slug']);
+                    echo '<li class="page-tree-item">';
+                    echo '<a href="' . Security::esc($baseUrl) . '/?r=page_view&amp;slug=' . Security::esc($node['slug']) . '"'
+                       . ' class="page-tree-link' . ($isActive ? ' page-tree-active' : '') . '"'
+                       . ' style="padding-left: ' . (12 + $depth * 16) . 'px">'
+                       . Security::esc($node['title'])
+                       . '</a>';
+                    if (!empty($node['children'])) {
+                        renderPageTree($node['children'], $baseUrl, $currentSlug, $depth + 1);
+                    }
+                    echo '</li>';
+                }
+                echo '</ul>';
+            }
+            renderPageTree($__pageTree, $baseUrl, $__currentSlug);
+            ?>
+        </div>
+        <?php endif; ?>
 
         <div class="sidebar-footer">
             <span class="sidebar-label">Workspace</span>
