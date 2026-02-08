@@ -16,7 +16,7 @@ class PageController
     }
 
     /**
-     * Show a single page by slug.
+     * Show a single page by slug, including linked tasks.
      */
     public function view(): void
     {
@@ -35,6 +35,14 @@ class PageController
 
         $breadcrumb = Page::getBreadcrumb((int) $page['id']);
         $renderedContent = Markdown::render($page['content_md']);
+
+        // AP5: Load linked tasks with their tags
+        $pageTasks = PageTask::getTasks((int) $page['id']);
+        $pageTaskTags = [];
+        foreach ($pageTasks as $t) {
+            $pageTaskTags[(int) $t['id']] = Task::getTags((int) $t['id']);
+        }
+        $users = User::allForDropdown();
 
         $pageTitle   = $page['title'];
         $contentView = APP_DIR . '/views/pages/view.php';
@@ -187,6 +195,208 @@ class PageController
         }
 
         $this->redirect('pages');
+    }
+
+    /**
+     * Show add-task dialog (GET) or link a task to the page (POST).
+     * Handles both linking an existing task and creating + linking a new task.
+     */
+    public function tasksAdd(): void
+    {
+        Security::requireRole(['admin', 'member']);
+
+        $slug = $_GET['slug'] ?? '';
+        $page = Page::findBySlug($slug);
+        if (!$page) {
+            http_response_code(404);
+            require APP_DIR . '/views/404.php';
+            return;
+        }
+
+        $pageId = (int) $page['id'];
+        $userId = (int) $_SESSION['user_id'];
+        $error  = null;
+        $success = null;
+        $searchResults = [];
+        $searchQuery   = '';
+
+        // POST: either link existing task or create new task
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            Security::csrfGuard();
+
+            $action = $_POST['action'] ?? '';
+
+            if ($action === 'link') {
+                $taskId = (int) ($_POST['task_id'] ?? 0);
+                if ($taskId <= 0) {
+                    $error = 'Keine Aufgabe ausgewaehlt.';
+                } else {
+                    $task = Task::findById($taskId);
+                    if (!$task) {
+                        $error = 'Aufgabe existiert nicht.';
+                    } else {
+                        try {
+                            $added = PageTask::addTask($pageId, $taskId, $userId);
+                            if ($added) {
+                                Activity::log('page', $pageId, 'task_linked', $userId, [
+                                    'task_id'    => $taskId,
+                                    'task_title' => $task['title'],
+                                    'page_title' => $page['title'],
+                                ]);
+                                Logger::info('Task linked to page', ['page_id' => $pageId, 'task_id' => $taskId]);
+                                $this->redirect('page_view&slug=' . urlencode($page['slug']));
+                                return;
+                            } else {
+                                $error = 'Aufgabe ist bereits mit dieser Seite verknuepft.';
+                            }
+                        } catch (Throwable $e) {
+                            Logger::error('Failed to link task to page', ['error' => $e->getMessage()]);
+                            $error = 'Verknuepfung konnte nicht erstellt werden.';
+                        }
+                    }
+                }
+            } elseif ($action === 'create') {
+                $title   = trim($_POST['title'] ?? '');
+                $dueDate = trim($_POST['due_date'] ?? '');
+                $ownerId = $_POST['owner_id'] ?? '';
+
+                if ($title === '') {
+                    $error = 'Titel darf nicht leer sein.';
+                } else {
+                    if ($dueDate !== '') {
+                        $d = date_create_from_format('Y-m-d', $dueDate);
+                        if (!$d || $d->format('Y-m-d') !== $dueDate) {
+                            $error = 'Ungueltiges Datum (YYYY-MM-DD erwartet).';
+                        }
+                    }
+
+                    if ($error === null) {
+                        try {
+                            $taskId = Task::create([
+                                'title'          => $title,
+                                'description_md' => null,
+                                'status'         => 'backlog',
+                                'owner_id'       => $ownerId !== '' ? (int) $ownerId : null,
+                                'due_date'       => $dueDate !== '' ? $dueDate : null,
+                                'created_by'     => $userId,
+                            ]);
+
+                            Activity::log('task', $taskId, 'created', $userId, [
+                                'title'  => $title,
+                                'status' => 'backlog',
+                            ]);
+
+                            PageTask::addTask($pageId, $taskId, $userId);
+
+                            Activity::log('page', $pageId, 'task_linked', $userId, [
+                                'task_id'    => $taskId,
+                                'task_title' => $title,
+                                'page_title' => $page['title'],
+                            ]);
+
+                            Logger::info('Task created and linked to page', [
+                                'page_id' => $pageId,
+                                'task_id' => $taskId,
+                                'title'   => $title,
+                            ]);
+
+                            $this->redirect('page_view&slug=' . urlencode($page['slug']));
+                            return;
+                        } catch (Throwable $e) {
+                            Logger::error('Failed to create and link task', ['error' => $e->getMessage()]);
+                            $error = 'Aufgabe konnte nicht erstellt werden.';
+                        }
+                    }
+                }
+            }
+        }
+
+        // GET: handle search query
+        $searchQuery = trim($_GET['q'] ?? '');
+        if ($searchQuery !== '') {
+            $searchResults = PageTask::searchAvailableTasks($pageId, $searchQuery);
+        }
+
+        $users = User::allForDropdown();
+
+        $pageTitle   = 'Task hinzufuegen - ' . $page['title'];
+        $contentView = APP_DIR . '/views/pages/tasks_add.php';
+        require APP_DIR . '/views/layout.php';
+    }
+
+    /**
+     * Remove a task-page relation (POST only). The task itself is not deleted.
+     */
+    public function tasksRemove(): void
+    {
+        Security::requireRole(['admin', 'member']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('pages');
+            return;
+        }
+
+        Security::csrfGuard();
+
+        $slug   = $_GET['slug'] ?? '';
+        $taskId = (int) ($_GET['task_id'] ?? 0);
+        $page   = Page::findBySlug($slug);
+
+        if (!$page || $taskId <= 0) {
+            http_response_code(404);
+            require APP_DIR . '/views/404.php';
+            return;
+        }
+
+        try {
+            $userId = (int) $_SESSION['user_id'];
+            $task = Task::findById($taskId);
+            PageTask::removeTask((int) $page['id'], $taskId);
+
+            Activity::log('page', (int) $page['id'], 'task_unlinked', $userId, [
+                'task_id'    => $taskId,
+                'task_title' => $task ? $task['title'] : '(deleted)',
+                'page_title' => $page['title'],
+            ]);
+            Logger::info('Task unlinked from page', ['page_id' => $page['id'], 'task_id' => $taskId]);
+        } catch (Throwable $e) {
+            Logger::error('Failed to unlink task from page', ['error' => $e->getMessage()]);
+        }
+
+        $this->redirect('page_view&slug=' . urlencode($page['slug']));
+    }
+
+    /**
+     * Reorder a task within a page's task list (POST only).
+     */
+    public function tasksReorder(): void
+    {
+        Security::requireRole(['admin', 'member']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('pages');
+            return;
+        }
+
+        Security::csrfGuard();
+
+        $slug   = $_GET['slug'] ?? '';
+        $taskId = (int) ($_GET['task_id'] ?? 0);
+        $dir    = $_GET['dir'] ?? '';
+        $page   = Page::findBySlug($slug);
+
+        if (!$page || $taskId <= 0 || !in_array($dir, ['up', 'down'], true)) {
+            $this->redirect('pages');
+            return;
+        }
+
+        try {
+            PageTask::reorderTask((int) $page['id'], $taskId, $dir);
+        } catch (Throwable $e) {
+            Logger::error('Failed to reorder task on page', ['error' => $e->getMessage()]);
+        }
+
+        $this->redirect('page_view&slug=' . urlencode($page['slug']));
     }
 
     /**

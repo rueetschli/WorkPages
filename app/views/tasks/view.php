@@ -1,7 +1,7 @@
 <?php
 /**
  * Task detail view.
- * Variables: $task (array), $tags (array), $renderedContent (string), $users (array)
+ * Variables: $task (array), $tags (array), $renderedContent (string), $users (array), $linkedPages (array)
  */
 $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 $canEdit = Security::hasRole(['admin', 'member']);
@@ -96,6 +96,24 @@ $canEdit = Security::hasRole(['admin', 'member']);
             </div>
         <?php endif; ?>
     </div>
+</div>
+
+<!-- AP5: Linked Pages -->
+<div class="section-block">
+    <h2>Verknuepfte Seiten</h2>
+    <?php if (!empty($linkedPages)): ?>
+        <ul class="linked-pages-list">
+            <?php foreach ($linkedPages as $lp): ?>
+                <li>
+                    <a href="<?= Security::esc($baseUrl) ?>/?r=page_view&amp;slug=<?= Security::esc($lp['slug']) ?>" class="page-link">
+                        <?= Security::esc($lp['title']) ?>
+                    </a>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    <?php else: ?>
+        <p class="placeholder-text">Nicht mit Seiten verknuepft.</p>
+    <?php endif; ?>
 </div>
 
 <div class="page-meta">
