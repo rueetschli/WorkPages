@@ -443,6 +443,18 @@ img {
     border: 1px solid rgba(0, 135, 90, 0.2);
 }
 
+.alert-info {
+    background: #e8f4fd;
+    color: #0065ff;
+    border: 1px solid rgba(0, 101, 255, 0.2);
+}
+
+/* ── Nav separator ───────────────────────────────────────────── */
+.nav-separator {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin: var(--space-sm) 0;
+}
+
 /* ── Login page ───────────────────────────────────────────────── */
 .login-body {
     display: flex;

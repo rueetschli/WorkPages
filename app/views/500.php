@@ -1,8 +1,8 @@
 <?php
 /**
- * 500 - Internal server error.
+ * 500 - Interner Serverfehler.
  */
-$appName = $GLOBALS['config']['APP_NAME'] ?? 'Work Pages';
+$appName = $GLOBALS['config']['APP_NAME'] ?? 'WorkPages';
 $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 ?>
 <!DOCTYPE html>
@@ -10,14 +10,15 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error - <?= Security::esc($appName) ?></title>
+    <title>Fehler - <?= Security::esc($appName) ?></title>
     <link rel="stylesheet" href="<?= Security::esc($baseUrl) ?>/assets/app.css">
 </head>
 <body class="error-body">
     <div class="error-container">
         <h1 class="error-code">500</h1>
-        <p class="error-message">Something went wrong. Please try again later.</p>
-        <a href="<?= Security::esc($baseUrl) ?>/?r=home" class="btn btn-primary">Back to Home</a>
+        <p class="error-message">Ein Fehler ist aufgetreten.</p>
+        <p style="margin: 1rem 0; color: #636e72;">Bitte versuchen Sie es spaeter erneut. Details finden Sie im Log.</p>
+        <a href="<?= Security::esc($baseUrl) ?>/?r=home" class="btn btn-primary">Zurueck zur Startseite</a>
     </div>
 </body>
 </html>

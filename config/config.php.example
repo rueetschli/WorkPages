@@ -1,32 +1,38 @@
 <?php
 /**
- * Work Pages - Configuration
+ * WorkPages - Konfiguration
  *
- * Copy this file to config.php and adjust the values.
+ * Kopieren Sie diese Datei nach config.php und passen Sie die Werte an.
+ * Alternativ wird config.php automatisch vom Installer erstellt.
  */
 
 return [
-    // Database
+    // Datenbank
     'DB_HOST'   => 'localhost',
     'DB_NAME'   => 'workpages',
     'DB_USER'   => 'root',
     'DB_PASS'   => '',
     'DB_CHARSET'=> 'utf8mb4',
 
-    // Application
+    // Applikation
     'BASE_URL'  => 'http://localhost/public',
     'APP_KEY'   => 'CHANGE-ME-to-a-random-string-of-at-least-32-chars',
-    'APP_NAME'  => 'Work Pages',
-    'APP_ENV'   => 'production', // 'development' shows errors in browser
+    'APP_NAME'  => 'WorkPages',
+    'APP_ENV'   => 'production', // 'development' fuer Entwicklung
 
-    // Search: 'like' (always works), 'fulltext' (requires FULLTEXT indexes),
-    //         'auto' (tries fulltext, falls back to like)
+    // Debug: wenn true und User ist Admin, werden Details bei Fehlern angezeigt
+    'DEBUG'     => false,
+
+    // Suche: 'like' (immer), 'fulltext' (FULLTEXT Indexes noetig), 'auto'
     'SEARCH_MODE' => 'like',
 
-    // Activity log: 'json' (native JSON column), 'text' (JSON as TEXT, for older MySQL)
+    // Activity Log: 'json' (native JSON-Spalte) oder 'text' (JSON als TEXT)
     'ACTIVITY_META_MODE' => 'text',
 
-    // Paths (normally no changes needed)
+    // Installer: auf true setzen um den Installer erneut ausfuehren zu koennen
+    'INSTALL_UNLOCK' => false,
+
+    // Pfade (normalerweise keine Aenderung noetig)
     'LOG_FILE'  => __DIR__ . '/../storage/logs/app.log',
     'UPLOAD_DIR'=> __DIR__ . '/../storage/uploads',
 ];
