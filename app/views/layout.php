@@ -30,7 +30,7 @@ $userRole     = Security::esc($_SESSION['user_role'] ?? '');
     <div class="header-center">
         <form class="search-form" action="<?= Security::esc($baseUrl) ?>/" method="get">
             <input type="hidden" name="r" value="search">
-            <input type="text" name="q" placeholder="Seiten und Aufgaben suchen..." class="search-input" aria-label="Suche">
+            <input type="text" name="q" placeholder="Seiten und Aufgaben suchen..." class="search-input" aria-label="Suche" value="<?= Security::esc($_GET['q'] ?? '') ?>">
         </form>
     </div>
     <div class="header-right">
