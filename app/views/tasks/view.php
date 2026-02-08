@@ -1,7 +1,8 @@
 <?php
 /**
  * Task detail view.
- * Variables: $task (array), $tags (array), $renderedContent (string), $users (array), $linkedPages (array)
+ * Variables: $task (array), $tags (array), $renderedContent (string), $users (array), $linkedPages (array),
+ *            $comments (array), $activities (array), $flashError (string|null)
  */
 $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 $canEdit = Security::hasRole(['admin', 'member']);
@@ -115,6 +116,16 @@ $canEdit = Security::hasRole(['admin', 'member']);
         <p class="placeholder-text">Nicht mit Seiten verknuepft.</p>
     <?php endif; ?>
 </div>
+
+<!-- AP8: Comments -->
+<?php
+    $entityType = 'task';
+    $entityId   = (int) $task['id'];
+    require APP_DIR . '/views/partials/comments.php';
+?>
+
+<!-- AP8: Activity Log -->
+<?php require APP_DIR . '/views/partials/activity.php'; ?>
 
 <div class="page-meta">
     <span class="text-muted">

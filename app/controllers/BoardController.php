@@ -95,7 +95,7 @@ class BoardController
 
             // Log status change if status actually changed
             if ($oldStatus !== $newStatus) {
-                Activity::log('task', $taskId, 'status_changed', $userId, [
+                ActivityService::log('task', $taskId, 'task_status_changed', $userId, [
                     'old_status' => $oldStatus,
                     'new_status' => $newStatus,
                     'board'      => true,
