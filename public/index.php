@@ -27,6 +27,8 @@ require_once APP_DIR . '/models/Comment.php';
 require_once APP_DIR . '/services/Markdown.php';
 require_once APP_DIR . '/services/SearchService.php';
 require_once APP_DIR . '/services/ActivityService.php';
+require_once APP_DIR . '/services/Authz.php';
+require_once APP_DIR . '/models/PageShare.php';
 
 // ── Configuration ───────────────────────────────────────────────────
 $configFile = CONFIG_DIR . '/config.php';
@@ -59,7 +61,7 @@ $GLOBALS['config'] = $config;
 $route = $_GET['r'] ?? 'home';
 
 // Routes that do NOT require authentication
-$publicRoutes = ['login', 'setup'];
+$publicRoutes = ['login', 'setup', 'share'];
 
 // Allowed routes mapped to controller files and methods
 $routes = [
@@ -89,6 +91,19 @@ $routes = [
     'search'             => ['controller' => 'SearchController', 'action' => 'index'],
     'comment_create'     => ['controller' => 'CommentController', 'action' => 'create'],
     'comment_delete'     => ['controller' => 'CommentController', 'action' => 'delete'],
+
+    // AP9: Admin user management
+    'admin_users'        => ['controller' => 'AdminController', 'action' => 'users'],
+    'admin_user_create'  => ['controller' => 'AdminController', 'action' => 'userCreate'],
+    'admin_user_store'   => ['controller' => 'AdminController', 'action' => 'userCreate'],
+    'admin_user_edit'    => ['controller' => 'AdminController', 'action' => 'userEdit'],
+    'admin_user_update'  => ['controller' => 'AdminController', 'action' => 'userEdit'],
+    'admin_user_disable' => ['controller' => 'AdminController', 'action' => 'userDisable'],
+
+    // AP9: Page sharing
+    'share'              => ['controller' => 'ShareController', 'action' => 'view'],
+    'share_create'       => ['controller' => 'ShareController', 'action' => 'create'],
+    'share_revoke'       => ['controller' => 'ShareController', 'action' => 'revoke'],
 ];
 
 if (!isset($routes[$route])) {

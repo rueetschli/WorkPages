@@ -4,7 +4,7 @@
  * Variables: $pages (array of page rows)
  */
 $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
-$canEdit = Security::hasRole(['admin', 'member']);
+$canEdit = Authz::can(Authz::PAGE_CREATE);
 ?>
 
 <div class="page-header">

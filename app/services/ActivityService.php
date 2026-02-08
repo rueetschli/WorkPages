@@ -142,6 +142,33 @@ class ActivityService
             case 'comment_deleted':
                 return $user . ' hat einen Kommentar geloescht';
 
+            // AP9: Admin actions
+            case 'user_created':
+                $email = isset($meta['email']) ? ' (' . Security::esc($meta['email']) . ')' : '';
+                $role  = isset($meta['role']) ? ' als ' . Security::esc($meta['role']) : '';
+                return $user . ' hat einen Benutzer' . $email . $role . ' erstellt';
+
+            case 'user_updated':
+                $target = isset($meta['email']) ? ' ' . Security::esc($meta['email']) : '';
+                $roleChange = '';
+                if (isset($meta['old_role']) && isset($meta['new_role'])) {
+                    $roleChange = ' (Rolle: ' . Security::esc($meta['old_role']) . ' → ' . Security::esc($meta['new_role']) . ')';
+                }
+                return $user . ' hat den Benutzer' . $target . ' bearbeitet' . $roleChange;
+
+            case 'user_disabled':
+                $email = isset($meta['email']) ? ' (' . Security::esc($meta['email']) . ')' : '';
+                return $user . ' hat einen Benutzer' . $email . ' deaktiviert';
+
+            // AP9: Share actions
+            case 'share_created':
+                $title = isset($meta['title']) ? ' fuer "' . Security::esc($meta['title']) . '"' : '';
+                return $user . ' hat einen Share-Link' . $title . ' erstellt';
+
+            case 'share_revoked':
+                $title = isset($meta['title']) ? ' fuer "' . Security::esc($meta['title']) . '"' : '';
+                return $user . ' hat einen Share-Link' . $title . ' widerrufen';
+
             // Legacy action names (backward compatibility with pre-AP8 data)
             case 'created':
                 $title = isset($meta['title']) ? ' "' . Security::esc($meta['title']) . '"' : '';
