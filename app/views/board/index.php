@@ -10,7 +10,7 @@
  */
 $esc     = [Security::class, 'esc'];
 $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
-$canEdit = Security::hasRole(['admin', 'member']);
+$canEdit = Authz::can(Authz::BOARD_MOVE);
 
 // Current filter values for preserving state
 $fOwner = $_GET['owner_id'] ?? '';

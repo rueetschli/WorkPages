@@ -5,7 +5,7 @@
  *            $comments (array), $activities (array), $flashError (string|null)
  */
 $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
-$canEdit = Security::hasRole(['admin', 'member']);
+$canEdit = Authz::can(Authz::TASK_EDIT);
 ?>
 
 <nav class="breadcrumb" aria-label="Breadcrumb">

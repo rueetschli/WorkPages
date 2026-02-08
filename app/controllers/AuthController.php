@@ -31,24 +31,30 @@ class AuthController
                 $user = User::findByEmail($email);
 
                 if ($user && password_verify($password, $user['password_hash'])) {
-                    // Regenerate session ID to prevent session fixation
-                    session_regenerate_id(true);
+                    // Check if user account is active (AP9)
+                    if (isset($user['is_active']) && (int) $user['is_active'] === 0) {
+                        $error = 'Ihr Konto ist deaktiviert. Bitte kontaktieren Sie den Administrator.';
+                        Logger::info('Login attempt for deactivated account', ['email' => $email]);
+                    } else {
+                        // Regenerate session ID to prevent session fixation
+                        session_regenerate_id(true);
 
-                    $_SESSION['user_id']   = (int) $user['id'];
-                    $_SESSION['user_role']  = $user['role'];
-                    $_SESSION['user_name']  = $user['name'];
+                        $_SESSION['user_id']   = (int) $user['id'];
+                        $_SESSION['user_role']  = $user['role'];
+                        $_SESSION['user_name']  = $user['name'];
 
-                    User::touchLogin((int) $user['id']);
+                        User::touchLogin((int) $user['id']);
 
-                    Logger::info('User logged in', ['user_id' => $user['id'], 'email' => $user['email']]);
+                        Logger::info('User logged in', ['user_id' => $user['id'], 'email' => $user['email']]);
 
-                    $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
-                    header('Location: ' . $baseUrl . '/?r=home');
-                    exit;
+                        $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
+                        header('Location: ' . $baseUrl . '/?r=home');
+                        exit;
+                    }
+                } else {
+                    $error = 'Login fehlgeschlagen.';
+                    Logger::info('Failed login attempt', ['email' => $email]);
                 }
-
-                $error = 'Login fehlgeschlagen.';
-                Logger::info('Failed login attempt', ['email' => $email]);
             }
         }
 

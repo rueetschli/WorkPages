@@ -76,12 +76,14 @@ $userRole     = Security::esc($_SESSION['user_role'] ?? '');
                     <span class="nav-icon">&#8981;</span> Search
                 </a>
             </li>
+            <?php if (Authz::can(Authz::ADMIN_USERS_MANAGE)): ?>
             <li>
-                <a href="<?= Security::esc($baseUrl) ?>/?r=settings"
-                   class="nav-link <?= $currentRoute === 'settings' ? 'active' : '' ?>">
-                    <span class="nav-icon">&#9881;</span> Settings
+                <a href="<?= Security::esc($baseUrl) ?>/?r=admin_users"
+                   class="nav-link <?= str_starts_with($currentRoute, 'admin_') ? 'active' : '' ?>">
+                    <span class="nav-icon">&#9881;</span> Verwaltung
                 </a>
             </li>
+            <?php endif; ?>
         </ul>
 
         <?php

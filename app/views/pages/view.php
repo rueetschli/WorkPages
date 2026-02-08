@@ -5,8 +5,13 @@
  *            $pageTasks (array), $pageTaskTags (array), $users (array),
  *            $comments (array), $activities (array), $flashError (string|null)
  */
-$baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
-$canEdit = Security::hasRole(['admin', 'member']);
+$baseUrl  = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
+$canEdit  = Authz::can(Authz::PAGE_EDIT);
+$canShare = Authz::can(Authz::SHARE_CREATE);
+$activeShare = null;
+if ($canShare) {
+    $activeShare = PageShare::findActiveForPage((int) $page['id']);
+}
 ?>
 
 <!-- Breadcrumb -->
@@ -46,6 +51,44 @@ $canEdit = Security::hasRole(['admin', 'member']);
         <?php endif; ?>
     </div>
 </div>
+
+<?php if ($canShare): ?>
+<div class="section-block share-section">
+    <h3>Teilen</h3>
+    <?php if ($activeShare): ?>
+        <?php
+            $shareUrl = $baseUrl . '/?r=share&page_token=' . urlencode($activeShare['token']);
+        ?>
+        <div class="share-link-box">
+            <input type="text" class="form-input" value="<?= Security::esc($shareUrl) ?>" readonly onclick="this.select();">
+            <?php if ($activeShare['expires_at']): ?>
+                <small class="form-hint">Gueltig bis: <?= Security::esc(date('d.m.Y', strtotime($activeShare['expires_at']))) ?></small>
+            <?php else: ?>
+                <small class="form-hint">Kein Ablaufdatum</small>
+            <?php endif; ?>
+        </div>
+        <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=share_revoke" class="inline-form" style="margin-top: var(--space-sm);">
+            <?= Security::csrfField() ?>
+            <input type="hidden" name="share_id" value="<?= (int) $activeShare['id'] ?>">
+            <button type="submit" class="btn btn-danger btn-sm-pad" onclick="return confirm('Share-Link wirklich widerrufen?');">Link widerrufen</button>
+        </form>
+    <?php else: ?>
+        <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=share_create" class="share-create-form">
+            <?= Security::csrfField() ?>
+            <input type="hidden" name="page_id" value="<?= (int) $page['id'] ?>">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="share-expires">Ablaufdatum (optional)</label>
+                    <input type="date" id="share-expires" name="expires_at" class="form-input form-input-sm">
+                </div>
+                <div class="filter-group filter-actions">
+                    <button type="submit" class="btn btn-primary btn-sm-pad">Share-Link erstellen</button>
+                </div>
+            </div>
+        </form>
+    <?php endif; ?>
+</div>
+<?php endif; ?>
 
 <div class="page-content md-content">
     <?= $renderedContent ?>

@@ -6,10 +6,12 @@
  *   $comments    - array of comment rows (from Comment::listFor)
  *   $entityType  - 'page' or 'task'
  *   $entityId    - int, ID of the entity
- *   $canEdit     - bool, whether the user can write comments
+ *   $canEdit     - bool, whether the user can edit (used for delete button)
  *   $flashError  - string|null, validation error from session flash
  *   $baseUrl     - string, base URL of the app
  */
+$canComment       = Authz::can(Authz::COMMENT_CREATE);
+$canDeleteComment = Authz::can(Authz::COMMENT_DELETE);
 ?>
 <div class="section-block comments-section">
     <h2>Kommentare</h2>
@@ -27,7 +29,7 @@
                 <div class="comment-header">
                     <span class="comment-author"><?= Security::esc($comment['author_name'] ?? 'Unbekannt') ?></span>
                     <span class="comment-date"><?= Security::esc(date('d.m.Y H:i', strtotime($comment['created_at']))) ?></span>
-                    <?php if ($canEdit): ?>
+                    <?php if ($canDeleteComment): ?>
                     <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=comment_delete&amp;id=<?= (int) $comment['id'] ?>"
                           class="inline-form comment-delete-form" onsubmit="return confirm('Kommentar wirklich loeschen?');">
                         <?= Security::csrfField() ?>
@@ -43,7 +45,7 @@
         </div>
     <?php endif; ?>
 
-    <?php if ($canEdit): ?>
+    <?php if ($canComment): ?>
     <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=comment_create" class="comment-form">
         <?= Security::csrfField() ?>
         <input type="hidden" name="entity_type" value="<?= Security::esc($entityType) ?>">

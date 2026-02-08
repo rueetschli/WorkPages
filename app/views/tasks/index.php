@@ -5,7 +5,7 @@
  *            $tagsByTask (array), $filters (array)
  */
 $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
-$canEdit = Security::hasRole(['admin', 'member']);
+$canEdit = Authz::can(Authz::TASK_CREATE);
 $currentStatus  = $filters['status'] ?? '';
 $currentOwnerId = $filters['owner_id'] ?? '';
 $currentTag     = $filters['tag'] ?? '';

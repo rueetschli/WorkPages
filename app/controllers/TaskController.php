@@ -76,7 +76,7 @@ class TaskController
      */
     public function create(): void
     {
-        Security::requireRole(['admin', 'member']);
+        Authz::require(Authz::TASK_CREATE);
 
         $error    = null;
         $formData = [
@@ -141,7 +141,7 @@ class TaskController
      */
     public function edit(): void
     {
-        Security::requireRole(['admin', 'member']);
+        Authz::require(Authz::TASK_EDIT);
 
         $id = (int) ($_GET['id'] ?? 0);
         if ($id <= 0) {
@@ -232,7 +232,7 @@ class TaskController
      */
     public function delete(): void
     {
-        Security::requireRole(['admin', 'member']);
+        Authz::require(Authz::TASK_DELETE);
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('tasks');
@@ -267,7 +267,7 @@ class TaskController
      */
     public function updateStatus(): void
     {
-        Security::requireRole(['admin', 'member']);
+        Authz::require(Authz::TASK_CHANGE_STATUS);
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('tasks');

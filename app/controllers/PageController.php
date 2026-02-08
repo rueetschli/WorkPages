@@ -61,7 +61,7 @@ class PageController
      */
     public function create(): void
     {
-        Security::requireRole(['admin', 'member']);
+        Authz::require(Authz::PAGE_CREATE);
 
         $error = null;
         $formData = ['title' => '', 'parent_id' => '', 'content_md' => ''];
@@ -109,7 +109,7 @@ class PageController
      */
     public function edit(): void
     {
-        Security::requireRole(['admin', 'member']);
+        Authz::require(Authz::PAGE_EDIT);
 
         $slug = $_GET['slug'] ?? '';
         if ($slug === '') {
@@ -174,7 +174,7 @@ class PageController
      */
     public function delete(): void
     {
-        Security::requireRole(['admin', 'member']);
+        Authz::require(Authz::PAGE_DELETE);
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('pages');
@@ -210,7 +210,7 @@ class PageController
      */
     public function tasksAdd(): void
     {
-        Security::requireRole(['admin', 'member']);
+        Authz::require(Authz::PAGE_TASK_LINK);
 
         $slug = $_GET['slug'] ?? '';
         $page = Page::findBySlug($slug);
@@ -336,7 +336,7 @@ class PageController
      */
     public function tasksRemove(): void
     {
-        Security::requireRole(['admin', 'member']);
+        Authz::require(Authz::PAGE_TASK_UNLINK);
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('pages');
@@ -378,7 +378,7 @@ class PageController
      */
     public function tasksReorder(): void
     {
-        Security::requireRole(['admin', 'member']);
+        Authz::require(Authz::PAGE_TASK_REORDER);
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('pages');

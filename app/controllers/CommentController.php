@@ -10,7 +10,7 @@ class CommentController
      */
     public function create(): void
     {
-        Security::requireRole(['admin', 'member']);
+        Authz::require(Authz::COMMENT_CREATE);
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('home');
@@ -86,7 +86,7 @@ class CommentController
      */
     public function delete(): void
     {
-        Security::requireRole(['admin', 'member']);
+        Authz::require(Authz::COMMENT_DELETE);
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('home');

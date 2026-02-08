@@ -57,7 +57,7 @@ class BoardController
      */
     public function move(): void
     {
-        Security::requireRole(['admin', 'member']);
+        Authz::require(Authz::BOARD_MOVE);
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('board');
@@ -134,7 +134,7 @@ class BoardController
      */
     public function reorder(): void
     {
-        Security::requireRole(['admin', 'member']);
+        Authz::require(Authz::BOARD_REORDER);
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('board');
