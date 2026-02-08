@@ -19,6 +19,10 @@ return [
     'APP_NAME'  => 'Work Pages',
     'APP_ENV'   => 'production', // 'development' shows errors in browser
 
+    // Search: 'like' (always works), 'fulltext' (requires FULLTEXT indexes),
+    //         'auto' (tries fulltext, falls back to like)
+    'SEARCH_MODE' => 'like',
+
     // Paths (normally no changes needed)
     'LOG_FILE'  => __DIR__ . '/../storage/logs/app.log',
     'UPLOAD_DIR'=> __DIR__ . '/../storage/uploads',

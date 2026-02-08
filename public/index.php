@@ -24,6 +24,7 @@ require_once APP_DIR . '/models/Activity.php';
 require_once APP_DIR . '/models/Task.php';
 require_once APP_DIR . '/models/PageTask.php';
 require_once APP_DIR . '/services/Markdown.php';
+require_once APP_DIR . '/services/SearchService.php';
 
 // ── Configuration ───────────────────────────────────────────────────
 $configFile = CONFIG_DIR . '/config.php';
@@ -83,6 +84,7 @@ $routes = [
     'board'              => ['controller' => 'BoardController', 'action' => 'index'],
     'board_move'         => ['controller' => 'BoardController', 'action' => 'move'],
     'board_reorder'      => ['controller' => 'BoardController', 'action' => 'reorder'],
+    'search'             => ['controller' => 'SearchController', 'action' => 'index'],
 ];
 
 if (!isset($routes[$route])) {
