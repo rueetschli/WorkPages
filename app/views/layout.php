@@ -6,11 +6,17 @@
  *   $pageTitle   - string, used in <title> and header
  *   $contentView - string, path to the view file rendered inside the main area
  */
-$appName      = $GLOBALS['config']['APP_NAME'] ?? 'Work Pages';
+$appName      = $GLOBALS['config']['APP_NAME'] ?? 'WorkPages';
 $baseUrl      = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 $currentRoute = $_GET['r'] ?? 'home';
 $userName     = Security::esc($_SESSION['user_name'] ?? '');
 $userRole     = Security::esc($_SESSION['user_role'] ?? '');
+
+// Flash messages
+$flashSuccess = $_SESSION['_flash_success'] ?? null;
+$flashError   = $_SESSION['_flash_error'] ?? null;
+$flashInfo    = $_SESSION['_flash_info'] ?? null;
+unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_info']);
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -73,14 +79,36 @@ $userRole     = Security::esc($_SESSION['user_role'] ?? '');
             <li>
                 <a href="<?= Security::esc($baseUrl) ?>/?r=search"
                    class="nav-link <?= $currentRoute === 'search' ? 'active' : '' ?>">
-                    <span class="nav-icon">&#8981;</span> Search
+                    <span class="nav-icon">&#8981;</span> Suche
                 </a>
             </li>
             <?php if (Authz::can(Authz::ADMIN_USERS_MANAGE)): ?>
+            <li class="nav-separator"></li>
             <li>
                 <a href="<?= Security::esc($baseUrl) ?>/?r=admin_users"
-                   class="nav-link <?= str_starts_with($currentRoute, 'admin_') ? 'active' : '' ?>">
-                    <span class="nav-icon">&#9881;</span> Verwaltung
+                   class="nav-link <?= in_array($currentRoute, ['admin_users', 'admin_user_create', 'admin_user_edit'], true) ? 'active' : '' ?>">
+                    <span class="nav-icon">&#9881;</span> Benutzer
+                </a>
+            </li>
+            <li>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=admin_migrate"
+                   class="nav-link <?= $currentRoute === 'admin_migrate' ? 'active' : '' ?>">
+                    <span class="nav-icon">&#8634;</span> Migrationen
+                </a>
+            </li>
+            <li>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=admin_system"
+                   class="nav-link <?= $currentRoute === 'admin_system' ? 'active' : '' ?>">
+                    <span class="nav-icon">&#9432;</span> System
+                </a>
+            </li>
+            <?php endif; ?>
+            <?php if (Authz::can(Authz::TASK_CREATE)): ?>
+            <li class="nav-separator"></li>
+            <li>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=export_tasks_csv"
+                   class="nav-link" title="Tasks als CSV exportieren">
+                    <span class="nav-icon">&#8615;</span> Export Tasks
                 </a>
             </li>
             <?php endif; ?>
@@ -118,12 +146,22 @@ $userRole     = Security::esc($_SESSION['user_role'] ?? '');
 
         <div class="sidebar-footer">
             <span class="sidebar-label">Workspace</span>
-            <span class="workspace-name"><?= Security::esc($GLOBALS['config']['APP_NAME'] ?? 'Work Pages') ?></span>
+            <span class="workspace-name"><?= Security::esc($GLOBALS['config']['APP_NAME'] ?? 'WorkPages') ?></span>
         </div>
     </nav>
 
     <!-- Main content area -->
     <main class="main-content <?= $currentRoute === 'board' ? 'main-content-wide' : '' ?>">
+        <?php if ($flashSuccess): ?>
+            <div class="alert alert-success"><?= Security::esc($flashSuccess) ?></div>
+        <?php endif; ?>
+        <?php if ($flashError): ?>
+            <div class="alert alert-error"><?= Security::esc($flashError) ?></div>
+        <?php endif; ?>
+        <?php if ($flashInfo): ?>
+            <div class="alert alert-info"><?= Security::esc($flashInfo) ?></div>
+        <?php endif; ?>
+
         <?php if (isset($contentView) && file_exists($contentView)): ?>
             <?php require $contentView; ?>
         <?php else: ?>

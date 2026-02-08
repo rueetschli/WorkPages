@@ -169,6 +169,12 @@ class ActivityService
                 $title = isset($meta['title']) ? ' fuer "' . Security::esc($meta['title']) . '"' : '';
                 return $user . ' hat einen Share-Link' . $title . ' widerrufen';
 
+            // AP10: Migration actions
+            case 'migration_applied':
+                $file = isset($meta['file']) ? ' ' . Security::esc($meta['file']) : '';
+                $version = isset($meta['new_version']) ? ' (Version ' . Security::esc((string) $meta['new_version']) . ')' : '';
+                return $user . ' hat eine Migration ausgefuehrt' . $file . $version;
+
             // Legacy action names (backward compatibility with pre-AP8 data)
             case 'created':
                 $title = isset($meta['title']) ? ' "' . Security::esc($meta['title']) . '"' : '';
