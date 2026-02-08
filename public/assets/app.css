@@ -1547,3 +1547,142 @@ img {
         align-items: flex-start;
     }
 }
+
+/* ── AP8: Comments ──────────────────────────────────────────────── */
+
+.comments-section {
+    margin-bottom: var(--space-lg);
+}
+
+.comments-list {
+    margin-bottom: var(--space-lg);
+}
+
+.comment-item {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.comment-item:last-child {
+    border-bottom: none;
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+    font-size: var(--font-size-sm);
+}
+
+.comment-author {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.comment-date {
+    color: var(--color-text-light);
+    font-size: var(--font-size-xs);
+}
+
+.comment-delete-form {
+    margin-left: auto;
+}
+
+.btn-comment-delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-light);
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    line-height: 1;
+}
+
+.btn-comment-delete:hover {
+    background: var(--color-error-bg);
+    color: var(--color-error);
+}
+
+.comment-body {
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+}
+
+.comment-body p {
+    margin-bottom: var(--space-sm);
+}
+
+.comment-body p:last-child {
+    margin-bottom: 0;
+}
+
+/* Comment form */
+.comment-form {
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-md);
+}
+
+.comment-textarea {
+    min-height: 100px;
+    resize: vertical;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+}
+
+/* ── AP8: Activity Log ──────────────────────────────────────────── */
+
+.activity-section {
+    margin-bottom: var(--space-lg);
+}
+
+.activity-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.activity-item {
+    display: flex;
+    gap: var(--space-md);
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: var(--font-size-sm);
+    align-items: baseline;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-time {
+    flex-shrink: 0;
+    color: var(--color-text-light);
+    font-size: var(--font-size-xs);
+    min-width: 110px;
+    white-space: nowrap;
+}
+
+.activity-text {
+    color: var(--color-text);
+    line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+    .activity-item {
+        flex-direction: column;
+        gap: var(--space-xs);
+    }
+
+    .activity-time {
+        min-width: 0;
+    }
+}

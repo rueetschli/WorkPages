@@ -37,12 +37,19 @@ class PageController
         $renderedContent = Markdown::render($page['content_md']);
 
         // AP5: Load linked tasks with their tags
+        // AP5: Load linked tasks with their tags
         $pageTasks = PageTask::getTasks((int) $page['id']);
         $pageTaskTags = [];
         foreach ($pageTasks as $t) {
             $pageTaskTags[(int) $t['id']] = Task::getTags((int) $t['id']);
         }
         $users = User::allForDropdown();
+
+        // AP8: Load comments and activity
+        $comments   = Comment::listFor('page', (int) $page['id']);
+        $activities = ActivityService::listFor('page', (int) $page['id']);
+        $flashError = $_SESSION['_flash_error'] ?? null;
+        unset($_SESSION['_flash_error']);
 
         $pageTitle   = $page['title'];
         $contentView = APP_DIR . '/views/pages/view.php';
@@ -80,7 +87,7 @@ class PageController
                     ]);
 
                     $newPage = Page::findById($pageId);
-                    Activity::log('page', $pageId, 'created', $userId, ['title' => $formData['title']]);
+                    ActivityService::log('page', $pageId, 'page_created', $userId, ['title' => $formData['title']]);
                     Logger::info('Page created', ['page_id' => $pageId, 'title' => $formData['title']]);
 
                     $this->redirect('page_view&slug=' . urlencode($newPage['slug']));
@@ -144,7 +151,7 @@ class PageController
                         'updated_by' => $userId,
                     ]);
 
-                    Activity::log('page', (int) $page['id'], 'updated', $userId, ['title' => $formData['title']]);
+                    ActivityService::log('page', (int) $page['id'], 'page_updated', $userId, ['title' => $formData['title']]);
                     Logger::info('Page updated', ['page_id' => $page['id'], 'title' => $formData['title']]);
 
                     $updatedPage = Page::findById((int) $page['id']);
@@ -188,7 +195,7 @@ class PageController
         try {
             $userId = (int) $_SESSION['user_id'];
             Page::softDelete((int) $page['id']);
-            Activity::log('page', (int) $page['id'], 'deleted', $userId, ['title' => $page['title']]);
+            ActivityService::log('page', (int) $page['id'], 'page_deleted', $userId, ['title' => $page['title']]);
             Logger::info('Page deleted', ['page_id' => $page['id'], 'title' => $page['title']]);
         } catch (Throwable $e) {
             Logger::error('Failed to delete page', ['error' => $e->getMessage()]);
@@ -238,7 +245,7 @@ class PageController
                         try {
                             $added = PageTask::addTask($pageId, $taskId, $userId);
                             if ($added) {
-                                Activity::log('page', $pageId, 'task_linked', $userId, [
+                                ActivityService::log('page', $pageId, 'page_task_linked', $userId, [
                                     'task_id'    => $taskId,
                                     'task_title' => $task['title'],
                                     'page_title' => $page['title'],
@@ -281,14 +288,14 @@ class PageController
                                 'created_by'     => $userId,
                             ]);
 
-                            Activity::log('task', $taskId, 'created', $userId, [
+                            ActivityService::log('task', $taskId, 'task_created', $userId, [
                                 'title'  => $title,
                                 'status' => 'backlog',
                             ]);
 
                             PageTask::addTask($pageId, $taskId, $userId);
 
-                            Activity::log('page', $pageId, 'task_linked', $userId, [
+                            ActivityService::log('page', $pageId, 'page_task_linked', $userId, [
                                 'task_id'    => $taskId,
                                 'task_title' => $title,
                                 'page_title' => $page['title'],
@@ -353,7 +360,7 @@ class PageController
             $task = Task::findById($taskId);
             PageTask::removeTask((int) $page['id'], $taskId);
 
-            Activity::log('page', (int) $page['id'], 'task_unlinked', $userId, [
+            ActivityService::log('page', (int) $page['id'], 'page_task_unlinked', $userId, [
                 'task_id'    => $taskId,
                 'task_title' => $task ? $task['title'] : '(deleted)',
                 'page_title' => $page['title'],

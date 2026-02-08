@@ -23,8 +23,10 @@ require_once APP_DIR . '/models/Page.php';
 require_once APP_DIR . '/models/Activity.php';
 require_once APP_DIR . '/models/Task.php';
 require_once APP_DIR . '/models/PageTask.php';
+require_once APP_DIR . '/models/Comment.php';
 require_once APP_DIR . '/services/Markdown.php';
 require_once APP_DIR . '/services/SearchService.php';
+require_once APP_DIR . '/services/ActivityService.php';
 
 // ── Configuration ───────────────────────────────────────────────────
 $configFile = CONFIG_DIR . '/config.php';
@@ -85,6 +87,8 @@ $routes = [
     'board_move'         => ['controller' => 'BoardController', 'action' => 'move'],
     'board_reorder'      => ['controller' => 'BoardController', 'action' => 'reorder'],
     'search'             => ['controller' => 'SearchController', 'action' => 'index'],
+    'comment_create'     => ['controller' => 'CommentController', 'action' => 'create'],
+    'comment_delete'     => ['controller' => 'CommentController', 'action' => 'delete'],
 ];
 
 if (!isset($routes[$route])) {

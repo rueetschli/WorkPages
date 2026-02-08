@@ -2,7 +2,8 @@
 /**
  * Page detail view.
  * Variables: $page (array), $breadcrumb (array), $renderedContent (string),
- *            $pageTasks (array), $pageTaskTags (array), $users (array)
+ *            $pageTasks (array), $pageTaskTags (array), $users (array),
+ *            $comments (array), $activities (array), $flashError (string|null)
  */
 $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 $canEdit = Security::hasRole(['admin', 'member']);
@@ -167,6 +168,16 @@ $canEdit = Security::hasRole(['admin', 'member']);
         </div>
     <?php endif; ?>
 </div>
+
+<!-- AP8: Comments -->
+<?php
+    $entityType = 'page';
+    $entityId   = (int) $page['id'];
+    require APP_DIR . '/views/partials/comments.php';
+?>
+
+<!-- AP8: Activity Log -->
+<?php require APP_DIR . '/views/partials/activity.php'; ?>
 
 <div class="page-meta">
     <span class="text-muted">

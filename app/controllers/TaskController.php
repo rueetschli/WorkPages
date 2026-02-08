@@ -60,6 +60,12 @@ class TaskController
         $users            = User::allForDropdown();
         $linkedPages      = PageTask::getPages($id);
 
+        // AP8: Load comments and activity
+        $comments   = Comment::listFor('task', $id);
+        $activities = ActivityService::listFor('task', $id);
+        $flashError = $_SESSION['_flash_error'] ?? null;
+        unset($_SESSION['_flash_error']);
+
         $pageTitle   = $task['title'];
         $contentView = APP_DIR . '/views/tasks/view.php';
         require APP_DIR . '/views/layout.php';
@@ -110,7 +116,7 @@ class TaskController
                     $tagNames = Task::parseTagString($formData['tags']);
                     Task::setTags($taskId, $tagNames);
 
-                    Activity::log('task', $taskId, 'created', $userId, [
+                    ActivityService::log('task', $taskId, 'task_created', $userId, [
                         'title'  => $formData['title'],
                         'status' => $formData['status'],
                     ]);
@@ -195,13 +201,13 @@ class TaskController
 
                     // Log status change separately
                     if ($oldStatus !== $newStatus) {
-                        Activity::log('task', $id, 'status_changed', $userId, [
+                        ActivityService::log('task', $id, 'task_status_changed', $userId, [
                             'old_status' => $oldStatus,
                             'new_status' => $newStatus,
                         ]);
                     }
 
-                    Activity::log('task', $id, 'updated', $userId, [
+                    ActivityService::log('task', $id, 'task_updated', $userId, [
                         'title'          => $formData['title'],
                         'changed_fields' => $this->changedFields($task, $formData),
                     ]);
@@ -247,7 +253,7 @@ class TaskController
         try {
             $userId = (int) $_SESSION['user_id'];
             Task::delete($id);
-            Activity::log('task', $id, 'deleted', $userId, ['title' => $task['title']]);
+            ActivityService::log('task', $id, 'task_deleted', $userId, ['title' => $task['title']]);
             Logger::info('Task deleted', ['task_id' => $id, 'title' => $task['title']]);
         } catch (Throwable $e) {
             Logger::error('Failed to delete task', ['error' => $e->getMessage()]);
@@ -304,7 +310,7 @@ class TaskController
                     $meta['from_page_slug'] = $returnSlug;
                 }
 
-                Activity::log('task', $id, 'status_changed', $userId, $meta);
+                ActivityService::log('task', $id, 'task_status_changed', $userId, $meta);
                 Logger::info('Task status changed', ['task_id' => $id, 'old' => $oldStatus, 'new' => $status]);
             } catch (Throwable $e) {
                 Logger::error('Failed to update task status', ['error' => $e->getMessage()]);

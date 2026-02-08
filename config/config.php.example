@@ -23,6 +23,9 @@ return [
     //         'auto' (tries fulltext, falls back to like)
     'SEARCH_MODE' => 'like',
 
+    // Activity log: 'json' (native JSON column), 'text' (JSON as TEXT, for older MySQL)
+    'ACTIVITY_META_MODE' => 'text',
+
     // Paths (normally no changes needed)
     'LOG_FILE'  => __DIR__ . '/../storage/logs/app.log',
     'UPLOAD_DIR'=> __DIR__ . '/../storage/uploads',
