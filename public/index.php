@@ -22,6 +22,7 @@ require_once APP_DIR . '/models/User.php';
 require_once APP_DIR . '/models/Page.php';
 require_once APP_DIR . '/models/Activity.php';
 require_once APP_DIR . '/models/Task.php';
+require_once APP_DIR . '/models/PageTask.php';
 require_once APP_DIR . '/services/Markdown.php';
 
 // ── Configuration ───────────────────────────────────────────────────
@@ -74,7 +75,11 @@ $routes = [
     'task_store'  => ['controller' => 'TaskController', 'action' => 'create'],
     'task_edit'   => ['controller' => 'TaskController', 'action' => 'edit'],
     'task_update' => ['controller' => 'TaskController', 'action' => 'edit'],
-    'task_delete' => ['controller' => 'TaskController', 'action' => 'delete'],
+    'task_delete'        => ['controller' => 'TaskController', 'action' => 'delete'],
+    'task_update_status' => ['controller' => 'TaskController', 'action' => 'updateStatus'],
+    'page_tasks_add'     => ['controller' => 'PageController', 'action' => 'tasksAdd'],
+    'page_tasks_remove'  => ['controller' => 'PageController', 'action' => 'tasksRemove'],
+    'page_tasks_reorder' => ['controller' => 'PageController', 'action' => 'tasksReorder'],
 ];
 
 if (!isset($routes[$route])) {

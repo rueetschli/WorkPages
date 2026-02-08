@@ -58,6 +58,7 @@ class TaskController
             ? Markdown::render($task['description_md'])
             : '';
         $users            = User::allForDropdown();
+        $linkedPages      = PageTask::getPages($id);
 
         $pageTitle   = $task['title'];
         $contentView = APP_DIR . '/views/tasks/view.php';
@@ -253,6 +254,68 @@ class TaskController
         }
 
         $this->redirect('tasks');
+    }
+
+    /**
+     * Update task status via POST (used from page-view context).
+     */
+    public function updateStatus(): void
+    {
+        Security::requireRole(['admin', 'member']);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('tasks');
+            return;
+        }
+
+        Security::csrfGuard();
+
+        $id     = (int) ($_POST['task_id'] ?? 0);
+        $status = $_POST['status'] ?? '';
+        $returnSlug = $_POST['return_slug'] ?? '';
+
+        $task = Task::findById($id);
+        if (!$task) {
+            http_response_code(404);
+            require APP_DIR . '/views/404.php';
+            return;
+        }
+
+        if (!in_array($status, Task::STATUSES, true)) {
+            $this->redirect('tasks');
+            return;
+        }
+
+        $userId    = (int) $_SESSION['user_id'];
+        $oldStatus = $task['status'];
+
+        if ($oldStatus !== $status) {
+            try {
+                Task::update($id, [
+                    'status'     => $status,
+                    'updated_by' => $userId,
+                ]);
+
+                $meta = [
+                    'old_status' => $oldStatus,
+                    'new_status' => $status,
+                ];
+                if ($returnSlug !== '') {
+                    $meta['from_page_slug'] = $returnSlug;
+                }
+
+                Activity::log('task', $id, 'status_changed', $userId, $meta);
+                Logger::info('Task status changed', ['task_id' => $id, 'old' => $oldStatus, 'new' => $status]);
+            } catch (Throwable $e) {
+                Logger::error('Failed to update task status', ['error' => $e->getMessage()]);
+            }
+        }
+
+        if ($returnSlug !== '') {
+            $this->redirect('page_view&slug=' . urlencode($returnSlug));
+        } else {
+            $this->redirect('task_view&id=' . $id);
+        }
     }
 
     /**

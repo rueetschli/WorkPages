@@ -1036,3 +1036,122 @@ img {
         grid-template-columns: 1fr;
     }
 }
+
+/* ── AP5: Page-Task relation styles ──────────────────────────── */
+
+/* Header row for the Tasks section on a page */
+.page-tasks-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-md);
+}
+
+.page-tasks-header h2 {
+    margin-bottom: 0;
+}
+
+/* Reorder buttons (up/down arrows) */
+.reorder-cell {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.btn-reorder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 20px;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    color: var(--color-text-light);
+    font-size: 10px;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    line-height: 1;
+}
+
+.btn-reorder:hover {
+    background: var(--color-bg);
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+/* Remove button */
+.btn-remove {
+    color: var(--color-error);
+}
+
+.btn-remove:hover {
+    background: var(--color-error-bg);
+}
+
+/* Status select dropdown styled inline */
+.status-select {
+    display: inline-block;
+    width: auto;
+    min-width: 100px;
+    padding: 2px 8px;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    appearance: auto;
+}
+
+.status-select.status-backlog { background: #f0f0f0; color: #626f86; }
+.status-select.status-ready   { background: #e9f2ff; color: #0055cc; }
+.status-select.status-doing   { background: #fff7e6; color: #b65c00; }
+.status-select.status-review  { background: #f3e8ff; color: #6e4ea2; }
+.status-select.status-done    { background: var(--color-success-bg); color: var(--color-success); }
+
+/* Status change form inline */
+.status-change-form {
+    display: inline;
+}
+
+/* Linked pages list on task view */
+.linked-pages-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.linked-pages-list li {
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.linked-pages-list li:last-child {
+    border-bottom: none;
+}
+
+.linked-pages-list .page-link {
+    font-size: var(--font-size-sm);
+}
+
+/* Task search form */
+.task-search-form {
+    margin-bottom: var(--space-md);
+}
+
+/* Page tasks table overrides */
+.page-tasks-table td {
+    vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+    .page-tasks-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-sm);
+    }
+
+    .page-tasks-table {
+        font-size: var(--font-size-xs);
+    }
+}
