@@ -121,7 +121,7 @@ $userRole     = Security::esc($_SESSION['user_role'] ?? '');
     </nav>
 
     <!-- Main content area -->
-    <main class="main-content">
+    <main class="main-content <?= $currentRoute === 'board' ? 'main-content-wide' : '' ?>">
         <?php if (isset($contentView) && file_exists($contentView)): ?>
             <?php require $contentView; ?>
         <?php else: ?>

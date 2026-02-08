@@ -80,6 +80,9 @@ $routes = [
     'page_tasks_add'     => ['controller' => 'PageController', 'action' => 'tasksAdd'],
     'page_tasks_remove'  => ['controller' => 'PageController', 'action' => 'tasksRemove'],
     'page_tasks_reorder' => ['controller' => 'PageController', 'action' => 'tasksReorder'],
+    'board'              => ['controller' => 'BoardController', 'action' => 'index'],
+    'board_move'         => ['controller' => 'BoardController', 'action' => 'move'],
+    'board_reorder'      => ['controller' => 'BoardController', 'action' => 'reorder'],
 ];
 
 if (!isset($routes[$route])) {
