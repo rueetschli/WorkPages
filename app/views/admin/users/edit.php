@@ -69,7 +69,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
         </label>
     </div>
 
-    <div class="page-meta" style="margin-bottom: var(--space-lg);">
+    <div class="page-meta" style="margin-bottom: var(--sp-6);">
         <span class="text-muted">
             Erstellt am <?= Security::esc(date('d.m.Y H:i', strtotime($user['created_at']))) ?>
             <?php if ($user['last_login_at']): ?>

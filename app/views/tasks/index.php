@@ -84,7 +84,7 @@ $currentTag     = $filters['tag'] ?? '';
     <div class="section-block">
         <p class="placeholder-text">Keine Aufgaben gefunden.</p>
         <?php if ($canEdit): ?>
-        <p style="margin-top: var(--space-md);">
+        <p style="margin-top: var(--sp-4);">
             <a href="<?= Security::esc($baseUrl) ?>/?r=task_create" class="btn btn-primary">Erste Aufgabe erstellen</a>
         </p>
         <?php endif; ?>

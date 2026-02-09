@@ -25,7 +25,7 @@ $canEdit = Authz::can(Authz::PAGE_CREATE);
     <div class="section-block">
         <p class="placeholder-text">Noch keine Seiten vorhanden.</p>
         <?php if ($canEdit): ?>
-        <p style="margin-top: var(--space-md);">
+        <p style="margin-top: var(--sp-4);">
             <a href="<?= Security::esc($baseUrl) ?>/?r=page_create" class="btn btn-primary">Erste Seite erstellen</a>
         </p>
         <?php endif; ?>

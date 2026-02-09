@@ -12,12 +12,13 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404 - <?= Security::esc($appName) ?></title>
     <link rel="stylesheet" href="<?= Security::esc($baseUrl) ?>/assets/app.css">
+    <script>(function(){var t=localStorage.getItem('wp-theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
 </head>
 <body class="error-body">
     <div class="error-container">
         <h1 class="error-code">404</h1>
         <p class="error-message">Seite nicht gefunden.</p>
-        <p style="margin: 1rem 0; color: #636e72;">Die angeforderte Seite existiert nicht oder wurde verschoben.</p>
+        <p style="margin: 1rem 0; color: var(--color-text-secondary);">Die angeforderte Seite existiert nicht oder wurde verschoben.</p>
         <a href="<?= Security::esc($baseUrl) ?>/?r=home" class="btn btn-primary">Zurueck zur Startseite</a>
     </div>
 </body>

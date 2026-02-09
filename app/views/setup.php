@@ -16,6 +16,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Setup - <?= Security::esc($appName) ?></title>
     <link rel="stylesheet" href="<?= Security::esc($baseUrl) ?>/assets/app.css">
+    <script>(function(){var t=localStorage.getItem('wp-theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
 </head>
 <body class="login-body">
 
@@ -30,7 +31,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 
         <?php if (!empty($success)): ?>
             <div class="alert alert-success"><?= Security::esc($success) ?></div>
-            <p style="text-align:center; margin-top: var(--space-md);">
+            <p style="text-align:center; margin-top: var(--sp-4);">
                 <a href="<?= Security::esc($baseUrl) ?>/?r=login" class="btn btn-primary">Zum Login</a>
             </p>
         <?php else: ?>
