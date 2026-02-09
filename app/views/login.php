@@ -6,7 +6,7 @@
  *   $error     - string|null, error message to display
  *   $pageTitle - string, page title
  */
-$appName = $GLOBALS['config']['APP_NAME'] ?? 'Work Pages';
+$appName = $GLOBALS['config']['APP_NAME'] ?? 'WorkPages';
 $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 $emailValue = Security::esc(trim($_POST['email'] ?? ''));
 ?>
@@ -17,13 +17,19 @@ $emailValue = Security::esc(trim($_POST['email'] ?? ''));
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - <?= Security::esc($appName) ?></title>
     <link rel="stylesheet" href="<?= Security::esc($baseUrl) ?>/assets/app.css">
+    <script>
+    (function() {
+        var t = localStorage.getItem('wp-theme');
+        if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+    </script>
 </head>
 <body class="login-body">
 
 <div class="login-container">
     <div class="login-card">
         <h1 class="login-title"><?= Security::esc($appName) ?></h1>
-        <p class="login-subtitle">Anmelden</p>
+        <p class="login-subtitle">Melden Sie sich an, um fortzufahren</p>
 
         <?php if (!empty($error)): ?>
             <div class="alert alert-error"><?= Security::esc($error) ?></div>

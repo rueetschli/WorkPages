@@ -54,9 +54,9 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 
     <?php if ($searchQuery !== ''): ?>
         <?php if (empty($searchResults)): ?>
-            <p class="placeholder-text" style="margin-top:var(--space-md);">Keine Aufgaben gefunden fuer &bdquo;<?= Security::esc($searchQuery) ?>&ldquo;.</p>
+            <p class="placeholder-text" style="margin-top:var(--sp-4);">Keine Aufgaben gefunden fuer &bdquo;<?= Security::esc($searchQuery) ?>&ldquo;.</p>
         <?php else: ?>
-            <table class="pages-table" style="margin-top:var(--space-md);">
+            <table class="pages-table" style="margin-top:var(--sp-4);">
                 <thead>
                     <tr>
                         <th>Titel</th>

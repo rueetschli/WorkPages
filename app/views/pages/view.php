@@ -67,7 +67,7 @@ if ($canShare) {
                 <small class="form-hint">Kein Ablaufdatum</small>
             <?php endif; ?>
         </div>
-        <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=share_revoke" class="inline-form" style="margin-top: var(--space-sm);">
+        <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=share_revoke" class="inline-form" style="margin-top: var(--sp-2);">
             <?= Security::csrfField() ?>
             <input type="hidden" name="share_id" value="<?= (int) $activeShare['id'] ?>">
             <button type="submit" class="btn btn-danger btn-sm-pad" onclick="return confirm('Share-Link wirklich widerrufen?');">Link widerrufen</button>

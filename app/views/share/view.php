@@ -15,6 +15,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= Security::esc($pageTitle) ?> - <?= Security::esc($appName) ?></title>
     <link rel="stylesheet" href="<?= Security::esc($baseUrl) ?>/assets/app.css">
+    <script>(function(){var t=localStorage.getItem('wp-theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');})()</script>
 </head>
 <body>
 
@@ -28,7 +29,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 </header>
 
 <div class="app-body">
-    <main class="main-content" style="margin-left: 0; max-width: 900px; margin: 0 auto; padding: var(--space-xl);">
+    <main class="main-content" style="margin-left: 0; max-width: 900px; margin: 0 auto; padding: var(--sp-8);">
 
         <div class="page-header">
             <h1><?= Security::esc($page['title']) ?></h1>
