@@ -53,6 +53,9 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
         </form>
     </div>
     <div class="header-right">
+        <button type="button" class="mobile-search-btn" id="mobile-search-btn" aria-label="Suche">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
         <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Farbschema wechseln">
             <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
             <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
@@ -225,6 +228,7 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
     function closeSidebar() {
         if (sidebar) sidebar.classList.remove('open');
         if (overlay) overlay.classList.remove('active');
+        document.body.classList.remove('sidebar-open');
     }
 
     if (menuBtn && sidebar) {
@@ -235,11 +239,37 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
             } else {
                 sidebar.classList.add('open');
                 if (overlay) overlay.classList.add('active');
+                document.body.classList.add('sidebar-open');
             }
         });
     }
     if (overlay) {
         overlay.addEventListener('click', closeSidebar);
+    }
+
+    /* Close sidebar when a nav link is clicked (mobile) */
+    if (sidebar) {
+        var sidebarLinks = sidebar.querySelectorAll('.nav-link, .page-tree-link');
+        for (var j = 0; j < sidebarLinks.length; j++) {
+            sidebarLinks[j].addEventListener('click', function() {
+                if (window.innerWidth <= 768) {
+                    closeSidebar();
+                }
+            });
+        }
+    }
+
+    /* -- Mobile Search Toggle -- */
+    var searchBtn = document.getElementById('mobile-search-btn');
+    var appHeader = document.querySelector('.app-header');
+    if (searchBtn && appHeader) {
+        searchBtn.addEventListener('click', function() {
+            appHeader.classList.toggle('search-active');
+            if (appHeader.classList.contains('search-active')) {
+                var searchInput = appHeader.querySelector('.search-input');
+                if (searchInput) searchInput.focus();
+            }
+        });
     }
 
     /* -- Auto-dismiss flash alerts after 6 seconds -- */

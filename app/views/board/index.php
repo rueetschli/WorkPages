@@ -78,10 +78,21 @@ $fQ     = $_GET['q'] ?? '';
     </form>
 </div>
 
+<!-- Mobile Kanban Tabs (AP12) -->
+<div class="kanban-tabs" id="kanban-tabs">
+    <?php foreach (Task::STATUSES as $idx => $status): ?>
+        <button type="button" class="kanban-tab<?= $idx === 0 ? ' active' : '' ?>"
+                data-status="<?= $esc($status) ?>">
+            <?= $esc(Task::STATUS_LABELS[$status]) ?>
+            <span class="kanban-tab-count"><?= count($columns[$status]) ?></span>
+        </button>
+    <?php endforeach; ?>
+</div>
+
 <!-- Kanban Board -->
 <div class="kanban-board" id="kanban-board">
-    <?php foreach (Task::STATUSES as $status): ?>
-        <div class="kanban-column" data-status="<?= $esc($status) ?>">
+    <?php foreach (Task::STATUSES as $idx => $status): ?>
+        <div class="kanban-column<?= $idx === 0 ? ' active' : '' ?>" data-status="<?= $esc($status) ?>">
             <div class="kanban-column-header">
                 <span class="kanban-column-title status-badge status-<?= $esc($status) ?>">
                     <?= $esc(Task::STATUS_LABELS[$status]) ?>
@@ -300,7 +311,7 @@ $fQ     = $_GET['q'] ?? '';
         placeholder = null;
     });
 
-    // Update the task count in column headers
+    // Update the task count in column headers and tabs
     function updateColumnCounts() {
         var cols = board.querySelectorAll('.kanban-column');
         for (var i = 0; i < cols.length; i++) {
@@ -310,8 +321,59 @@ $fQ     = $_GET['q'] ?? '';
                 var cards = body.querySelectorAll('.kanban-card:not(.kanban-placeholder):not(.kanban-card-dragging)');
                 count.textContent = cards.length;
             }
+            // Also update tab counts
+            var status = cols[i].dataset.status;
+            var tabCount = document.querySelector('.kanban-tab[data-status="' + status + '"] .kanban-tab-count');
+            if (tabCount && body) {
+                var tabCards = body.querySelectorAll('.kanban-card:not(.kanban-placeholder):not(.kanban-card-dragging)');
+                tabCount.textContent = tabCards.length;
+            }
         }
     }
 })();
 </script>
 <?php endif; ?>
+
+<!-- Mobile Tab Switching (AP12) -->
+<script>
+(function() {
+    'use strict';
+
+    var tabs = document.getElementById('kanban-tabs');
+    var board = document.getElementById('kanban-board');
+    if (!tabs || !board) return;
+
+    var savedTab = sessionStorage.getItem('wp-board-tab');
+
+    function activateTab(status) {
+        var allTabs = tabs.querySelectorAll('.kanban-tab');
+        for (var i = 0; i < allTabs.length; i++) {
+            if (allTabs[i].dataset.status === status) {
+                allTabs[i].classList.add('active');
+            } else {
+                allTabs[i].classList.remove('active');
+            }
+        }
+        var columns = board.querySelectorAll('.kanban-column');
+        for (var i = 0; i < columns.length; i++) {
+            if (columns[i].dataset.status === status) {
+                columns[i].classList.add('active');
+            } else {
+                columns[i].classList.remove('active');
+            }
+        }
+        sessionStorage.setItem('wp-board-tab', status);
+    }
+
+    tabs.addEventListener('click', function(e) {
+        var tab = e.target.closest('.kanban-tab');
+        if (!tab) return;
+        activateTab(tab.dataset.status);
+    });
+
+    // Restore saved tab if on mobile
+    if (savedTab && window.innerWidth <= 768) {
+        activateTab(savedTab);
+    }
+})();
+</script>

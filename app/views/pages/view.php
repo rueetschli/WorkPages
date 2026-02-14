@@ -106,7 +106,7 @@ if ($canShare) {
     <?php if (empty($pageTasks)): ?>
         <p class="placeholder-text">Keine Aufgaben mit dieser Seite verknuepft.</p>
     <?php else: ?>
-        <div class="pages-table-wrap">
+        <div class="pages-table-wrap responsive-cards">
         <table class="pages-table page-tasks-table">
             <thead>
                 <tr>
@@ -138,12 +138,12 @@ if ($canShare) {
                         <?php endif; ?>
                     </td>
                     <?php endif; ?>
-                    <td>
+                    <td class="card-cell-title">
                         <a href="<?= Security::esc($baseUrl) ?>/?r=task_view&amp;id=<?= (int) $pt['id'] ?>" class="page-link">
                             <?= Security::esc($pt['title']) ?>
                         </a>
                     </td>
-                    <td>
+                    <td data-label="Status">
                         <?php if ($canEdit): ?>
                         <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=task_update_status" class="inline-form status-change-form">
                             <?= Security::csrfField() ?>
@@ -161,14 +161,14 @@ if ($canShare) {
                         </span>
                         <?php endif; ?>
                     </td>
-                    <td>
+                    <td data-label="Owner">
                         <?php if ($pt['owner_name']): ?>
                             <?= Security::esc($pt['owner_name']) ?>
                         <?php else: ?>
                             <span class="text-muted">&mdash;</span>
                         <?php endif; ?>
                     </td>
-                    <td>
+                    <td data-label="Faellig">
                         <?php if ($pt['due_date']): ?>
                             <?php
                                 $dueTs = strtotime($pt['due_date']);
@@ -181,7 +181,7 @@ if ($canShare) {
                             <span class="text-muted">&mdash;</span>
                         <?php endif; ?>
                     </td>
-                    <td>
+                    <td data-label="Tags">
                         <?php
                             $tTags = $pageTaskTags[(int) $pt['id']] ?? [];
                             if (!empty($tTags)):
@@ -196,7 +196,7 @@ if ($canShare) {
                         <?php endif; ?>
                     </td>
                     <?php if ($canEdit): ?>
-                    <td>
+                    <td class="card-cell-actions">
                         <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=page_tasks_remove&amp;slug=<?= Security::esc($page['slug']) ?>&amp;task_id=<?= (int) $pt['id'] ?>"
                               class="inline-form" onsubmit="return confirm('Verknuepfung wirklich entfernen? Die Aufgabe wird nicht geloescht.');">
                             <?= Security::csrfField() ?>
