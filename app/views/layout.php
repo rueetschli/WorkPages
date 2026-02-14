@@ -24,6 +24,7 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= Security::esc($pageTitle) ?> - <?= Security::esc($appName) ?></title>
+    <meta name="base-url" content="<?= Security::esc($baseUrl) ?>">
     <link rel="stylesheet" href="<?= Security::esc($baseUrl) ?>/assets/app.css">
     <script>
     /* Apply saved theme immediately to prevent flash */
@@ -286,6 +287,7 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
     }
 })();
 </script>
+<script src="<?= Security::esc($baseUrl) ?>/assets/mentions.js"></script>
 
 </body>
 </html>

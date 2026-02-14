@@ -63,8 +63,13 @@ class CommentController
         try {
             $commentId = Comment::create($entityType, $entityId, $bodyMd, $userId);
 
+            // AP14: Sync mentions in comment
+            TextCommands::syncMentions($bodyMd, 'comment', $commentId, $userId);
+
+            $mentionedIds = TextCommands::extractMentions($bodyMd);
             ActivityService::log($entityType, $entityId, 'comment_created', $userId, [
-                'comment_id' => $commentId,
+                'comment_id'       => $commentId,
+                'mention_user_ids' => $mentionedIds,
             ]);
 
             Logger::info('Comment created', [

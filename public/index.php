@@ -124,6 +124,8 @@ require_once APP_DIR . '/services/ActivityService.php';
 require_once APP_DIR . '/services/Authz.php';
 require_once APP_DIR . '/models/PageShare.php';
 require_once APP_DIR . '/models/BoardColumn.php';
+require_once APP_DIR . '/models/Mention.php';
+require_once APP_DIR . '/services/TextCommands.php';
 
 // ── Database (lazy) ─────────────────────────────────────────────────
 DB::setConfig($config);
@@ -192,6 +194,10 @@ $routes = [
     'admin_system'       => ['controller' => 'AdminController', 'action' => 'system'],
     'export_tasks_csv'   => ['controller' => 'ExportController', 'action' => 'tasksCsv'],
     'export_page_md'     => ['controller' => 'ExportController', 'action' => 'pageMd'],
+
+    // AP14: Smart Text Commands - API endpoints for autocomplete
+    'api_users'          => ['controller' => 'ApiController', 'action' => 'users'],
+    'api_tags'           => ['controller' => 'ApiController', 'action' => 'tags'],
 ];
 
 if (!isset($routes[$route])) {

@@ -54,7 +54,9 @@ $canDeleteComment = Authz::can(Authz::COMMENT_DELETE);
             <label for="comment-body">Neuer Kommentar</label>
             <textarea id="comment-body" name="body_md" class="form-input form-textarea comment-textarea"
                       placeholder="Kommentar schreiben (Markdown wird unterstuetzt)..."
-                      required maxlength="<?= Comment::MAX_BODY_LENGTH ?>"></textarea>
+                      required maxlength="<?= Comment::MAX_BODY_LENGTH ?>"
+                      data-mentions="true" data-context="comment"></textarea>
+            <span class="textarea-hint">@ fuer Mentions, # fuer Tags</span>
         </div>
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">Kommentar speichern</button>

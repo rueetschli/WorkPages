@@ -42,7 +42,8 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
         <div class="form-group">
             <label for="content_md">Inhalt (Markdown)</label>
             <textarea id="content_md" name="content_md" class="form-input form-textarea"
-                      rows="18"><?= Security::esc($formData['content_md']) ?></textarea>
+                      rows="18" data-mentions="true" data-context="page"><?= Security::esc($formData['content_md']) ?></textarea>
+            <span class="textarea-hint">@ fuer Mentions, # fuer Tags, /task Titel fuer neue Aufgabe</span>
         </div>
 
         <div class="form-actions">
