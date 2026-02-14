@@ -37,13 +37,13 @@ class PageController
         $renderedContent = Markdown::render($page['content_md']);
 
         // AP5: Load linked tasks with their tags
-        // AP5: Load linked tasks with their tags
         $pageTasks = PageTask::getTasks((int) $page['id']);
         $pageTaskTags = [];
         foreach ($pageTasks as $t) {
             $pageTaskTags[(int) $t['id']] = Task::getTags((int) $t['id']);
         }
         $users = User::allForDropdown();
+        $boardColumns = BoardColumn::allOrdered();
 
         // AP8: Load comments and activity
         $comments   = Comment::listFor('page', (int) $page['id']);
@@ -279,18 +279,21 @@ class PageController
 
                     if ($error === null) {
                         try {
+                            $defaultColumnId = BoardColumn::getDefaultId();
+                            $defaultColumn   = BoardColumn::findById($defaultColumnId);
+
                             $taskId = Task::create([
                                 'title'          => $title,
                                 'description_md' => null,
-                                'status'         => 'backlog',
+                                'column_id'      => $defaultColumnId,
                                 'owner_id'       => $ownerId !== '' ? (int) $ownerId : null,
                                 'due_date'       => $dueDate !== '' ? $dueDate : null,
                                 'created_by'     => $userId,
                             ]);
 
                             ActivityService::log('task', $taskId, 'task_created', $userId, [
-                                'title'  => $title,
-                                'status' => 'backlog',
+                                'title'       => $title,
+                                'column_name' => $defaultColumn ? $defaultColumn['name'] : '',
                             ]);
 
                             PageTask::addTask($pageId, $taskId, $userId);

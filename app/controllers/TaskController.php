@@ -1,6 +1,7 @@
 <?php
 /**
  * TaskController - CRUD operations for tasks.
+ * AP13: Uses column_id (board_columns) instead of fixed status ENUM.
  */
 class TaskController
 {
@@ -11,8 +12,8 @@ class TaskController
     {
         $filters = [];
 
-        if (!empty($_GET['status']) && in_array($_GET['status'], Task::STATUSES, true)) {
-            $filters['status'] = $_GET['status'];
+        if (!empty($_GET['column_id'])) {
+            $filters['column_id'] = (int) $_GET['column_id'];
         }
         if (!empty($_GET['owner_id'])) {
             $filters['owner_id'] = (int) $_GET['owner_id'];
@@ -25,6 +26,7 @@ class TaskController
         $users      = User::allForDropdown();
         $allTags    = Task::allTags();
         $tagsByTask = [];
+        $boardColumns = BoardColumn::allOrdered();
 
         foreach ($tasks as $task) {
             $tagsByTask[(int) $task['id']] = Task::getTags((int) $task['id']);
@@ -59,6 +61,7 @@ class TaskController
             : '';
         $users            = User::allForDropdown();
         $linkedPages      = PageTask::getPages($id);
+        $boardColumns     = BoardColumn::allOrdered();
 
         // AP8: Load comments and activity
         $comments   = Comment::listFor('task', $id);
@@ -79,10 +82,12 @@ class TaskController
         Authz::require(Authz::TASK_CREATE);
 
         $error    = null;
+        $boardColumns = BoardColumn::allOrdered();
+        $defaultColumnId = BoardColumn::getDefaultId();
         $formData = [
             'title'          => '',
             'description_md' => '',
-            'status'         => 'backlog',
+            'column_id'      => (string) $defaultColumnId,
             'owner_id'       => '',
             'due_date'       => '',
             'tags'           => '',
@@ -94,7 +99,7 @@ class TaskController
 
             $formData['title']          = trim($_POST['title'] ?? '');
             $formData['description_md'] = $_POST['description_md'] ?? '';
-            $formData['status']         = $_POST['status'] ?? 'backlog';
+            $formData['column_id']      = $_POST['column_id'] ?? (string) $defaultColumnId;
             $formData['owner_id']       = $_POST['owner_id'] ?? '';
             $formData['due_date']       = trim($_POST['due_date'] ?? '');
             $formData['tags']           = trim($_POST['tags'] ?? '');
@@ -104,10 +109,12 @@ class TaskController
             if ($error === null) {
                 try {
                     $userId = (int) $_SESSION['user_id'];
+                    $columnId = (int) $formData['column_id'];
+                    $column = BoardColumn::findById($columnId);
                     $taskId = Task::create([
                         'title'          => $formData['title'],
                         'description_md' => $formData['description_md'],
-                        'status'         => $formData['status'],
+                        'column_id'      => $columnId,
                         'owner_id'       => $formData['owner_id'] !== '' ? (int) $formData['owner_id'] : null,
                         'due_date'       => $formData['due_date'] !== '' ? $formData['due_date'] : null,
                         'created_by'     => $userId,
@@ -117,8 +124,9 @@ class TaskController
                     Task::setTags($taskId, $tagNames);
 
                     ActivityService::log('task', $taskId, 'task_created', $userId, [
-                        'title'  => $formData['title'],
-                        'status' => $formData['status'],
+                        'title'       => $formData['title'],
+                        'column_id'   => $columnId,
+                        'column_name' => $column['name'] ?? '',
                     ]);
                     Logger::info('Task created', ['task_id' => $taskId, 'title' => $formData['title']]);
 
@@ -159,10 +167,11 @@ class TaskController
         $error    = null;
         $tags     = Task::getTags($id);
         $tagStr   = implode(', ', array_column($tags, 'name'));
+        $boardColumns = BoardColumn::allOrdered();
         $formData = [
             'title'          => $task['title'],
             'description_md' => $task['description_md'] ?? '',
-            'status'         => $task['status'],
+            'column_id'      => (string) $task['column_id'],
             'owner_id'       => $task['owner_id'] ?? '',
             'due_date'       => $task['due_date'] ?? '',
             'tags'           => $tagStr,
@@ -174,7 +183,7 @@ class TaskController
 
             $formData['title']          = trim($_POST['title'] ?? '');
             $formData['description_md'] = $_POST['description_md'] ?? '';
-            $formData['status']         = $_POST['status'] ?? $task['status'];
+            $formData['column_id']      = $_POST['column_id'] ?? (string) $task['column_id'];
             $formData['owner_id']       = $_POST['owner_id'] ?? '';
             $formData['due_date']       = trim($_POST['due_date'] ?? '');
             $formData['tags']           = trim($_POST['tags'] ?? '');
@@ -183,14 +192,14 @@ class TaskController
 
             if ($error === null) {
                 try {
-                    $userId   = (int) $_SESSION['user_id'];
-                    $oldStatus = $task['status'];
-                    $newStatus = $formData['status'];
+                    $userId      = (int) $_SESSION['user_id'];
+                    $oldColumnId = (int) $task['column_id'];
+                    $newColumnId = (int) $formData['column_id'];
 
                     Task::update($id, [
                         'title'          => $formData['title'],
                         'description_md' => $formData['description_md'],
-                        'status'         => $formData['status'],
+                        'column_id'      => $newColumnId,
                         'owner_id'       => $formData['owner_id'] !== '' ? (int) $formData['owner_id'] : null,
                         'due_date'       => $formData['due_date'] !== '' ? $formData['due_date'] : null,
                         'updated_by'     => $userId,
@@ -199,11 +208,15 @@ class TaskController
                     $tagNames = Task::parseTagString($formData['tags']);
                     Task::setTags($id, $tagNames);
 
-                    // Log status change separately
-                    if ($oldStatus !== $newStatus) {
-                        ActivityService::log('task', $id, 'task_status_changed', $userId, [
-                            'old_status' => $oldStatus,
-                            'new_status' => $newStatus,
+                    // Log column change separately
+                    if ($oldColumnId !== $newColumnId) {
+                        $oldColumn = BoardColumn::findById($oldColumnId);
+                        $newColumn = BoardColumn::findById($newColumnId);
+                        ActivityService::log('task', $id, 'task_column_changed', $userId, [
+                            'old_column_id'   => $oldColumnId,
+                            'new_column_id'   => $newColumnId,
+                            'old_column_name' => $oldColumn['name'] ?? '',
+                            'new_column_name' => $newColumn['name'] ?? '',
                         ]);
                     }
 
@@ -263,7 +276,7 @@ class TaskController
     }
 
     /**
-     * Update task status via POST (used from page-view context).
+     * Update task column via POST (used from page-view context).
      */
     public function updateStatus(): void
     {
@@ -276,8 +289,8 @@ class TaskController
 
         Security::csrfGuard();
 
-        $id     = (int) ($_POST['task_id'] ?? 0);
-        $status = $_POST['status'] ?? '';
+        $id         = (int) ($_POST['task_id'] ?? 0);
+        $columnId   = (int) ($_POST['column_id'] ?? 0);
         $returnSlug = $_POST['return_slug'] ?? '';
 
         $task = Task::findById($id);
@@ -287,33 +300,37 @@ class TaskController
             return;
         }
 
-        if (!in_array($status, Task::STATUSES, true)) {
+        $targetColumn = BoardColumn::findById($columnId);
+        if (!$targetColumn) {
             $this->redirect('tasks');
             return;
         }
 
-        $userId    = (int) $_SESSION['user_id'];
-        $oldStatus = $task['status'];
+        $userId      = (int) $_SESSION['user_id'];
+        $oldColumnId = (int) $task['column_id'];
 
-        if ($oldStatus !== $status) {
+        if ($oldColumnId !== $columnId) {
             try {
                 Task::update($id, [
-                    'status'     => $status,
+                    'column_id'  => $columnId,
                     'updated_by' => $userId,
                 ]);
 
+                $oldColumn = BoardColumn::findById($oldColumnId);
                 $meta = [
-                    'old_status' => $oldStatus,
-                    'new_status' => $status,
+                    'old_column_id'   => $oldColumnId,
+                    'new_column_id'   => $columnId,
+                    'old_column_name' => $oldColumn['name'] ?? '',
+                    'new_column_name' => $targetColumn['name'],
                 ];
                 if ($returnSlug !== '') {
                     $meta['from_page_slug'] = $returnSlug;
                 }
 
-                ActivityService::log('task', $id, 'task_status_changed', $userId, $meta);
-                Logger::info('Task status changed', ['task_id' => $id, 'old' => $oldStatus, 'new' => $status]);
+                ActivityService::log('task', $id, 'task_column_changed', $userId, $meta);
+                Logger::info('Task column changed', ['task_id' => $id, 'old' => $oldColumnId, 'new' => $columnId]);
             } catch (Throwable $e) {
-                Logger::error('Failed to update task status', ['error' => $e->getMessage()]);
+                Logger::error('Failed to update task column', ['error' => $e->getMessage()]);
             }
         }
 
@@ -333,8 +350,13 @@ class TaskController
             return 'Titel darf nicht leer sein.';
         }
 
-        if (!in_array($data['status'], Task::STATUSES, true)) {
-            return 'Ungueltiger Status.';
+        // Validate column_id
+        if (empty($data['column_id'])) {
+            return 'Spalte ist erforderlich.';
+        }
+        $column = BoardColumn::findById((int) $data['column_id']);
+        if (!$column) {
+            return 'Ungueltige Spalte ausgewaehlt.';
         }
 
         if ($data['owner_id'] !== '' && $data['owner_id'] !== null) {
@@ -363,7 +385,7 @@ class TaskController
         $map = [
             'title'          => 'title',
             'description_md' => 'description_md',
-            'status'         => 'status',
+            'column_id'      => 'column_id',
             'owner_id'       => 'owner_id',
             'due_date'       => 'due_date',
         ];

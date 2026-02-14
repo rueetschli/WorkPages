@@ -1,16 +1,18 @@
 <?php
 /**
- * Board view - Kanban board with drag & drop (AP6).
+ * Board view - Kanban board with drag & drop (AP6 / AP13).
  *
  * Variables:
- *   $columns  - array keyed by status, each containing task rows
- *   $users    - array for owner filter dropdown
- *   $allTags  - array of tag rows for filter dropdown
- *   $filters  - currently active filters from GET
+ *   $boardColumns   - array of board_columns rows, ordered by position
+ *   $tasksByColumn  - array keyed by column_id, each containing task rows
+ *   $users          - array for owner filter dropdown
+ *   $allTags        - array of tag rows for filter dropdown
+ *   $filters        - currently active filters from GET
  */
 $esc     = [Security::class, 'esc'];
 $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 $canEdit = Authz::can(Authz::BOARD_MOVE);
+$canManage = Authz::can(Authz::BOARD_COLUMNS_MANAGE);
 
 // Current filter values for preserving state
 $fOwner = $_GET['owner_id'] ?? '';
@@ -23,6 +25,9 @@ $fQ     = $_GET['q'] ?? '';
 <div class="board-header">
     <div class="board-header-row">
         <h1>Board</h1>
+        <?php if ($canManage): ?>
+            <a href="<?= $esc($baseUrl) ?>/?r=board_columns" class="btn btn-secondary">Spalten verwalten</a>
+        <?php endif; ?>
     </div>
 
     <!-- Filter bar -->
@@ -78,36 +83,54 @@ $fQ     = $_GET['q'] ?? '';
     </form>
 </div>
 
-<!-- Mobile Kanban Tabs (AP12) -->
+<!-- Mobile Kanban Tabs (AP12 / AP13) -->
 <div class="kanban-tabs" id="kanban-tabs">
-    <?php foreach (Task::STATUSES as $idx => $status): ?>
+    <?php foreach ($boardColumns as $idx => $col):
+        $colId = (int) $col['id'];
+        $count = count($tasksByColumn[$colId] ?? []);
+    ?>
         <button type="button" class="kanban-tab<?= $idx === 0 ? ' active' : '' ?>"
-                data-status="<?= $esc($status) ?>">
-            <?= $esc(Task::STATUS_LABELS[$status]) ?>
-            <span class="kanban-tab-count"><?= count($columns[$status]) ?></span>
+                data-column-id="<?= $colId ?>">
+            <?= $esc($col['name']) ?>
+            <span class="kanban-tab-count"><?= $count ?></span>
         </button>
     <?php endforeach; ?>
 </div>
 
 <!-- Kanban Board -->
 <div class="kanban-board" id="kanban-board">
-    <?php foreach (Task::STATUSES as $idx => $status): ?>
-        <div class="kanban-column<?= $idx === 0 ? ' active' : '' ?>" data-status="<?= $esc($status) ?>">
-            <div class="kanban-column-header">
-                <span class="kanban-column-title status-badge status-<?= $esc($status) ?>">
-                    <?= $esc(Task::STATUS_LABELS[$status]) ?>
+    <?php foreach ($boardColumns as $idx => $col):
+        $colId      = (int) $col['id'];
+        $colName    = $col['name'];
+        $colSlug    = $col['slug'];
+        $colColor   = $col['color'] ?? '';
+        $wipLimit   = $col['wip_limit'];
+        $tasks      = $tasksByColumn[$colId] ?? [];
+        $count      = count($tasks);
+        $wipExceeded = ($wipLimit !== null && $count > (int) $wipLimit);
+    ?>
+        <div class="kanban-column<?= $idx === 0 ? ' active' : '' ?> <?= $wipExceeded ? 'kanban-column-wip-exceeded' : '' ?>"
+             data-column-id="<?= $colId ?>">
+            <div class="kanban-column-header"
+                 <?php if ($colColor): ?>style="border-top: 3px solid <?= $esc($colColor) ?>;"<?php endif; ?>>
+                <span class="kanban-column-title">
+                    <strong><?= $esc($colName) ?></strong>
                 </span>
-                <span class="kanban-column-count"><?= count($columns[$status]) ?></span>
+                <span class="kanban-column-count <?= $wipExceeded ? 'kanban-wip-warning' : '' ?>">
+                    <?= $count ?><?php if ($wipLimit !== null): ?>/<?= (int) $wipLimit ?><?php endif; ?>
+                </span>
             </div>
-            <div class="kanban-column-body" data-status="<?= $esc($status) ?>">
-                <?php foreach ($columns[$status] as $task):
+            <div class="kanban-column-body" data-column-id="<?= $colId ?>">
+                <?php foreach ($tasks as $task):
                     $taskId   = (int) $task['id'];
                     $tags     = $task['tag_list'] ? explode(',', $task['tag_list']) : [];
-                    $isOverdue = ($task['due_date'] && $task['due_date'] < date('Y-m-d') && $status !== 'done');
+                    $dueDate  = $task['due_date'] ?? null;
+                    $isDoneCol = ($colSlug === 'done');
+                    $isOverdue = ($dueDate && $dueDate < date('Y-m-d') && !$isDoneCol);
                 ?>
                     <div class="kanban-card" draggable="<?= $canEdit ? 'true' : 'false' ?>"
                          data-task-id="<?= $taskId ?>"
-                         data-status="<?= $esc($status) ?>">
+                         data-column-id="<?= $colId ?>">
                         <a href="<?= $esc($baseUrl) ?>/?r=task_view&amp;id=<?= $taskId ?>" class="kanban-card-title">
                             <?= $esc($task['title']) ?>
                         </a>
@@ -117,9 +140,9 @@ $fQ     = $_GET['q'] ?? '';
                                     <?= $esc(mb_substr($task['owner_name'], 0, 2, 'UTF-8')) ?>
                                 </span>
                             <?php endif; ?>
-                            <?php if ($task['due_date']): ?>
+                            <?php if ($dueDate): ?>
                                 <span class="kanban-card-due <?= $isOverdue ? 'text-overdue' : '' ?>">
-                                    <?= $esc($task['due_date']) ?>
+                                    <?= $esc(date('d.m.Y', strtotime($dueDate))) ?>
                                 </span>
                             <?php endif; ?>
                         </div>
@@ -140,11 +163,12 @@ $fQ     = $_GET['q'] ?? '';
                                     <input type="hidden" name="_filter_tag" value="<?= $esc($fTag) ?>">
                                     <input type="hidden" name="_filter_due" value="<?= $esc($fDue) ?>">
                                     <input type="hidden" name="_filter_q" value="<?= $esc($fQ) ?>">
-                                    <select name="new_status" class="status-select status-<?= $esc($status) ?>"
+                                    <select name="new_column_id" class="status-select"
                                             onchange="this.form.submit()">
-                                        <?php foreach (Task::STATUSES as $s): ?>
-                                            <option value="<?= $esc($s) ?>" <?= $s === $status ? 'selected' : '' ?>>
-                                                <?= $esc(Task::STATUS_LABELS[$s]) ?>
+                                        <?php foreach ($boardColumns as $optCol): ?>
+                                            <option value="<?= (int) $optCol['id'] ?>"
+                                                <?= (int) $optCol['id'] === $colId ? 'selected' : '' ?>>
+                                                <?= $esc($optCol['name']) ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
@@ -170,14 +194,12 @@ $fQ     = $_GET['q'] ?? '';
     var dragCard   = null;
     var placeholder = null;
 
-    // Create drag placeholder element
     function createPlaceholder() {
         var el = document.createElement('div');
         el.className = 'kanban-card kanban-placeholder';
         return el;
     }
 
-    // Find the closest kanban-card or column body for drop targeting
     function getDropTarget(el) {
         while (el && el !== board) {
             if (el.classList.contains('kanban-card') && el !== placeholder) return { type: 'card', el: el };
@@ -187,7 +209,6 @@ $fQ     = $_GET['q'] ?? '';
         return null;
     }
 
-    // Drag start
     board.addEventListener('dragstart', function(e) {
         var card = e.target.closest('.kanban-card');
         if (!card || card.getAttribute('draggable') !== 'true') return;
@@ -195,7 +216,6 @@ $fQ     = $_GET['q'] ?? '';
         dragCard = card;
         placeholder = createPlaceholder();
 
-        // Delay hiding the dragged card so the drag image is captured
         setTimeout(function() {
             dragCard.classList.add('kanban-card-dragging');
         }, 0);
@@ -204,7 +224,6 @@ $fQ     = $_GET['q'] ?? '';
         e.dataTransfer.setData('text/plain', card.dataset.taskId);
     });
 
-    // Drag over: show placeholder at target position
     board.addEventListener('dragover', function(e) {
         if (!dragCard) return;
         e.preventDefault();
@@ -214,7 +233,6 @@ $fQ     = $_GET['q'] ?? '';
         if (!target) return;
 
         if (target.type === 'card') {
-            // Insert before or after the target card based on mouse Y position
             var rect = target.el.getBoundingClientRect();
             var midY = rect.top + rect.height / 2;
             if (e.clientY < midY) {
@@ -223,14 +241,12 @@ $fQ     = $_GET['q'] ?? '';
                 target.el.parentNode.insertBefore(placeholder, target.el.nextSibling);
             }
         } else if (target.type === 'column') {
-            // Empty column or bottom of column
             if (!target.el.contains(placeholder)) {
                 target.el.appendChild(placeholder);
             }
         }
     });
 
-    // Drag end: clean up
     board.addEventListener('dragend', function(e) {
         if (dragCard) {
             dragCard.classList.remove('kanban-card-dragging');
@@ -242,7 +258,6 @@ $fQ     = $_GET['q'] ?? '';
         placeholder = null;
     });
 
-    // Drop: move the card and send POST
     board.addEventListener('drop', function(e) {
         e.preventDefault();
         if (!dragCard || !placeholder || !placeholder.parentNode) return;
@@ -250,14 +265,12 @@ $fQ     = $_GET['q'] ?? '';
         var columnBody = placeholder.closest('.kanban-column-body');
         if (!columnBody) return;
 
-        var newStatus = columnBody.dataset.status;
-        var taskId    = dragCard.dataset.taskId;
+        var newColumnId = columnBody.dataset.columnId;
+        var taskId      = dragCard.dataset.taskId;
 
-        // Determine after_id and before_id from placeholder position
         var prev = placeholder.previousElementSibling;
         var next = placeholder.nextElementSibling;
 
-        // Skip placeholder and dragging card when finding siblings
         while (prev && (prev === dragCard || prev.classList.contains('kanban-placeholder'))) {
             prev = prev.previousElementSibling;
         }
@@ -268,28 +281,22 @@ $fQ     = $_GET['q'] ?? '';
         var afterId  = prev ? prev.dataset.taskId : '';
         var beforeId = next ? next.dataset.taskId : '';
 
-        // Move card in DOM immediately for visual feedback
         placeholder.parentNode.insertBefore(dragCard, placeholder);
         placeholder.parentNode.removeChild(placeholder);
         dragCard.classList.remove('kanban-card-dragging');
-        dragCard.dataset.status = newStatus;
+        dragCard.dataset.columnId = newColumnId;
 
-        // Update the status dropdown on the card
-        var select = dragCard.querySelector('select[name="new_status"]');
+        var select = dragCard.querySelector('select[name="new_column_id"]');
         if (select) {
-            select.value = newStatus;
-            // Update status-select color class
-            select.className = 'status-select status-' + newStatus;
+            select.value = newColumnId;
         }
 
-        // Update column counts
         updateColumnCounts();
 
-        // Send move request via AJAX
         var formData = new FormData();
         formData.append('_csrf_token', csrfToken);
         formData.append('task_id', taskId);
-        formData.append('new_status', newStatus);
+        formData.append('new_column_id', newColumnId);
         if (afterId)  formData.append('after_id', afterId);
         if (beforeId) formData.append('before_id', beforeId);
 
@@ -298,7 +305,6 @@ $fQ     = $_GET['q'] ?? '';
         xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         xhr.onload = function() {
             if (xhr.status !== 200) {
-                // Reload on error to get consistent state
                 window.location.reload();
             }
         };
@@ -311,7 +317,6 @@ $fQ     = $_GET['q'] ?? '';
         placeholder = null;
     });
 
-    // Update the task count in column headers and tabs
     function updateColumnCounts() {
         var cols = board.querySelectorAll('.kanban-column');
         for (var i = 0; i < cols.length; i++) {
@@ -319,11 +324,16 @@ $fQ     = $_GET['q'] ?? '';
             var count = cols[i].querySelector('.kanban-column-count');
             if (body && count) {
                 var cards = body.querySelectorAll('.kanban-card:not(.kanban-placeholder):not(.kanban-card-dragging)');
-                count.textContent = cards.length;
+                var num = cards.length;
+                var wipMatch = count.textContent.match(/\/(\d+)/);
+                if (wipMatch) {
+                    count.textContent = num + '/' + wipMatch[1];
+                } else {
+                    count.textContent = num;
+                }
             }
-            // Also update tab counts
-            var status = cols[i].dataset.status;
-            var tabCount = document.querySelector('.kanban-tab[data-status="' + status + '"] .kanban-tab-count');
+            var columnId = cols[i].dataset.columnId;
+            var tabCount = document.querySelector('.kanban-tab[data-column-id="' + columnId + '"] .kanban-tab-count');
             if (tabCount && body) {
                 var tabCards = body.querySelectorAll('.kanban-card:not(.kanban-placeholder):not(.kanban-card-dragging)');
                 tabCount.textContent = tabCards.length;
@@ -334,7 +344,7 @@ $fQ     = $_GET['q'] ?? '';
 </script>
 <?php endif; ?>
 
-<!-- Mobile Tab Switching (AP12) -->
+<!-- Mobile Tab Switching (AP12 / AP13) -->
 <script>
 (function() {
     'use strict';
@@ -343,12 +353,13 @@ $fQ     = $_GET['q'] ?? '';
     var board = document.getElementById('kanban-board');
     if (!tabs || !board) return;
 
-    var savedTab = sessionStorage.getItem('wp-board-tab');
+    var savedTab = null;
+    try { savedTab = sessionStorage.getItem('wp-board-tab'); } catch(e) {}
 
-    function activateTab(status) {
+    function activateTab(columnId) {
         var allTabs = tabs.querySelectorAll('.kanban-tab');
         for (var i = 0; i < allTabs.length; i++) {
-            if (allTabs[i].dataset.status === status) {
+            if (allTabs[i].dataset.columnId === columnId) {
                 allTabs[i].classList.add('active');
             } else {
                 allTabs[i].classList.remove('active');
@@ -356,22 +367,21 @@ $fQ     = $_GET['q'] ?? '';
         }
         var columns = board.querySelectorAll('.kanban-column');
         for (var i = 0; i < columns.length; i++) {
-            if (columns[i].dataset.status === status) {
+            if (columns[i].dataset.columnId === columnId) {
                 columns[i].classList.add('active');
             } else {
                 columns[i].classList.remove('active');
             }
         }
-        sessionStorage.setItem('wp-board-tab', status);
+        try { sessionStorage.setItem('wp-board-tab', columnId); } catch(e) {}
     }
 
     tabs.addEventListener('click', function(e) {
         var tab = e.target.closest('.kanban-tab');
         if (!tab) return;
-        activateTab(tab.dataset.status);
+        activateTab(tab.dataset.columnId);
     });
 
-    // Restore saved tab if on mobile
     if (savedTab && window.innerWidth <= 768) {
         activateTab(savedTab);
     }

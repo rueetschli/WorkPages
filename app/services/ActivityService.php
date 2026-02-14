@@ -115,6 +115,32 @@ class ActivityService
                 $via = !empty($meta['board']) ? ' (Board)' : '';
                 return $user . ' hat den Status von ' . $old . ' nach ' . $new . ' geaendert' . $via;
 
+            // AP13: Column changed (replaces status_changed for new entries)
+            case 'task_column_changed':
+                $oldCol = isset($meta['old_column_name']) ? Security::esc($meta['old_column_name']) : '?';
+                $newCol = isset($meta['new_column_name']) ? Security::esc($meta['new_column_name']) : '?';
+                $via = !empty($meta['board']) ? ' (Board)' : '';
+                return $user . ' hat die Spalte von ' . $oldCol . ' nach ' . $newCol . ' geaendert' . $via;
+
+            // AP13: Board column management
+            case 'column_created':
+                $colName = isset($meta['column_name']) ? ' "' . Security::esc($meta['column_name']) . '"' : '';
+                return $user . ' hat die Board-Spalte' . $colName . ' erstellt';
+
+            case 'column_updated':
+                $oldName = isset($meta['old_name']) ? Security::esc($meta['old_name']) : '';
+                $newName = isset($meta['new_name']) ? Security::esc($meta['new_name']) : '';
+                if ($oldName !== '' && $newName !== '' && $oldName !== $newName) {
+                    return $user . ' hat die Board-Spalte "' . $oldName . '" in "' . $newName . '" umbenannt';
+                }
+                $colName = isset($meta['column_name']) ? ' "' . Security::esc($meta['column_name']) . '"' : '';
+                return $user . ' hat die Board-Spalte' . $colName . ' bearbeitet';
+
+            case 'column_deleted':
+                $colName = isset($meta['column_name']) ? ' "' . Security::esc($meta['column_name']) . '"' : '';
+                $target  = isset($meta['target_column']) ? ' (Tasks verschoben nach "' . Security::esc($meta['target_column']) . '")' : '';
+                return $user . ' hat die Board-Spalte' . $colName . ' geloescht' . $target;
+
             case 'task_owner_changed':
                 $newOwner = isset($meta['new_owner']) ? Security::esc($meta['new_owner']) : 'Nicht zugewiesen';
                 return $user . ' hat den Owner auf ' . $newOwner . ' geaendert';
@@ -214,6 +240,7 @@ class ActivityService
             'title'          => 'Titel',
             'description_md' => 'Beschreibung',
             'status'         => 'Status',
+            'column_id'      => 'Spalte',
             'owner_id'       => 'Owner',
             'due_date'       => 'Faelligkeitsdatum',
             'content_md'     => 'Inhalt',

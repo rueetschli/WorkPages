@@ -39,10 +39,11 @@ $canEdit = Authz::can(Authz::TASK_EDIT);
     <!-- Meta sidebar -->
     <div class="task-meta-card section-block">
         <dl class="task-meta-list">
-            <dt>Status</dt>
+            <dt>Spalte</dt>
             <dd>
-                <span class="status-badge status-<?= Security::esc($task['status']) ?>">
-                    <?= Security::esc(Task::STATUS_LABELS[$task['status']] ?? $task['status']) ?>
+                <span class="status-badge"
+                      <?php if (!empty($task['column_color'])): ?>style="border-left: 3px solid <?= Security::esc($task['column_color']) ?>;"<?php endif; ?>>
+                    <?= Security::esc($task['column_name'] ?? '') ?>
                 </span>
             </dd>
 
@@ -60,7 +61,7 @@ $canEdit = Authz::can(Authz::TASK_EDIT);
                 <?php if ($task['due_date']): ?>
                     <?php
                         $dueTs   = strtotime($task['due_date']);
-                        $isOverdue = $task['status'] !== 'done' && $dueTs < strtotime('today');
+                        $isOverdue = ($task['column_slug'] ?? '') !== 'done' && $dueTs < strtotime('today');
                     ?>
                     <span class="<?= $isOverdue ? 'text-overdue' : '' ?>">
                         <?= Security::esc(date('d.m.Y', $dueTs)) ?>

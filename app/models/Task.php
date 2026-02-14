@@ -1,31 +1,22 @@
 <?php
 /**
  * Task model - database operations for the tasks table.
+ * AP13: Uses column_id (board_columns) instead of fixed status ENUM.
  */
 class Task
 {
-    /** Valid status values. */
-    public const STATUSES = ['backlog', 'ready', 'doing', 'review', 'done'];
-
-    /** Human-readable status labels. */
-    public const STATUS_LABELS = [
-        'backlog' => 'Backlog',
-        'ready'   => 'Ready',
-        'doing'   => 'Doing',
-        'review'  => 'Review',
-        'done'    => 'Done',
-    ];
-
     /**
      * Find a task by ID.
      */
     public static function findById(int $id): ?array
     {
         return DB::fetch(
-            'SELECT t.*, u.name AS owner_name, c.name AS creator_name
+            'SELECT t.*, u.name AS owner_name, c.name AS creator_name,
+                    bc.name AS column_name, bc.slug AS column_slug, bc.color AS column_color
              FROM tasks t
              LEFT JOIN users u ON u.id = t.owner_id
              LEFT JOIN users c ON c.id = t.created_by
+             LEFT JOIN board_columns bc ON bc.id = t.column_id
              WHERE t.id = ?',
             [$id]
         );
@@ -34,7 +25,7 @@ class Task
     /**
      * Fetch all tasks with optional filters.
      *
-     * Supported filters: status, owner_id, due_date, tag
+     * Supported filters: column_id, owner_id, due_date, tag
      */
     public static function all(array $filters = []): array
     {
@@ -42,9 +33,9 @@ class Task
         $params = [];
         $join   = '';
 
-        if (!empty($filters['status'])) {
-            $where[]  = 't.status = ?';
-            $params[] = $filters['status'];
+        if (!empty($filters['column_id'])) {
+            $where[]  = 't.column_id = ?';
+            $params[] = (int) $filters['column_id'];
         }
 
         if (!empty($filters['owner_id'])) {
@@ -68,10 +59,12 @@ class Task
             $whereSql = 'WHERE ' . implode(' AND ', $where);
         }
 
-        $sql = "SELECT t.*, u.name AS owner_name, c.name AS creator_name
+        $sql = "SELECT t.*, u.name AS owner_name, c.name AS creator_name,
+                       bc.name AS column_name, bc.slug AS column_slug
                 FROM tasks t
                 LEFT JOIN users u ON u.id = t.owner_id
                 LEFT JOIN users c ON c.id = t.created_by
+                LEFT JOIN board_columns bc ON bc.id = t.column_id
                 {$join}
                 {$whereSql}
                 ORDER BY t.created_at DESC";
@@ -84,13 +77,18 @@ class Task
      */
     public static function create(array $data): int
     {
+        // Use default column if none specified
+        $columnId = !empty($data['column_id'])
+            ? (int) $data['column_id']
+            : BoardColumn::getDefaultId();
+
         DB::query(
-            'INSERT INTO tasks (title, description_md, status, owner_id, due_date, created_by, created_at)
+            'INSERT INTO tasks (title, description_md, column_id, owner_id, due_date, created_by, created_at)
              VALUES (?, ?, ?, ?, ?, ?, NOW())',
             [
                 $data['title'],
                 $data['description_md'] ?? null,
-                $data['status'] ?? 'backlog',
+                $columnId,
                 !empty($data['owner_id']) ? (int) $data['owner_id'] : null,
                 !empty($data['due_date']) ? $data['due_date'] : null,
                 (int) $data['created_by'],
@@ -112,13 +110,13 @@ class Task
 
         DB::query(
             'UPDATE tasks
-             SET title = ?, description_md = ?, status = ?, owner_id = ?,
+             SET title = ?, description_md = ?, column_id = ?, owner_id = ?,
                  due_date = ?, updated_by = ?, updated_at = NOW()
              WHERE id = ?',
             [
                 $data['title'] ?? $task['title'],
                 array_key_exists('description_md', $data) ? $data['description_md'] : $task['description_md'],
-                $data['status'] ?? $task['status'],
+                isset($data['column_id']) ? (int) $data['column_id'] : (int) $task['column_id'],
                 array_key_exists('owner_id', $data)
                     ? (!empty($data['owner_id']) ? (int) $data['owner_id'] : null)
                     : $task['owner_id'],
@@ -216,7 +214,7 @@ class Task
         return array_unique($tags);
     }
 
-    // ── Board (AP6) ─────────────────────────────────────────────────
+    // -- Board (AP6 / AP13) ---------------------------------------------------
 
     /**
      * Fetch all tasks for the Kanban board with optional filters.
@@ -224,7 +222,7 @@ class Task
      *
      * Supported filters: owner_id, tag, due, q (title search)
      *
-     * @return array Tasks ordered by (status, position ASC, updated_at DESC)
+     * @return array Tasks ordered by (column position, task position ASC, updated_at DESC)
      */
     public static function allForBoard(array $filters = []): array
     {
@@ -271,22 +269,25 @@ class Task
         }
 
         $sql = "SELECT t.*, u.name AS owner_name,
+                       bc.name AS column_name, bc.slug AS column_slug,
+                       bc.position AS column_position,
                        GROUP_CONCAT(DISTINCT tg.name ORDER BY tg.name SEPARATOR ',') AS tag_list
                 FROM tasks t
                 LEFT JOIN users u ON u.id = t.owner_id
+                LEFT JOIN board_columns bc ON bc.id = t.column_id
                 LEFT JOIN task_tags tt ON tt.task_id = t.id
                 LEFT JOIN tags tg ON tg.id = tt.tag_id
                 {$join}
                 {$whereSql}
                 GROUP BY t.id
-                ORDER BY t.status, t.position ASC, t.updated_at DESC";
+                ORDER BY bc.position ASC, t.position ASC, t.updated_at DESC";
 
         return DB::fetchAll($sql, $params);
     }
 
     /**
      * Initialize board positions for tasks that have position = 0.
-     * Sets position in 1000-step increments per status group.
+     * Sets position in 1000-step increments per column group.
      */
     public static function initBoardPositions(): void
     {
@@ -298,10 +299,11 @@ class Task
             return;
         }
 
-        foreach (self::STATUSES as $status) {
+        $columns = BoardColumn::allOrdered();
+        foreach ($columns as $col) {
             $tasks = DB::fetchAll(
-                'SELECT id FROM tasks WHERE status = ? ORDER BY updated_at DESC, id ASC',
-                [$status]
+                'SELECT id FROM tasks WHERE column_id = ? ORDER BY updated_at DESC, id ASC',
+                [(int) $col['id']]
             );
             $pos = 1000;
             foreach ($tasks as $task) {
@@ -315,40 +317,40 @@ class Task
     }
 
     /**
-     * Get the maximum position value for a given status.
+     * Get the maximum position value for a given column.
      */
-    public static function maxPosition(string $status): int
+    public static function maxPosition(int $columnId): int
     {
         $row = DB::fetch(
-            'SELECT MAX(position) AS max_pos FROM tasks WHERE status = ?',
-            [$status]
+            'SELECT MAX(position) AS max_pos FROM tasks WHERE column_id = ?',
+            [$columnId]
         );
         return (int) ($row['max_pos'] ?? 0);
     }
 
     /**
-     * Move a task to a new status and/or position.
+     * Move a task to a new column and/or position.
      *
-     * @param int    $taskId      Task ID
-     * @param string $newStatus   Target status column
-     * @param int|null $afterId   Task ID to place after (null = end of column)
-     * @param int|null $beforeId  Task ID to place before (null = end of column)
-     * @param int    $updatedBy   User ID performing the move
+     * @param int      $taskId       Task ID
+     * @param int      $newColumnId  Target column ID
+     * @param int|null $afterId      Task ID to place after (null = end of column)
+     * @param int|null $beforeId     Task ID to place before (null = end of column)
+     * @param int      $updatedBy    User ID performing the move
      */
-    public static function moveToStatus(int $taskId, string $newStatus, ?int $afterId, ?int $beforeId, int $updatedBy): void
+    public static function moveToColumn(int $taskId, int $newColumnId, ?int $afterId, ?int $beforeId, int $updatedBy): void
     {
-        $newPosition = self::calculatePosition($newStatus, $afterId, $beforeId);
+        $newPosition = self::calculatePosition($newColumnId, $afterId, $beforeId);
 
         DB::query(
-            'UPDATE tasks SET status = ?, position = ?, updated_by = ?, updated_at = NOW() WHERE id = ?',
-            [$newStatus, $newPosition, $updatedBy, $taskId]
+            'UPDATE tasks SET column_id = ?, position = ?, updated_by = ?, updated_at = NOW() WHERE id = ?',
+            [$newColumnId, $newPosition, $updatedBy, $taskId]
         );
     }
 
     /**
-     * Calculate the target position for inserting a task into a status column.
+     * Calculate the target position for inserting a task into a column.
      */
-    private static function calculatePosition(string $status, ?int $afterId, ?int $beforeId): int
+    private static function calculatePosition(int $columnId, ?int $afterId, ?int $beforeId): int
     {
         // Both specified: place between them
         if ($afterId !== null && $beforeId !== null) {
@@ -356,7 +358,7 @@ class Task
             $beforePos = self::getPosition($beforeId);
             if ($afterPos !== null && $beforePos !== null) {
                 if ($beforePos - $afterPos < 2) {
-                    self::renumberColumn($status);
+                    self::renumberColumn($columnId);
                     $afterPos  = self::getPosition($afterId);
                     $beforePos = self::getPosition($beforeId);
                 }
@@ -368,18 +370,17 @@ class Task
         if ($afterId !== null) {
             $afterPos = self::getPosition($afterId);
             if ($afterPos !== null) {
-                // Check if there's a next task
                 $next = DB::fetch(
-                    'SELECT position FROM tasks WHERE status = ? AND position > ? ORDER BY position ASC LIMIT 1',
-                    [$status, $afterPos]
+                    'SELECT position FROM tasks WHERE column_id = ? AND position > ? ORDER BY position ASC LIMIT 1',
+                    [$columnId, $afterPos]
                 );
                 if ($next !== null) {
                     if ((int) $next['position'] - $afterPos < 2) {
-                        self::renumberColumn($status);
+                        self::renumberColumn($columnId);
                         $afterPos = self::getPosition($afterId);
                         $next = DB::fetch(
-                            'SELECT position FROM tasks WHERE status = ? AND position > ? ORDER BY position ASC LIMIT 1',
-                            [$status, $afterPos]
+                            'SELECT position FROM tasks WHERE column_id = ? AND position > ? ORDER BY position ASC LIMIT 1',
+                            [$columnId, $afterPos]
                         );
                     }
                     return (int) floor(($afterPos + (int) $next['position']) / 2);
@@ -393,16 +394,16 @@ class Task
             $beforePos = self::getPosition($beforeId);
             if ($beforePos !== null) {
                 $prev = DB::fetch(
-                    'SELECT position FROM tasks WHERE status = ? AND position < ? ORDER BY position DESC LIMIT 1',
-                    [$status, $beforePos]
+                    'SELECT position FROM tasks WHERE column_id = ? AND position < ? ORDER BY position DESC LIMIT 1',
+                    [$columnId, $beforePos]
                 );
                 if ($prev !== null) {
                     if ($beforePos - (int) $prev['position'] < 2) {
-                        self::renumberColumn($status);
+                        self::renumberColumn($columnId);
                         $beforePos = self::getPosition($beforeId);
                         $prev = DB::fetch(
-                            'SELECT position FROM tasks WHERE status = ? AND position < ? ORDER BY position DESC LIMIT 1',
-                            [$status, $beforePos]
+                            'SELECT position FROM tasks WHERE column_id = ? AND position < ? ORDER BY position DESC LIMIT 1',
+                            [$columnId, $beforePos]
                         );
                     }
                     return (int) floor(((int) $prev['position'] + $beforePos) / 2);
@@ -412,7 +413,7 @@ class Task
         }
 
         // Default: append at end
-        return self::maxPosition($status) + 1000;
+        return self::maxPosition($columnId) + 1000;
     }
 
     /**
@@ -425,13 +426,13 @@ class Task
     }
 
     /**
-     * Renumber all tasks in a status column with 1000-step increments.
+     * Renumber all tasks in a column with 1000-step increments.
      */
-    public static function renumberColumn(string $status): void
+    public static function renumberColumn(int $columnId): void
     {
         $tasks = DB::fetchAll(
-            'SELECT id FROM tasks WHERE status = ? ORDER BY position ASC, id ASC',
-            [$status]
+            'SELECT id FROM tasks WHERE column_id = ? ORDER BY position ASC, id ASC',
+            [$columnId]
         );
         $pos = 1000;
         foreach ($tasks as $task) {
@@ -441,15 +442,15 @@ class Task
     }
 
     /**
-     * Reorder tasks within a status column based on an ordered list of task IDs.
+     * Reorder tasks within a column based on an ordered list of task IDs.
      */
-    public static function reorderColumn(string $status, array $taskIds): void
+    public static function reorderColumn(int $columnId, array $taskIds): void
     {
         $pos = 1000;
         foreach ($taskIds as $taskId) {
             DB::query(
-                'UPDATE tasks SET position = ? WHERE id = ? AND status = ?',
-                [$pos, (int) $taskId, $status]
+                'UPDATE tasks SET position = ? WHERE id = ? AND column_id = ?',
+                [$pos, (int) $taskId, $columnId]
             );
             $pos += 1000;
         }

@@ -151,14 +151,16 @@ class SearchService
     {
         $likeTerm = '%' . $q . '%';
 
-        $sql = "SELECT t.id, t.title, t.description_md, t.status, t.due_date,
+        $sql = "SELECT t.id, t.title, t.description_md, t.due_date,
                        t.owner_id, t.created_at, t.updated_at,
+                       bc.name AS column_name, bc.slug AS column_slug,
                        u.name AS owner_name,
                        GROUP_CONCAT(DISTINCT tg.name ORDER BY tg.name SEPARATOR ',') AS tag_list,
                        MATCH(t.title, t.description_md) AGAINST(? IN BOOLEAN MODE) AS relevance,
                        CASE WHEN t.title LIKE ? THEN 10 ELSE 0 END AS title_boost
                 FROM tasks t
                 LEFT JOIN users u ON u.id = t.owner_id
+                LEFT JOIN board_columns bc ON bc.id = t.column_id
                 LEFT JOIN task_tags tt ON tt.task_id = t.id
                 LEFT JOIN tags tg ON tg.id = tt.tag_id
                 WHERE MATCH(t.title, t.description_md) AGAINST(? IN BOOLEAN MODE)
@@ -173,13 +175,15 @@ class SearchService
     {
         $likeTerm = '%' . $q . '%';
 
-        $sql = "SELECT t.id, t.title, t.description_md, t.status, t.due_date,
+        $sql = "SELECT t.id, t.title, t.description_md, t.due_date,
                        t.owner_id, t.created_at, t.updated_at,
+                       bc.name AS column_name, bc.slug AS column_slug,
                        u.name AS owner_name,
                        GROUP_CONCAT(DISTINCT tg.name ORDER BY tg.name SEPARATOR ',') AS tag_list,
                        CASE WHEN t.title LIKE ? THEN 10 ELSE 0 END AS title_boost
                 FROM tasks t
                 LEFT JOIN users u ON u.id = t.owner_id
+                LEFT JOIN board_columns bc ON bc.id = t.column_id
                 LEFT JOIN task_tags tt ON tt.task_id = t.id
                 LEFT JOIN tags tg ON tg.id = tt.tag_id
                 WHERE (t.title LIKE ? OR t.description_md LIKE ?)

@@ -7,7 +7,7 @@ class PageTask
     /**
      * Get all tasks linked to a page, with optional filters.
      *
-     * Supported filters: status, owner_id, due_date, tag
+     * Supported filters: column_id, owner_id, due_date, tag
      *
      * @return array Tasks ordered by sort_order ASC
      */
@@ -17,9 +17,9 @@ class PageTask
         $params = [$pageId];
         $join   = '';
 
-        if (!empty($filters['status'])) {
-            $where[]  = 't.status = ?';
-            $params[] = $filters['status'];
+        if (!empty($filters['column_id'])) {
+            $where[]  = 't.column_id = ?';
+            $params[] = (int) $filters['column_id'];
         }
 
         if (!empty($filters['owner_id'])) {
@@ -40,11 +40,13 @@ class PageTask
 
         $whereSql = 'WHERE ' . implode(' AND ', $where);
 
-        $sql = "SELECT t.*, u.name AS owner_name, c.name AS creator_name, pt.sort_order
+        $sql = "SELECT t.*, u.name AS owner_name, c.name AS creator_name, pt.sort_order,
+                       bc.name AS column_name, bc.slug AS column_slug, bc.color AS column_color
                 FROM page_tasks pt
                 INNER JOIN tasks t ON t.id = pt.task_id
                 LEFT JOIN users u ON u.id = t.owner_id
                 LEFT JOIN users c ON c.id = t.created_by
+                LEFT JOIN board_columns bc ON bc.id = t.column_id
                 {$join}
                 {$whereSql}
                 ORDER BY pt.sort_order ASC, t.created_at DESC";
@@ -169,9 +171,10 @@ class PageTask
         $query = '%' . $query . '%';
 
         return DB::fetchAll(
-            'SELECT t.id, t.title, t.status, u.name AS owner_name
+            'SELECT t.id, t.title, bc.name AS column_name, bc.slug AS column_slug, u.name AS owner_name
              FROM tasks t
              LEFT JOIN users u ON u.id = t.owner_id
+             LEFT JOIN board_columns bc ON bc.id = t.column_id
              WHERE t.title LIKE ?
                AND t.id NOT IN (SELECT task_id FROM page_tasks WHERE page_id = ?)
              ORDER BY t.updated_at DESC, t.created_at DESC

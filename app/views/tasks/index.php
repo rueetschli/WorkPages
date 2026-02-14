@@ -1,14 +1,14 @@
 <?php
 /**
- * Tasks list view.
+ * Tasks list view (AP13: uses board_columns instead of fixed status).
  * Variables: $tasks (array), $users (array), $allTags (array),
- *            $tagsByTask (array), $filters (array)
+ *            $tagsByTask (array), $filters (array), $boardColumns (array)
  */
 $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 $canEdit = Authz::can(Authz::TASK_CREATE);
-$currentStatus  = $filters['status'] ?? '';
-$currentOwnerId = $filters['owner_id'] ?? '';
-$currentTag     = $filters['tag'] ?? '';
+$currentColumnId = $filters['column_id'] ?? '';
+$currentOwnerId  = $filters['owner_id'] ?? '';
+$currentTag      = $filters['tag'] ?? '';
 ?>
 
 <div class="page-header">
@@ -32,13 +32,13 @@ $currentTag     = $filters['tag'] ?? '';
 
         <div class="filter-row">
             <div class="filter-group">
-                <label for="filter-status">Status</label>
-                <select id="filter-status" name="status" class="form-input form-input-sm">
+                <label for="filter-column">Spalte</label>
+                <select id="filter-column" name="column_id" class="form-input form-input-sm">
                     <option value="">Alle</option>
-                    <?php foreach (Task::STATUS_LABELS as $val => $label): ?>
-                        <option value="<?= Security::esc($val) ?>"
-                            <?= $currentStatus === $val ? 'selected' : '' ?>>
-                            <?= Security::esc($label) ?>
+                    <?php foreach ($boardColumns as $col): ?>
+                        <option value="<?= (int) $col['id'] ?>"
+                            <?= (string) $currentColumnId === (string) $col['id'] ? 'selected' : '' ?>>
+                            <?= Security::esc($col['name']) ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
@@ -72,7 +72,7 @@ $currentTag     = $filters['tag'] ?? '';
 
             <div class="filter-group filter-actions">
                 <button type="submit" class="btn btn-primary btn-sm-pad">Filtern</button>
-                <?php if ($currentStatus !== '' || $currentOwnerId !== '' || $currentTag !== ''): ?>
+                <?php if ($currentColumnId !== '' || $currentOwnerId !== '' || $currentTag !== ''): ?>
                     <a href="<?= Security::esc($baseUrl) ?>/?r=tasks" class="btn btn-secondary btn-sm-pad">Zuruecksetzen</a>
                 <?php endif; ?>
             </div>
@@ -95,7 +95,7 @@ $currentTag     = $filters['tag'] ?? '';
             <thead>
                 <tr>
                     <th>Titel</th>
-                    <th>Status</th>
+                    <th>Spalte</th>
                     <th>Owner</th>
                     <th>Faellig</th>
                     <th>Tags</th>
@@ -112,9 +112,9 @@ $currentTag     = $filters['tag'] ?? '';
                             <?= Security::esc($t['title']) ?>
                         </a>
                     </td>
-                    <td data-label="Status">
-                        <span class="status-badge status-<?= Security::esc($t['status']) ?>">
-                            <?= Security::esc(Task::STATUS_LABELS[$t['status']] ?? $t['status']) ?>
+                    <td data-label="Spalte">
+                        <span class="status-badge">
+                            <?= Security::esc($t['column_name'] ?? '') ?>
                         </span>
                     </td>
                     <td data-label="Owner">
@@ -128,7 +128,7 @@ $currentTag     = $filters['tag'] ?? '';
                         <?php if ($t['due_date']): ?>
                             <?php
                                 $dueTs   = strtotime($t['due_date']);
-                                $isOverdue = $t['status'] !== 'done' && $dueTs < strtotime('today');
+                                $isOverdue = ($t['column_slug'] ?? '') !== 'done' && $dueTs < strtotime('today');
                             ?>
                             <span class="<?= $isOverdue ? 'text-overdue' : '' ?>">
                                 <?= Security::esc(date('d.m.Y', $dueTs)) ?>

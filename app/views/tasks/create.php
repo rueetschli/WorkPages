@@ -28,12 +28,12 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 
         <div class="form-row">
             <div class="form-group form-group-half">
-                <label for="status">Status</label>
-                <select id="status" name="status" class="form-input">
-                    <?php foreach (Task::STATUS_LABELS as $val => $label): ?>
-                        <option value="<?= Security::esc($val) ?>"
-                            <?= $formData['status'] === $val ? 'selected' : '' ?>>
-                            <?= Security::esc($label) ?>
+                <label for="column_id">Spalte</label>
+                <select id="column_id" name="column_id" class="form-input">
+                    <?php foreach ($boardColumns as $col): ?>
+                        <option value="<?= (int) $col['id'] ?>"
+                            <?= (string) $formData['column_id'] === (string) $col['id'] ? 'selected' : '' ?>>
+                            <?= Security::esc($col['name']) ?>
                         </option>
                     <?php endforeach; ?>
                 </select>

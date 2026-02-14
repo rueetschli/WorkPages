@@ -109,8 +109,8 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
                     <span class="search-type-badge search-type-task">Task</span>
                     <a href="<?= Security::esc($baseUrl) ?>/?r=task_view&amp;id=<?= (int) $task['id'] ?>"
                        class="search-result-title"><?= Security::esc($task['title']) ?></a>
-                    <span class="status-badge status-<?= Security::esc($task['status']) ?>">
-                        <?= Security::esc(Task::STATUS_LABELS[$task['status']] ?? $task['status']) ?>
+                    <span class="status-badge">
+                        <?= Security::esc($task['column_name'] ?? '') ?>
                     </span>
                 </div>
                 <div class="search-result-snippet">
@@ -122,7 +122,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
                     <?php endif; ?>
                     <?php if (!empty($task['due_date'])): ?>
                         <?php
-                            $isOverdue = $task['due_date'] < date('Y-m-d') && $task['status'] !== 'done';
+                            $isOverdue = $task['due_date'] < date('Y-m-d') && ($task['column_slug'] ?? '') !== 'done';
                         ?>
                         <span class="search-meta-item <?= $isOverdue ? 'text-overdue' : '' ?>">
                             F&auml;llig: <?= Security::esc(date('d.m.Y', strtotime($task['due_date']))) ?>
