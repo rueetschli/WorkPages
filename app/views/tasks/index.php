@@ -90,7 +90,7 @@ $currentTag     = $filters['tag'] ?? '';
         <?php endif; ?>
     </div>
 <?php else: ?>
-    <div class="pages-table-wrap">
+    <div class="pages-table-wrap responsive-cards">
         <table class="pages-table tasks-table">
             <thead>
                 <tr>
@@ -107,24 +107,24 @@ $currentTag     = $filters['tag'] ?? '';
             <tbody>
                 <?php foreach ($tasks as $t): ?>
                 <tr>
-                    <td>
+                    <td class="card-cell-title">
                         <a href="<?= Security::esc($baseUrl) ?>/?r=task_view&amp;id=<?= (int) $t['id'] ?>" class="page-link">
                             <?= Security::esc($t['title']) ?>
                         </a>
                     </td>
-                    <td>
+                    <td data-label="Status">
                         <span class="status-badge status-<?= Security::esc($t['status']) ?>">
                             <?= Security::esc(Task::STATUS_LABELS[$t['status']] ?? $t['status']) ?>
                         </span>
                     </td>
-                    <td>
+                    <td data-label="Owner">
                         <?php if ($t['owner_name']): ?>
                             <?= Security::esc($t['owner_name']) ?>
                         <?php else: ?>
                             <span class="text-muted">&mdash;</span>
                         <?php endif; ?>
                     </td>
-                    <td>
+                    <td data-label="Faellig">
                         <?php if ($t['due_date']): ?>
                             <?php
                                 $dueTs   = strtotime($t['due_date']);
@@ -137,7 +137,7 @@ $currentTag     = $filters['tag'] ?? '';
                             <span class="text-muted">&mdash;</span>
                         <?php endif; ?>
                     </td>
-                    <td>
+                    <td data-label="Tags">
                         <?php
                             $taskTags = $tagsByTask[(int) $t['id']] ?? [];
                             if (!empty($taskTags)):
@@ -152,7 +152,7 @@ $currentTag     = $filters['tag'] ?? '';
                         <?php endif; ?>
                     </td>
                     <?php if ($canEdit): ?>
-                    <td>
+                    <td class="card-cell-actions">
                         <a href="<?= Security::esc($baseUrl) ?>/?r=task_edit&amp;id=<?= (int) $t['id'] ?>" class="btn-sm">Bearbeiten</a>
                     </td>
                     <?php endif; ?>

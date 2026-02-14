@@ -133,6 +133,9 @@
     --transition-fast:   100ms ease;
     --transition-normal: 150ms ease;
     --transition-slow:   250ms ease;
+
+    /* --- Touch / Mobile --- */
+    --touch-target-min: 44px;
 }
 
 
@@ -458,6 +461,29 @@ img {
 .mobile-menu-btn svg {
     width: 20px;
     height: 20px;
+}
+
+/* Mobile search button */
+.mobile-search-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+.mobile-search-btn:hover {
+    background: var(--color-surface-hover);
+}
+.mobile-search-btn svg {
+    width: 18px;
+    height: 18px;
 }
 
 /* --- 4.2 Sidebar --- */
@@ -1761,6 +1787,54 @@ select.form-input {
     max-width: none;
 }
 
+/* Mobile Kanban Tabs (AP12) */
+.kanban-tabs {
+    display: none;
+}
+
+.kanban-tab {
+    flex: 0 0 auto;
+    padding: var(--sp-2) var(--sp-3);
+    border: none;
+    background: none;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    font-family: var(--font-sans);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    white-space: nowrap;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
+    min-height: var(--touch-target-min);
+}
+.kanban-tab:hover {
+    color: var(--color-text);
+}
+.kanban-tab.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+}
+
+.kanban-tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: var(--color-border);
+    color: var(--color-text-secondary);
+    border-radius: var(--radius-full);
+    font-size: 10px;
+    font-weight: 600;
+    margin-left: var(--sp-1);
+}
+.kanban-tab.active .kanban-tab-count {
+    background: var(--color-primary-subtle);
+    color: var(--color-primary);
+}
+
 
 /* --- 6.8 Search (AP7) --- */
 .search-page-form {
@@ -2065,14 +2139,80 @@ select.form-input {
 
 
 /* ============================================================================
-   8. RESPONSIVE
+   8. RESPONSIVE - AP12 Mobile-First Optimization
    ============================================================================ */
 
-@media (max-width: 768px) {
-    .mobile-menu-btn {
-        display: flex;
+/* --- Body scroll lock when sidebar is open on mobile --- */
+body.sidebar-open {
+    overflow: hidden;
+}
+
+/* --- 8.1 Tablet (max-width: 1024px) --- */
+@media (max-width: 1024px) {
+    .main-content {
+        padding: var(--sp-6) var(--sp-6);
     }
 
+    .kanban-column {
+        flex: 0 0 240px;
+        min-width: 240px;
+        max-width: 240px;
+    }
+
+    .task-detail-grid {
+        grid-template-columns: 220px 1fr;
+    }
+}
+
+/* --- 8.2 Mobile (max-width: 768px) --- */
+@media (max-width: 768px) {
+
+    /* -- Header -- */
+    .mobile-menu-btn {
+        display: flex;
+        width: var(--touch-target-min);
+        height: var(--touch-target-min);
+    }
+
+    .mobile-search-btn {
+        display: inline-flex;
+        width: var(--touch-target-min);
+        height: var(--touch-target-min);
+    }
+
+    .header-center {
+        display: none;
+    }
+
+    .app-header.search-active .header-center {
+        display: block;
+        position: absolute;
+        top: var(--header-height);
+        left: 0;
+        right: 0;
+        padding: var(--sp-2) var(--sp-4);
+        background: var(--color-header);
+        border-bottom: 1px solid var(--color-border);
+        max-width: none;
+        z-index: 99;
+        box-shadow: var(--shadow-md);
+    }
+
+    .user-role-label {
+        display: none;
+    }
+
+    .logout-link {
+        font-size: var(--text-xs);
+        padding: var(--sp-1);
+    }
+
+    .user-badge {
+        font-size: 10px;
+        padding: 2px var(--sp-2);
+    }
+
+    /* -- Sidebar -- */
     .sidebar {
         transform: translateX(-100%);
     }
@@ -2081,19 +2221,27 @@ select.form-input {
         box-shadow: var(--shadow-xl);
     }
 
+    .nav-link {
+        padding: var(--sp-3) var(--sp-3);
+        min-height: var(--touch-target-min);
+        font-size: var(--text-base);
+    }
+
+    .page-tree-link {
+        padding: var(--sp-2) var(--sp-2);
+        min-height: 36px;
+        font-size: var(--text-sm);
+        display: flex;
+        align-items: center;
+    }
+
+    /* -- Main Content -- */
     .main-content {
         margin-left: 0;
         padding: var(--sp-4) var(--sp-4);
     }
 
-    .header-center {
-        display: none;
-    }
-
-    .card-grid {
-        grid-template-columns: 1fr;
-    }
-
+    /* -- Page Headers -- */
     .page-header h1 {
         font-size: var(--text-xl);
     }
@@ -2103,28 +2251,55 @@ select.form-input {
         gap: var(--sp-3);
     }
 
+    .page-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--sp-2);
+        width: 100%;
+    }
+    .page-actions .btn {
+        flex: 1;
+        min-width: 0;
+        min-height: var(--touch-target-min);
+    }
+
+    /* -- Dashboard Cards -- */
+    .card-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--sp-3);
+    }
+    .card {
+        padding: var(--sp-4);
+    }
+    .card-title {
+        font-size: var(--text-base);
+    }
+    .card-desc {
+        font-size: var(--text-xs);
+    }
+
+    /* -- Task Detail -- */
     .task-detail-grid {
         grid-template-columns: 1fr;
     }
+    .task-meta-card {
+        order: -1;
+    }
 
+    /* -- Filters -- */
     .filter-row {
         flex-direction: column;
     }
     .filter-group {
         min-width: 100%;
     }
-
-    .form-row {
-        flex-direction: column;
+    .filter-actions {
+        flex-direction: row;
+        width: 100%;
     }
-
-    .kanban-board {
-        padding-bottom: var(--sp-5);
-    }
-    .kanban-column {
-        flex: 0 0 260px;
-        min-width: 260px;
-        max-width: 260px;
+    .filter-actions .btn {
+        flex: 1;
+        min-height: var(--touch-target-min);
     }
 
     .board-filter-form .filter-row {
@@ -2134,6 +2309,220 @@ select.form-input {
         min-width: 100%;
     }
 
+    /* -- Forms -- */
+    .form-row {
+        flex-direction: column;
+    }
+
+    .form-input {
+        padding: var(--sp-3);
+        font-size: 16px;
+        min-height: var(--touch-target-min);
+    }
+    .form-input-sm {
+        padding: var(--sp-2) var(--sp-3);
+        font-size: 16px;
+        min-height: var(--touch-target-min);
+    }
+    select.form-input {
+        min-height: var(--touch-target-min);
+    }
+    .form-textarea {
+        min-height: 150px;
+        font-size: 16px;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+    .form-actions .btn {
+        width: 100%;
+        min-height: var(--touch-target-min);
+        justify-content: center;
+    }
+
+    .checkbox-label {
+        min-height: var(--touch-target-min);
+        padding: var(--sp-1) 0;
+    }
+    .checkbox-label input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* -- Buttons Global Touch Targets -- */
+    .btn {
+        min-height: var(--touch-target-min);
+        padding: var(--sp-3) var(--sp-4);
+    }
+    .btn-sm {
+        min-height: 36px;
+        padding: var(--sp-2) var(--sp-3);
+        font-size: var(--text-sm);
+    }
+    .btn-sm-pad {
+        min-height: var(--touch-target-min);
+        padding: var(--sp-3) var(--sp-4);
+    }
+
+    /* -- Kanban Board: Tab-Based Mobile -- */
+    .kanban-tabs {
+        display: flex;
+        overflow-x: auto;
+        gap: 0;
+        border-bottom: 2px solid var(--color-border);
+        margin-bottom: var(--sp-3);
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .kanban-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .kanban-board {
+        display: block;
+        overflow-x: visible;
+        min-height: auto;
+        padding-bottom: var(--sp-4);
+    }
+
+    .kanban-column {
+        display: none;
+        flex: none;
+        width: 100%;
+        min-width: 100%;
+        max-width: 100%;
+        max-height: none;
+    }
+    .kanban-column.active {
+        display: flex;
+    }
+
+    .kanban-card {
+        padding: var(--sp-4);
+        margin-bottom: var(--sp-3);
+        cursor: default;
+    }
+    .kanban-card-title {
+        font-size: var(--text-base);
+        margin-bottom: var(--sp-2);
+        padding: var(--sp-1) 0;
+    }
+    .kanban-card-meta {
+        margin-bottom: var(--sp-2);
+        font-size: var(--text-sm);
+    }
+    .kanban-card-owner {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+    }
+    .kanban-card-due {
+        font-size: var(--text-sm);
+    }
+    .kanban-card-tags {
+        margin-bottom: var(--sp-2);
+    }
+    .kanban-card-tags .tag-chip {
+        font-size: var(--text-xs);
+        padding: 2px 8px;
+    }
+    .kanban-card-actions {
+        padding-top: var(--sp-3);
+    }
+    .kanban-card-actions .status-select {
+        min-height: 36px;
+        font-size: var(--text-sm);
+        padding: var(--sp-1) var(--sp-2);
+    }
+
+    /* -- Table Card Transformation (AP12) -- */
+    .responsive-cards {
+        border: none;
+        border-radius: 0;
+        background: none;
+        overflow: visible;
+    }
+    .responsive-cards .pages-table thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+    .responsive-cards .pages-table,
+    .responsive-cards .pages-table tbody {
+        display: block;
+    }
+    .responsive-cards .pages-table tr {
+        display: block;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: var(--sp-3) var(--sp-4);
+        margin-bottom: var(--sp-3);
+    }
+    .responsive-cards .pages-table tr:hover {
+        background: var(--color-surface);
+    }
+    .responsive-cards .pages-table td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--sp-1) 0;
+        border-bottom: none;
+    }
+    .responsive-cards .pages-table td::before {
+        content: attr(data-label);
+        display: inline-block;
+        min-width: 90px;
+        flex-shrink: 0;
+        font-weight: 600;
+        font-size: var(--text-xs);
+        color: var(--color-text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-right: var(--sp-3);
+    }
+    .responsive-cards .pages-table td:not([data-label])::before,
+    .responsive-cards .pages-table td[data-label=""]::before {
+        display: none;
+    }
+    /* Title cell: full width, prominent, no label */
+    .responsive-cards .pages-table td.card-cell-title {
+        display: block;
+        padding-bottom: var(--sp-2);
+        margin-bottom: var(--sp-2);
+        border-bottom: 1px solid var(--color-border);
+    }
+    .responsive-cards .pages-table td.card-cell-title::before {
+        display: none;
+    }
+    .responsive-cards .pages-table td.card-cell-title .page-link {
+        font-size: var(--text-base);
+        font-weight: 600;
+    }
+    /* Actions cell: right-aligned */
+    .responsive-cards .pages-table td.card-cell-actions {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: var(--sp-2);
+        margin-top: var(--sp-1);
+        border-top: 1px solid var(--color-border);
+    }
+    .responsive-cards .pages-table td.card-cell-actions::before {
+        display: none;
+    }
+    /* Hide reorder cells on mobile */
+    .responsive-cards .pages-table td.reorder-cell {
+        display: none;
+    }
+
+    /* -- Search Results -- */
     .search-result-header {
         flex-direction: column;
         align-items: flex-start;
@@ -2142,16 +2531,51 @@ select.form-input {
         flex-direction: column;
         align-items: flex-start;
     }
+    .search-result-card {
+        padding: var(--sp-3) var(--sp-4);
+    }
 
+    /* -- Page Tasks -- */
     .page-tasks-header {
         flex-direction: column;
         align-items: flex-start;
         gap: var(--sp-2);
     }
-    .page-tasks-table {
-        font-size: var(--text-xs);
+    .page-tasks-header .btn {
+        width: 100%;
     }
 
+    /* -- Page Content -- */
+    .page-content {
+        padding: var(--sp-4);
+        border-radius: var(--radius-md);
+    }
+    .md-content pre {
+        padding: var(--sp-3);
+        font-size: var(--text-xs);
+    }
+    .md-content table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* -- Comments -- */
+    .comment-item {
+        padding: var(--sp-3);
+    }
+    .comment-textarea {
+        min-height: 80px;
+    }
+    .comment-header {
+        flex-wrap: wrap;
+    }
+    .btn-comment-delete {
+        width: 36px;
+        height: 36px;
+    }
+
+    /* -- Activity -- */
     .activity-item {
         flex-direction: column;
         gap: var(--sp-1);
@@ -2160,18 +2584,64 @@ select.form-input {
         min-width: 0;
     }
 
-    .user-role-label {
-        display: none;
+    /* -- Share Section -- */
+    .share-link-box .form-input {
+        font-size: var(--text-xs);
+    }
+    .share-create-form .filter-row {
+        flex-direction: column;
+    }
+
+    /* -- Status Select Mobile -- */
+    .status-select {
+        min-height: 32px;
+        font-size: var(--text-sm);
+        padding: var(--sp-1) var(--sp-2);
+    }
+
+    /* -- Breadcrumb -- */
+    .breadcrumb-list {
+        font-size: var(--text-xs);
+    }
+
+    /* -- Section Block -- */
+    .section-block {
+        padding: var(--sp-4);
     }
 }
 
+/* --- 8.3 Small Mobile (max-width: 480px) --- */
 @media (max-width: 480px) {
-    .page-actions {
-        flex-wrap: wrap;
+    .main-content {
+        padding: var(--sp-3) var(--sp-3);
+    }
+
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .page-header h1 {
+        font-size: var(--text-lg);
     }
 
     .login-card {
         padding: var(--sp-6) var(--sp-5);
+    }
+
+    .kanban-card {
+        padding: var(--sp-3);
+    }
+
+    .responsive-cards .pages-table tr {
+        padding: var(--sp-3);
+    }
+
+    .search-result-card {
+        padding: var(--sp-3);
+    }
+
+    .app-logo {
+        font-size: var(--text-base);
     }
 }
 
@@ -2198,14 +2668,18 @@ select.form-input {
 
 /* Sidebar overlay for mobile */
 .sidebar-overlay {
-    display: none;
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.4);
     z-index: 85;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-slow), visibility var(--transition-slow);
+    -webkit-tap-highlight-color: transparent;
 }
 .sidebar-overlay.active {
-    display: block;
+    opacity: 1;
+    visibility: visible;
 }
 
 /* Smooth scrollbar for sidebar */

@@ -31,7 +31,7 @@ $canEdit = Authz::can(Authz::PAGE_CREATE);
         <?php endif; ?>
     </div>
 <?php else: ?>
-    <div class="pages-table-wrap">
+    <div class="pages-table-wrap responsive-cards">
         <table class="pages-table">
             <thead>
                 <tr>
@@ -47,22 +47,22 @@ $canEdit = Authz::can(Authz::PAGE_CREATE);
             <tbody>
                 <?php foreach ($pages as $p): ?>
                 <tr>
-                    <td>
+                    <td class="card-cell-title">
                         <a href="<?= Security::esc($baseUrl) ?>/?r=page_view&slug=<?= Security::esc($p['slug']) ?>" class="page-link">
                             <?= Security::esc($p['title']) ?>
                         </a>
                     </td>
-                    <td>
+                    <td data-label="Uebergeordnet">
                         <?php if ($p['parent_title']): ?>
                             <?= Security::esc($p['parent_title']) ?>
                         <?php else: ?>
                             <span class="text-muted">&mdash;</span>
                         <?php endif; ?>
                     </td>
-                    <td><?= Security::esc($p['creator_name'] ?? '') ?></td>
-                    <td><?= Security::esc(date('d.m.Y', strtotime($p['created_at']))) ?></td>
+                    <td data-label="Erstellt von"><?= Security::esc($p['creator_name'] ?? '') ?></td>
+                    <td data-label="Erstellt am"><?= Security::esc(date('d.m.Y', strtotime($p['created_at']))) ?></td>
                     <?php if ($canEdit): ?>
-                    <td>
+                    <td class="card-cell-actions">
                         <a href="<?= Security::esc($baseUrl) ?>/?r=page_edit&slug=<?= Security::esc($p['slug']) ?>" class="btn-sm">Bearbeiten</a>
                     </td>
                     <?php endif; ?>
