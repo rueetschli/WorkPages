@@ -235,6 +235,16 @@ class Markdown
         $text = preg_replace('/\*(.+?)\*/', '<em>$1</em>', $text);
         $text = preg_replace('/(?<!\w)_(.+?)_(?!\w)/', '<em>$1</em>', $text);
 
+        // AP14: @mentions - @[Name](user:ID) rendered as styled span
+        $text = preg_replace_callback(
+            '/@\[([^\]]+)\]\(user:(\d+)\)/',
+            function ($matches) {
+                $name = $matches[1]; // Already HTML-escaped
+                return '<span class="mention" data-user-id="' . (int) $matches[2] . '">@' . $name . '</span>';
+            },
+            $text
+        );
+
         // Links [text](url) - URL was already escaped, decode for href
         $text = preg_replace_callback(
             '/\[([^\]]+)\]\(([^)]+)\)/',
@@ -247,6 +257,18 @@ class Markdown
                     return '<a href="' . $safeUrl . '" rel="noopener">' . $linkText . '</a>';
                 }
                 return $linkText;
+            },
+            $text
+        );
+
+        // AP14: #tags - rendered as styled link to task filter
+        $text = preg_replace_callback(
+            '/(?:^|(?<=\s))#([a-z0-9][a-z0-9._-]{0,49})(?=\s|$|[.,;:!?)])/m',
+            function ($matches) {
+                $tag = $matches[1]; // Already HTML-escaped (only safe chars)
+                $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
+                $safeBase = htmlspecialchars($baseUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                return '<a href="' . $safeBase . '/?r=tasks&amp;tag=' . $tag . '" class="tag-ref">#' . $tag . '</a>';
             },
             $text
         );

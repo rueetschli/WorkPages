@@ -79,16 +79,33 @@ class PageController
             } else {
                 try {
                     $userId = (int) $_SESSION['user_id'];
+
+                    // AP14: Strip /commands from content (text only, no execution)
+                    $cleanedContent = TextCommands::stripCommands(
+                        $formData['content_md'], 'page'
+                    );
+
                     $pageId = Page::create([
                         'title'      => $formData['title'],
                         'parent_id'  => $formData['parent_id'] !== '' ? (int) $formData['parent_id'] : null,
-                        'content_md' => $formData['content_md'],
+                        'content_md' => $cleanedContent,
                         'created_by' => $userId,
                     ]);
+
+                    // AP14: Execute commands now that page_id exists
+                    $cmdResult = TextCommands::processCommands(
+                        $formData['content_md'], 'page', $userId, ['page_id' => $pageId]
+                    );
+
+                    // AP14: Sync mentions
+                    TextCommands::syncMentions($cleanedContent, 'page', $pageId, $userId);
 
                     $newPage = Page::findById($pageId);
                     ActivityService::log('page', $pageId, 'page_created', $userId, ['title' => $formData['title']]);
                     Logger::info('Page created', ['page_id' => $pageId, 'title' => $formData['title']]);
+
+                    // AP14: Flash command results
+                    $this->flashCommandResults($cmdResult['results']);
 
                     $this->redirect('page_view&slug=' . urlencode($newPage['slug']));
                     return;
@@ -144,17 +161,31 @@ class PageController
             } else {
                 try {
                     $userId = (int) $_SESSION['user_id'];
-                    Page::update((int) $page['id'], [
+                    $pageId = (int) $page['id'];
+
+                    // AP14: Process /commands before saving
+                    $cmdResult = TextCommands::processCommands(
+                        $formData['content_md'], 'page', $userId, ['page_id' => $pageId]
+                    );
+                    $cleanedContent = $cmdResult['text'];
+
+                    Page::update($pageId, [
                         'title'      => $formData['title'],
                         'parent_id'  => $formData['parent_id'] !== '' ? (int) $formData['parent_id'] : null,
-                        'content_md' => $formData['content_md'],
+                        'content_md' => $cleanedContent,
                         'updated_by' => $userId,
                     ]);
 
-                    ActivityService::log('page', (int) $page['id'], 'page_updated', $userId, ['title' => $formData['title']]);
+                    // AP14: Sync mentions
+                    TextCommands::syncMentions($cleanedContent, 'page', $pageId, $userId);
+
+                    ActivityService::log('page', $pageId, 'page_updated', $userId, ['title' => $formData['title']]);
                     Logger::info('Page updated', ['page_id' => $page['id'], 'title' => $formData['title']]);
 
-                    $updatedPage = Page::findById((int) $page['id']);
+                    // AP14: Flash command results
+                    $this->flashCommandResults($cmdResult['results']);
+
+                    $updatedPage = Page::findById($pageId);
                     $this->redirect('page_view&slug=' . urlencode($updatedPage['slug']));
                     return;
                 } catch (Throwable $e) {
@@ -407,6 +438,25 @@ class PageController
         }
 
         $this->redirect('page_view&slug=' . urlencode($page['slug']));
+    }
+
+    /**
+     * AP14: Store command execution results as flash messages.
+     */
+    private function flashCommandResults(array $results): void
+    {
+        if (empty($results)) {
+            return;
+        }
+
+        $messages = [];
+        foreach ($results as $r) {
+            $messages[] = $r['message'] ?? '';
+        }
+        $combined = implode(' ', array_filter($messages));
+        if ($combined !== '') {
+            $_SESSION['_flash_info'] = $combined;
+        }
     }
 
     /**

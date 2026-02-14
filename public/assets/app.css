@@ -2790,3 +2790,132 @@ body.sidebar-open {
     gap: var(--sp-3);
     flex-wrap: wrap;
 }
+
+
+/* ============================================================================
+   AP14 - Smart Text Commands: Mentions, Tags, Autocomplete
+   ============================================================================ */
+
+/* --- Autocomplete Dropdown --- */
+.mentions-dropdown {
+    position: fixed;
+    z-index: 1000;
+    min-width: 200px;
+    max-width: 360px;
+    max-height: 240px;
+    overflow-y: auto;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: var(--sp-1) 0;
+}
+
+.mentions-item {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-3);
+    cursor: pointer;
+    font-size: var(--text-sm);
+    transition: background var(--transition-fast);
+}
+.mentions-item:hover,
+.mentions-item-active {
+    background: var(--color-primary);
+    color: #fff;
+}
+.mentions-item-active .mentions-item-email,
+.mentions-item:hover .mentions-item-email {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.mentions-item-name {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mentions-item-email {
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mentions-item-tag {
+    font-weight: 500;
+    color: var(--color-primary);
+}
+.mentions-item-active .mentions-item-tag,
+.mentions-item:hover .mentions-item-tag {
+    color: #fff;
+}
+
+/* --- Rendered Mention Inline --- */
+.mention {
+    display: inline;
+    background: var(--c-blue-100, #dbeafe);
+    color: var(--c-blue-700, #1d4ed8);
+    padding: 1px 4px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.92em;
+    white-space: nowrap;
+}
+
+/* --- Rendered Tag Reference Inline --- */
+a.tag-ref {
+    display: inline;
+    background: var(--c-amber-50, #fffbeb);
+    color: var(--c-amber-700, #b45309);
+    padding: 1px 4px;
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    font-size: 0.92em;
+    text-decoration: none;
+    white-space: nowrap;
+}
+a.tag-ref:hover {
+    background: var(--c-amber-100, #fef3c7);
+    text-decoration: none;
+}
+
+/* --- Dark mode adjustments --- */
+[data-theme="dark"] .mention {
+    background: rgba(59, 130, 246, 0.2);
+    color: var(--c-blue-300, #93c5fd);
+}
+[data-theme="dark"] a.tag-ref {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--c-amber-300, #fcd34d);
+}
+[data-theme="dark"] a.tag-ref:hover {
+    background: rgba(245, 158, 11, 0.25);
+}
+[data-theme="dark"] .mentions-dropdown {
+    background: var(--color-surface);
+    border-color: var(--color-border-strong);
+}
+
+/* --- Textarea hint for smart commands --- */
+.textarea-hint {
+    display: block;
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    margin-top: var(--sp-1);
+}
+
+/* --- Mobile adjustments --- */
+@media (max-width: 768px) {
+    .mentions-dropdown {
+        max-width: calc(100vw - 32px);
+        min-width: 180px;
+    }
+    .mentions-item {
+        padding: var(--sp-3) var(--sp-3);
+        min-height: var(--touch-target-min);
+    }
+}

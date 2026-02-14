@@ -111,9 +111,15 @@ class TaskController
                     $userId = (int) $_SESSION['user_id'];
                     $columnId = (int) $formData['column_id'];
                     $column = BoardColumn::findById($columnId);
+
+                    // AP14: Strip /commands from description (text only, no execution)
+                    $cleanedDesc = TextCommands::stripCommands(
+                        $formData['description_md'], 'task'
+                    );
+
                     $taskId = Task::create([
                         'title'          => $formData['title'],
-                        'description_md' => $formData['description_md'],
+                        'description_md' => $cleanedDesc,
                         'column_id'      => $columnId,
                         'owner_id'       => $formData['owner_id'] !== '' ? (int) $formData['owner_id'] : null,
                         'due_date'       => $formData['due_date'] !== '' ? $formData['due_date'] : null,
@@ -123,12 +129,23 @@ class TaskController
                     $tagNames = Task::parseTagString($formData['tags']);
                     Task::setTags($taskId, $tagNames);
 
+                    // AP14: Execute commands now that task_id exists
+                    $cmdResult = TextCommands::processCommands(
+                        $formData['description_md'], 'task', $userId, ['task_id' => $taskId]
+                    );
+
+                    // AP14: Sync mentions
+                    TextCommands::syncMentions($cleanedDesc, 'task', $taskId, $userId);
+
                     ActivityService::log('task', $taskId, 'task_created', $userId, [
                         'title'       => $formData['title'],
                         'column_id'   => $columnId,
                         'column_name' => $column['name'] ?? '',
                     ]);
                     Logger::info('Task created', ['task_id' => $taskId, 'title' => $formData['title']]);
+
+                    // AP14: Flash command results
+                    $this->flashCommandResults($cmdResult['results']);
 
                     $this->redirect('task_view&id=' . $taskId);
                     return;
@@ -196,9 +213,15 @@ class TaskController
                     $oldColumnId = (int) $task['column_id'];
                     $newColumnId = (int) $formData['column_id'];
 
+                    // AP14: Process /commands before saving
+                    $cmdResult = TextCommands::processCommands(
+                        $formData['description_md'], 'task', $userId, ['task_id' => $id]
+                    );
+                    $cleanedDesc = $cmdResult['text'];
+
                     Task::update($id, [
                         'title'          => $formData['title'],
-                        'description_md' => $formData['description_md'],
+                        'description_md' => $cleanedDesc,
                         'column_id'      => $newColumnId,
                         'owner_id'       => $formData['owner_id'] !== '' ? (int) $formData['owner_id'] : null,
                         'due_date'       => $formData['due_date'] !== '' ? $formData['due_date'] : null,
@@ -207,6 +230,9 @@ class TaskController
 
                     $tagNames = Task::parseTagString($formData['tags']);
                     Task::setTags($id, $tagNames);
+
+                    // AP14: Sync mentions
+                    TextCommands::syncMentions($cleanedDesc, 'task', $id, $userId);
 
                     // Log column change separately
                     if ($oldColumnId !== $newColumnId) {
@@ -225,6 +251,9 @@ class TaskController
                         'changed_fields' => $this->changedFields($task, $formData),
                     ]);
                     Logger::info('Task updated', ['task_id' => $id, 'title' => $formData['title']]);
+
+                    // AP14: Flash command results
+                    $this->flashCommandResults($cmdResult['results']);
 
                     $this->redirect('task_view&id=' . $id);
                     return;
@@ -399,6 +428,25 @@ class TaskController
         }
 
         return $changed;
+    }
+
+    /**
+     * AP14: Store command execution results as flash messages.
+     */
+    private function flashCommandResults(array $results): void
+    {
+        if (empty($results)) {
+            return;
+        }
+
+        $messages = [];
+        foreach ($results as $r) {
+            $messages[] = $r['message'] ?? '';
+        }
+        $combined = implode(' ', array_filter($messages));
+        if ($combined !== '') {
+            $_SESSION['_flash_info'] = $combined;
+        }
     }
 
     /**

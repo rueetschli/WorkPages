@@ -53,6 +53,10 @@ class Authz
     const SHARE_CREATE = 'share.create';
     const SHARE_REVOKE = 'share.revoke';
 
+    // AP14: Smart Text Commands
+    const API_USERS_SEARCH = 'api.users.search';
+    const API_TAGS_SEARCH  = 'api.tags.search';
+
     // ── Action-to-roles mapping ─────────────────────────────────────
 
     /**
@@ -102,6 +106,10 @@ class Authz
         // Sharing
         self::SHARE_CREATE => ['admin', 'member'],
         self::SHARE_REVOKE => ['admin', 'member'],
+
+        // AP14: Smart Text Commands - API endpoints (all logged-in users can search)
+        self::API_USERS_SEARCH => ['admin', 'member', 'viewer'],
+        self::API_TAGS_SEARCH  => ['admin', 'member', 'viewer'],
     ];
 
     /**
