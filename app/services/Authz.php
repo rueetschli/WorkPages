@@ -39,6 +39,9 @@ class Authz
     const BOARD_MOVE    = 'board.move';
     const BOARD_REORDER = 'board.reorder';
 
+    // Board Columns (AP13)
+    const BOARD_COLUMNS_MANAGE = 'board.columns.manage';
+
     // Search
     const SEARCH_VIEW = 'search.view';
 
@@ -85,6 +88,9 @@ class Authz
         self::BOARD_VIEW    => ['admin', 'member', 'viewer'],
         self::BOARD_MOVE    => ['admin', 'member'],
         self::BOARD_REORDER => ['admin', 'member'],
+
+        // Board Columns (AP13)
+        self::BOARD_COLUMNS_MANAGE => ['admin', 'member'],
 
         // Search
         self::SEARCH_VIEW => ['admin', 'member', 'viewer'],

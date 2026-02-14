@@ -1,11 +1,12 @@
 <?php
 /**
- * BoardController - Kanban board for visual task management (AP6).
+ * BoardController - Kanban board for visual task management (AP6 / AP13).
+ * AP13: Dynamic columns from board_columns table.
  */
 class BoardController
 {
     /**
-     * Display the Kanban board with tasks grouped by status columns.
+     * Display the Kanban board with tasks grouped by dynamic columns.
      */
     public function index(): void
     {
@@ -27,18 +28,21 @@ class BoardController
             $filters['q'] = trim($_GET['q']);
         }
 
+        // Load board columns
+        $boardColumns = BoardColumn::allOrdered();
+
         // Load tasks in one query with GROUP_CONCAT tags
         $allTasks = Task::allForBoard($filters);
 
-        // Group tasks by status for column display
-        $columns = [];
-        foreach (Task::STATUSES as $status) {
-            $columns[$status] = [];
+        // Group tasks by column_id
+        $tasksByColumn = [];
+        foreach ($boardColumns as $col) {
+            $tasksByColumn[(int) $col['id']] = [];
         }
         foreach ($allTasks as $task) {
-            $status = $task['status'];
-            if (isset($columns[$status])) {
-                $columns[$status][] = $task;
+            $colId = (int) $task['column_id'];
+            if (isset($tasksByColumn[$colId])) {
+                $tasksByColumn[$colId][] = $task;
             }
         }
 
@@ -52,7 +56,7 @@ class BoardController
     }
 
     /**
-     * Move a task to a new status (and optionally reposition).
+     * Move a task to a new column (and optionally reposition).
      * POST only, CSRF protected, requires member/admin role.
      */
     public function move(): void
@@ -66,10 +70,10 @@ class BoardController
 
         Security::csrfGuard();
 
-        $taskId    = (int) ($_POST['task_id'] ?? 0);
-        $newStatus = $_POST['new_status'] ?? '';
-        $afterId   = !empty($_POST['after_id'])  ? (int) $_POST['after_id']  : null;
-        $beforeId  = !empty($_POST['before_id']) ? (int) $_POST['before_id'] : null;
+        $taskId      = (int) ($_POST['task_id'] ?? 0);
+        $newColumnId = (int) ($_POST['new_column_id'] ?? 0);
+        $afterId     = !empty($_POST['after_id'])  ? (int) $_POST['after_id']  : null;
+        $beforeId    = !empty($_POST['before_id']) ? (int) $_POST['before_id'] : null;
 
         // Validate task exists
         $task = Task::findById($taskId);
@@ -79,31 +83,35 @@ class BoardController
             return;
         }
 
-        // Validate status
-        if (!in_array($newStatus, Task::STATUSES, true)) {
+        // Validate target column exists
+        $targetColumn = BoardColumn::findById($newColumnId);
+        if (!$targetColumn) {
             http_response_code(400);
-            echo 'Ungueltiger Status.';
-            Logger::error('Board move: invalid status', ['status' => $newStatus]);
+            echo 'Ungueltige Spalte.';
+            Logger::error('Board move: invalid column', ['column_id' => $newColumnId]);
             return;
         }
 
-        $userId    = (int) $_SESSION['user_id'];
-        $oldStatus = $task['status'];
+        $userId      = (int) $_SESSION['user_id'];
+        $oldColumnId = (int) $task['column_id'];
 
         try {
-            Task::moveToStatus($taskId, $newStatus, $afterId, $beforeId, $userId);
+            Task::moveToColumn($taskId, $newColumnId, $afterId, $beforeId, $userId);
 
-            // Log status change if status actually changed
-            if ($oldStatus !== $newStatus) {
-                ActivityService::log('task', $taskId, 'task_status_changed', $userId, [
-                    'old_status' => $oldStatus,
-                    'new_status' => $newStatus,
-                    'board'      => true,
+            // Log column change if column actually changed
+            if ($oldColumnId !== $newColumnId) {
+                $oldColumn = BoardColumn::findById($oldColumnId);
+                ActivityService::log('task', $taskId, 'task_column_changed', $userId, [
+                    'old_column_id'   => $oldColumnId,
+                    'new_column_id'   => $newColumnId,
+                    'old_column_name' => $oldColumn['name'] ?? '',
+                    'new_column_name' => $targetColumn['name'],
+                    'board'           => true,
                 ]);
-                Logger::info('Board move: status changed', [
+                Logger::info('Board move: column changed', [
                     'task_id' => $taskId,
-                    'old'     => $oldStatus,
-                    'new'     => $newStatus,
+                    'old'     => $oldColumnId,
+                    'new'     => $newColumnId,
                 ]);
             }
 
@@ -129,7 +137,7 @@ class BoardController
     }
 
     /**
-     * Reorder tasks within a single status column.
+     * Reorder tasks within a single column.
      * POST only, CSRF protected, requires member/admin role.
      */
     public function reorder(): void
@@ -143,12 +151,14 @@ class BoardController
 
         Security::csrfGuard();
 
-        $status  = $_POST['status'] ?? '';
-        $taskIds = $_POST['task_ids'] ?? [];
+        $columnId = (int) ($_POST['column_id'] ?? 0);
+        $taskIds  = $_POST['task_ids'] ?? [];
 
-        if (!in_array($status, Task::STATUSES, true)) {
+        // Validate column
+        $column = BoardColumn::findById($columnId);
+        if (!$column) {
             http_response_code(400);
-            echo 'Ungueltiger Status.';
+            echo 'Ungueltige Spalte.';
             return;
         }
 
@@ -162,7 +172,7 @@ class BoardController
         $taskIds = array_map('intval', $taskIds);
 
         try {
-            Task::reorderColumn($status, $taskIds);
+            Task::reorderColumn($columnId, $taskIds);
 
             if ($this->isAjax()) {
                 header('Content-Type: application/json');
@@ -170,7 +180,7 @@ class BoardController
                 return;
             }
         } catch (Throwable $e) {
-            Logger::error('Board reorder failed', ['error' => $e->getMessage(), 'status' => $status]);
+            Logger::error('Board reorder failed', ['error' => $e->getMessage(), 'column_id' => $columnId]);
 
             if ($this->isAjax()) {
                 http_response_code(500);
@@ -182,6 +192,266 @@ class BoardController
 
         $this->redirectWithFilters();
     }
+
+    // ── Column Management (AP13) ────────────────────────────────────
+
+    /**
+     * Show column management page.
+     */
+    public function columns(): void
+    {
+        Authz::require(Authz::BOARD_COLUMNS_MANAGE);
+
+        $columns = BoardColumn::allOrdered();
+
+        // Count tasks per column
+        $taskCounts = [];
+        foreach ($columns as $col) {
+            $taskCounts[(int) $col['id']] = BoardColumn::taskCount((int) $col['id']);
+        }
+
+        $pageTitle   = 'Board-Spalten verwalten';
+        $contentView = APP_DIR . '/views/board/columns.php';
+        require APP_DIR . '/views/layout.php';
+    }
+
+    /**
+     * Create a new column. POST only.
+     */
+    public function columnCreate(): void
+    {
+        Authz::require(Authz::BOARD_COLUMNS_MANAGE);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('board_columns');
+            return;
+        }
+
+        Security::csrfGuard();
+
+        $name     = trim($_POST['name'] ?? '');
+        $color    = trim($_POST['color'] ?? '');
+        $wipLimit = trim($_POST['wip_limit'] ?? '');
+
+        if ($name === '') {
+            $_SESSION['_flash_error'] = 'Name der Spalte ist erforderlich.';
+            $this->redirect('board_columns');
+            return;
+        }
+
+        if (mb_strlen($name, 'UTF-8') > 100) {
+            $_SESSION['_flash_error'] = 'Name darf maximal 100 Zeichen lang sein.';
+            $this->redirect('board_columns');
+            return;
+        }
+
+        $userId = (int) $_SESSION['user_id'];
+
+        $id = BoardColumn::create([
+            'name'      => $name,
+            'color'     => $color,
+            'wip_limit' => $wipLimit !== '' ? (int) $wipLimit : null,
+        ]);
+
+        ActivityService::log('board_column', $id, 'column_created', $userId, [
+            'column_name' => $name,
+        ]);
+
+        $_SESSION['_flash_success'] = 'Spalte "' . $name . '" wurde erstellt.';
+        $this->redirect('board_columns');
+    }
+
+    /**
+     * Update a column (rename, color, WIP limit). POST only.
+     */
+    public function columnUpdate(): void
+    {
+        Authz::require(Authz::BOARD_COLUMNS_MANAGE);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('board_columns');
+            return;
+        }
+
+        Security::csrfGuard();
+
+        $id       = (int) ($_POST['id'] ?? 0);
+        $name     = trim($_POST['name'] ?? '');
+        $color    = trim($_POST['color'] ?? '');
+        $wipLimit = trim($_POST['wip_limit'] ?? '');
+
+        $column = BoardColumn::findById($id);
+        if (!$column) {
+            $_SESSION['_flash_error'] = 'Spalte nicht gefunden.';
+            $this->redirect('board_columns');
+            return;
+        }
+
+        if ($name === '') {
+            $_SESSION['_flash_error'] = 'Name der Spalte ist erforderlich.';
+            $this->redirect('board_columns');
+            return;
+        }
+
+        if (mb_strlen($name, 'UTF-8') > 100) {
+            $_SESSION['_flash_error'] = 'Name darf maximal 100 Zeichen lang sein.';
+            $this->redirect('board_columns');
+            return;
+        }
+
+        $userId  = (int) $_SESSION['user_id'];
+        $oldName = $column['name'];
+
+        BoardColumn::update($id, [
+            'name'      => $name,
+            'color'     => $color,
+            'wip_limit' => $wipLimit !== '' ? (int) $wipLimit : null,
+        ]);
+
+        ActivityService::log('board_column', $id, 'column_updated', $userId, [
+            'old_name'    => $oldName,
+            'new_name'    => $name,
+            'column_name' => $name,
+        ]);
+
+        $_SESSION['_flash_success'] = 'Spalte "' . $name . '" wurde aktualisiert.';
+        $this->redirect('board_columns');
+    }
+
+    /**
+     * Delete a column and move tasks to a target column. POST only.
+     */
+    public function columnDelete(): void
+    {
+        Authz::require(Authz::BOARD_COLUMNS_MANAGE);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('board_columns');
+            return;
+        }
+
+        Security::csrfGuard();
+
+        $id             = (int) ($_POST['id'] ?? 0);
+        $targetColumnId = (int) ($_POST['target_column_id'] ?? 0);
+
+        $column = BoardColumn::findById($id);
+        if (!$column) {
+            $_SESSION['_flash_error'] = 'Spalte nicht gefunden.';
+            $this->redirect('board_columns');
+            return;
+        }
+
+        // Must have at least 2 columns (can't delete the last one)
+        if (BoardColumn::count() <= 1) {
+            $_SESSION['_flash_error'] = 'Die letzte Spalte kann nicht geloescht werden.';
+            $this->redirect('board_columns');
+            return;
+        }
+
+        // Validate target column
+        if ($targetColumnId === $id) {
+            $_SESSION['_flash_error'] = 'Zielspalte darf nicht die zu loeschende Spalte sein.';
+            $this->redirect('board_columns');
+            return;
+        }
+
+        $targetColumn = BoardColumn::findById($targetColumnId);
+        if (!$targetColumn) {
+            $_SESSION['_flash_error'] = 'Zielspalte nicht gefunden.';
+            $this->redirect('board_columns');
+            return;
+        }
+
+        $userId    = (int) $_SESSION['user_id'];
+        $taskCount = BoardColumn::taskCount($id);
+
+        BoardColumn::delete($id, $targetColumnId);
+
+        ActivityService::log('board_column', $id, 'column_deleted', $userId, [
+            'column_name'      => $column['name'],
+            'target_column_id' => $targetColumnId,
+            'target_column'    => $targetColumn['name'],
+            'tasks_moved'      => $taskCount,
+        ]);
+
+        $msg = 'Spalte "' . $column['name'] . '" wurde geloescht.';
+        if ($taskCount > 0) {
+            $msg .= ' ' . $taskCount . ' Task(s) wurden nach "' . $targetColumn['name'] . '" verschoben.';
+        }
+        $_SESSION['_flash_success'] = $msg;
+        $this->redirect('board_columns');
+    }
+
+    /**
+     * Move column up. POST only.
+     */
+    public function columnMoveUp(): void
+    {
+        Authz::require(Authz::BOARD_COLUMNS_MANAGE);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('board_columns');
+            return;
+        }
+
+        Security::csrfGuard();
+
+        $id = (int) ($_POST['id'] ?? 0);
+        BoardColumn::moveUp($id);
+
+        $this->redirect('board_columns');
+    }
+
+    /**
+     * Move column down. POST only.
+     */
+    public function columnMoveDown(): void
+    {
+        Authz::require(Authz::BOARD_COLUMNS_MANAGE);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('board_columns');
+            return;
+        }
+
+        Security::csrfGuard();
+
+        $id = (int) ($_POST['id'] ?? 0);
+        BoardColumn::moveDown($id);
+
+        $this->redirect('board_columns');
+    }
+
+    /**
+     * Set a column as the default for new tasks. POST only.
+     */
+    public function columnSetDefault(): void
+    {
+        Authz::require(Authz::BOARD_COLUMNS_MANAGE);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('board_columns');
+            return;
+        }
+
+        Security::csrfGuard();
+
+        $id = (int) ($_POST['id'] ?? 0);
+        $column = BoardColumn::findById($id);
+        if (!$column) {
+            $_SESSION['_flash_error'] = 'Spalte nicht gefunden.';
+            $this->redirect('board_columns');
+            return;
+        }
+
+        BoardColumn::setDefault($id);
+
+        $_SESSION['_flash_success'] = '"' . $column['name'] . '" ist jetzt die Standard-Spalte fuer neue Tasks.';
+        $this->redirect('board_columns');
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────
 
     /**
      * Check if the current request is an AJAX/fetch request.

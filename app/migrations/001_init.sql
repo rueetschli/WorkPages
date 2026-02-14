@@ -62,11 +62,35 @@ CREATE TABLE IF NOT EXISTS `tags` (
     UNIQUE INDEX `idx_tags_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- AP13: Board columns (flexible Kanban)
+CREATE TABLE IF NOT EXISTS `board_columns` (
+    `id`         INT AUTO_INCREMENT PRIMARY KEY,
+    `name`       VARCHAR(100) NOT NULL,
+    `slug`       VARCHAR(100) NOT NULL,
+    `position`   INT NOT NULL DEFAULT 0,
+    `color`      VARCHAR(20) NULL DEFAULT NULL,
+    `wip_limit`  INT NULL DEFAULT NULL,
+    `is_default` TINYINT NOT NULL DEFAULT 0,
+    `created_at` DATETIME NOT NULL,
+    `updated_at` DATETIME NULL DEFAULT NULL,
+    INDEX `idx_board_columns_position` (`position`),
+    INDEX `idx_board_columns_slug` (`slug`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Default board columns
+INSERT INTO `board_columns` (`name`, `slug`, `position`, `color`, `wip_limit`, `is_default`, `created_at`)
+VALUES
+    ('Backlog',  'backlog', 1000,  NULL, NULL, 1, NOW()),
+    ('Ready',    'ready',   2000,  NULL, NULL, 0, NOW()),
+    ('Doing',    'doing',   3000,  NULL, NULL, 0, NOW()),
+    ('Review',   'review',  4000,  NULL, NULL, 0, NOW()),
+    ('Done',     'done',    5000,  NULL, NULL, 0, NOW());
+
 CREATE TABLE IF NOT EXISTS `tasks` (
     `id`             INT AUTO_INCREMENT PRIMARY KEY,
     `title`          VARCHAR(190) NOT NULL,
     `description_md` LONGTEXT NULL DEFAULT NULL,
-    `status`         ENUM('backlog','ready','doing','review','done') NOT NULL DEFAULT 'backlog',
+    `column_id`      INT NOT NULL,
     `owner_id`       INT NULL DEFAULT NULL,
     `due_date`       DATE NULL DEFAULT NULL,
     `position`       INT NOT NULL DEFAULT 0,
@@ -74,11 +98,12 @@ CREATE TABLE IF NOT EXISTS `tasks` (
     `updated_by`     INT NULL DEFAULT NULL,
     `created_at`     DATETIME NOT NULL,
     `updated_at`     DATETIME NULL DEFAULT NULL,
-    INDEX `idx_tasks_status` (`status`),
+    INDEX `idx_tasks_column_id` (`column_id`),
     INDEX `idx_tasks_owner_id` (`owner_id`),
     INDEX `idx_tasks_due_date` (`due_date`),
-    INDEX `idx_tasks_status_position` (`status`, `position`),
+    INDEX `idx_tasks_column_position` (`column_id`, `position`),
     INDEX `idx_tasks_title` (`title`(191)),
+    CONSTRAINT `fk_tasks_column` FOREIGN KEY (`column_id`) REFERENCES `board_columns` (`id`),
     CONSTRAINT `fk_tasks_owner` FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
     CONSTRAINT `fk_tasks_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
     CONSTRAINT `fk_tasks_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`)
@@ -135,7 +160,7 @@ CREATE TABLE IF NOT EXISTS `page_shares` (
     CONSTRAINT `fk_page_shares_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Set initial schema version
-INSERT INTO `app_meta` (`meta_key`, `meta_value`) VALUES ('schema_version', '1');
+-- Set initial schema version (includes AP13)
+INSERT INTO `app_meta` (`meta_key`, `meta_value`) VALUES ('schema_version', '2');
 INSERT INTO `app_meta` (`meta_key`, `meta_value`) VALUES ('app_version', '1.0.0');
 INSERT INTO `app_meta` (`meta_key`, `meta_value`) VALUES ('installed_at', NOW());

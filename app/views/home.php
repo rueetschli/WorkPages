@@ -69,8 +69,8 @@ $userName = Security::esc($_SESSION['user_name'] ?? '');
                             </a>
                         </td>
                         <td>
-                            <span class="status-badge status-<?= Security::esc($rt['status']) ?>">
-                                <?= Security::esc(Task::STATUS_LABELS[$rt['status']] ?? $rt['status']) ?>
+                            <span class="status-badge">
+                                <?= Security::esc($rt['column_name'] ?? '') ?>
                             </span>
                         </td>
                         <td class="text-muted"><?= Security::esc($rt['owner_name'] ?? '') ?></td>

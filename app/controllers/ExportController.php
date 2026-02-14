@@ -13,13 +13,15 @@ class ExportController
         Authz::requireRole(['admin', 'member']);
 
         $tasks = DB::fetchAll(
-            "SELECT t.id, t.title, t.status,
+            "SELECT t.id, t.title,
+                    bc.name AS column_name,
                     u.name AS owner_name,
                     t.due_date,
                     t.created_at,
                     t.updated_at
              FROM tasks t
              LEFT JOIN users u ON u.id = t.owner_id
+             LEFT JOIN board_columns bc ON bc.id = t.column_id
              ORDER BY t.created_at DESC"
         );
 
@@ -55,14 +57,14 @@ class ExportController
         $out = fopen('php://output', 'w');
 
         // Header row
-        fputcsv($out, ['ID', 'Titel', 'Status', 'Owner', 'Faelligkeitsdatum', 'Tags', 'Erstellt', 'Aktualisiert'], ';');
+        fputcsv($out, ['ID', 'Titel', 'Spalte', 'Owner', 'Faelligkeitsdatum', 'Tags', 'Erstellt', 'Aktualisiert'], ';');
 
         foreach ($tasks as $task) {
             $tags = $allTags[(int) $task['id']] ?? [];
             fputcsv($out, [
                 $task['id'],
                 $task['title'],
-                $task['status'],
+                $task['column_name'] ?? '',
                 $task['owner_name'] ?? '',
                 $task['due_date'] ?? '',
                 implode(', ', $tags),

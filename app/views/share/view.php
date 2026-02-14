@@ -47,7 +47,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
                     <thead>
                         <tr>
                             <th>Titel</th>
-                            <th>Status</th>
+                            <th>Spalte</th>
                             <th>Faellig</th>
                             <th>Tags</th>
                         </tr>
@@ -57,8 +57,8 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
                         <tr>
                             <td><?= Security::esc($pt['title']) ?></td>
                             <td>
-                                <span class="status-badge status-<?= Security::esc($pt['status']) ?>">
-                                    <?= Security::esc(Task::STATUS_LABELS[$pt['status']] ?? $pt['status']) ?>
+                                <span class="status-badge">
+                                    <?= Security::esc($pt['column_name'] ?? '') ?>
                                 </span>
                             </td>
                             <td>

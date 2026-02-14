@@ -123,6 +123,7 @@ require_once APP_DIR . '/services/SearchService.php';
 require_once APP_DIR . '/services/ActivityService.php';
 require_once APP_DIR . '/services/Authz.php';
 require_once APP_DIR . '/models/PageShare.php';
+require_once APP_DIR . '/models/BoardColumn.php';
 
 // ── Database (lazy) ─────────────────────────────────────────────────
 DB::setConfig($config);
@@ -157,9 +158,18 @@ $routes = [
     'page_tasks_add'     => ['controller' => 'PageController', 'action' => 'tasksAdd'],
     'page_tasks_remove'  => ['controller' => 'PageController', 'action' => 'tasksRemove'],
     'page_tasks_reorder' => ['controller' => 'PageController', 'action' => 'tasksReorder'],
-    'board'              => ['controller' => 'BoardController', 'action' => 'index'],
-    'board_move'         => ['controller' => 'BoardController', 'action' => 'move'],
-    'board_reorder'      => ['controller' => 'BoardController', 'action' => 'reorder'],
+    'board'                    => ['controller' => 'BoardController', 'action' => 'index'],
+    'board_move'               => ['controller' => 'BoardController', 'action' => 'move'],
+    'board_reorder'            => ['controller' => 'BoardController', 'action' => 'reorder'],
+
+    // AP13: Board column management
+    'board_columns'            => ['controller' => 'BoardController', 'action' => 'columns'],
+    'board_column_create'      => ['controller' => 'BoardController', 'action' => 'columnCreate'],
+    'board_column_update'      => ['controller' => 'BoardController', 'action' => 'columnUpdate'],
+    'board_column_delete'      => ['controller' => 'BoardController', 'action' => 'columnDelete'],
+    'board_column_move_up'     => ['controller' => 'BoardController', 'action' => 'columnMoveUp'],
+    'board_column_move_down'   => ['controller' => 'BoardController', 'action' => 'columnMoveDown'],
+    'board_column_set_default' => ['controller' => 'BoardController', 'action' => 'columnSetDefault'],
     'search'             => ['controller' => 'SearchController', 'action' => 'index'],
     'comment_create'     => ['controller' => 'CommentController', 'action' => 'create'],
     'comment_delete'     => ['controller' => 'CommentController', 'action' => 'delete'],

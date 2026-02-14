@@ -112,7 +112,7 @@ if ($canShare) {
                 <tr>
                     <?php if ($canEdit): ?><th style="width:60px;">Pos.</th><?php endif; ?>
                     <th>Titel</th>
-                    <th>Status</th>
+                    <th>Spalte</th>
                     <th>Owner</th>
                     <th>Faellig</th>
                     <th>Tags</th>
@@ -143,21 +143,21 @@ if ($canShare) {
                             <?= Security::esc($pt['title']) ?>
                         </a>
                     </td>
-                    <td data-label="Status">
+                    <td data-label="Spalte">
                         <?php if ($canEdit): ?>
                         <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=task_update_status" class="inline-form status-change-form">
                             <?= Security::csrfField() ?>
                             <input type="hidden" name="task_id" value="<?= (int) $pt['id'] ?>">
                             <input type="hidden" name="return_slug" value="<?= Security::esc($page['slug']) ?>">
-                            <select name="status" class="form-input form-input-sm status-select status-<?= Security::esc($pt['status']) ?>" onchange="this.form.submit()">
-                                <?php foreach (Task::STATUS_LABELS as $val => $label): ?>
-                                    <option value="<?= Security::esc($val) ?>" <?= $pt['status'] === $val ? 'selected' : '' ?>><?= Security::esc($label) ?></option>
+                            <select name="column_id" class="form-input form-input-sm status-select" onchange="this.form.submit()">
+                                <?php foreach ($boardColumns as $col): ?>
+                                    <option value="<?= (int) $col['id'] ?>" <?= (int) $pt['column_id'] === (int) $col['id'] ? 'selected' : '' ?>><?= Security::esc($col['name']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </form>
                         <?php else: ?>
-                        <span class="status-badge status-<?= Security::esc($pt['status']) ?>">
-                            <?= Security::esc(Task::STATUS_LABELS[$pt['status']] ?? $pt['status']) ?>
+                        <span class="status-badge">
+                            <?= Security::esc($pt['column_name'] ?? '') ?>
                         </span>
                         <?php endif; ?>
                     </td>
@@ -172,7 +172,7 @@ if ($canShare) {
                         <?php if ($pt['due_date']): ?>
                             <?php
                                 $dueTs = strtotime($pt['due_date']);
-                                $isOverdue = $pt['status'] !== 'done' && $dueTs < strtotime('today');
+                                $isOverdue = ($pt['column_slug'] ?? '') !== 'done' && $dueTs < strtotime('today');
                             ?>
                             <span class="<?= $isOverdue ? 'text-overdue' : '' ?>">
                                 <?= Security::esc(date('d.m.Y', $dueTs)) ?>
