@@ -77,6 +77,25 @@ class CommentController
                 'entity_type' => $entityType,
                 'entity_id'   => $entityId,
             ]);
+
+            // AP15: Auto-watch on comment + comment event
+            WatcherService::autoWatchOnComment($entityType, $entityId, $userId);
+
+            $commentEventName = $entityType === 'task' ? 'task.commented' : 'page.commented';
+            EventService::emit($commentEventName, 'comment', $commentId, $userId, [
+                'comment_id'        => $commentId,
+                'parent_entity_type' => $entityType,
+                'parent_entity_id'   => $entityId,
+            ]);
+
+            // AP15: Mention events from comment
+            foreach ($mentionedIds as $mentionedId) {
+                EventService::emit('mention.created', 'comment', $commentId, $userId, [
+                    'mentioned_user_id'  => $mentionedId,
+                    'parent_entity_type' => $entityType,
+                    'parent_entity_id'   => $entityId,
+                ]);
+            }
         } catch (Throwable $e) {
             Logger::error('Failed to create comment', ['error' => $e->getMessage()]);
             $_SESSION['_flash_error'] = 'Kommentar konnte nicht gespeichert werden.';

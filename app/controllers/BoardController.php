@@ -113,6 +113,13 @@ class BoardController
                     'old'     => $oldColumnId,
                     'new'     => $newColumnId,
                 ]);
+
+                // AP15: Move event
+                EventService::emit('task.moved', 'task', $taskId, $userId, [
+                    'old_column_id'   => $oldColumnId,
+                    'new_column_id'   => $newColumnId,
+                    'new_column_name' => $targetColumn['name'],
+                ]);
             }
 
             // AJAX request: return JSON

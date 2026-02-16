@@ -144,6 +144,32 @@ class TaskController
                     ]);
                     Logger::info('Task created', ['task_id' => $taskId, 'title' => $formData['title']]);
 
+                    // AP15: Auto-watch + event
+                    WatcherService::autoWatchOnCreate('task', $taskId, $userId);
+                    EventService::emit('task.created', 'task', $taskId, $userId, [
+                        'title' => $formData['title'],
+                    ]);
+
+                    // AP15: Mention events
+                    $mentionedIds = TextCommands::extractMentions($cleanedDesc);
+                    foreach ($mentionedIds as $mentionedId) {
+                        EventService::emit('mention.created', 'task', $taskId, $userId, [
+                            'mentioned_user_id'  => $mentionedId,
+                            'parent_entity_type' => 'task',
+                            'parent_entity_id'   => $taskId,
+                        ]);
+                    }
+
+                    // AP15: Assignment event
+                    if ($formData['owner_id'] !== '' && (int) $formData['owner_id'] !== $userId) {
+                        WatcherService::autoWatchOnAssignment($taskId, (int) $formData['owner_id']);
+                        EventService::emit('task.assigned', 'task', $taskId, $userId, [
+                            'new_owner_id' => (int) $formData['owner_id'],
+                            'task_id'      => $taskId,
+                            'task_title'   => $formData['title'],
+                        ]);
+                    }
+
                     // AP14: Flash command results
                     $this->flashCommandResults($cmdResult['results']);
 
@@ -252,6 +278,44 @@ class TaskController
                     ]);
                     Logger::info('Task updated', ['task_id' => $id, 'title' => $formData['title']]);
 
+                    // AP15: Events for task update
+                    EventService::emit('task.updated', 'task', $id, $userId, [
+                        'title' => $formData['title'],
+                    ]);
+
+                    // AP15: Column move event
+                    if ($oldColumnId !== $newColumnId) {
+                        $newColumn = BoardColumn::findById($newColumnId);
+                        EventService::emit('task.moved', 'task', $id, $userId, [
+                            'old_column_id'   => $oldColumnId,
+                            'new_column_id'   => $newColumnId,
+                            'new_column_name' => $newColumn['name'] ?? '',
+                        ]);
+                    }
+
+                    // AP15: Owner change event
+                    $oldOwnerId = (int) ($task['owner_id'] ?? 0);
+                    $newOwnerId = $formData['owner_id'] !== '' ? (int) $formData['owner_id'] : 0;
+                    if ($newOwnerId > 0 && $newOwnerId !== $oldOwnerId) {
+                        WatcherService::autoWatchOnAssignment($id, $newOwnerId);
+                        EventService::emit('task.assigned', 'task', $id, $userId, [
+                            'new_owner_id' => $newOwnerId,
+                            'old_owner_id' => $oldOwnerId,
+                            'task_id'      => $id,
+                            'task_title'   => $formData['title'],
+                        ]);
+                    }
+
+                    // AP15: Mention events
+                    $mentionedIds = TextCommands::extractMentions($cleanedDesc);
+                    foreach ($mentionedIds as $mentionedId) {
+                        EventService::emit('mention.created', 'task', $id, $userId, [
+                            'mentioned_user_id'  => $mentionedId,
+                            'parent_entity_type' => 'task',
+                            'parent_entity_id'   => $id,
+                        ]);
+                    }
+
                     // AP14: Flash command results
                     $this->flashCommandResults($cmdResult['results']);
 
@@ -358,6 +422,13 @@ class TaskController
 
                 ActivityService::log('task', $id, 'task_column_changed', $userId, $meta);
                 Logger::info('Task column changed', ['task_id' => $id, 'old' => $oldColumnId, 'new' => $columnId]);
+
+                // AP15: Move event
+                EventService::emit('task.moved', 'task', $id, $userId, [
+                    'old_column_id'   => $oldColumnId,
+                    'new_column_id'   => $columnId,
+                    'new_column_name' => $targetColumn['name'],
+                ]);
             } catch (Throwable $e) {
                 Logger::error('Failed to update task column', ['error' => $e->getMessage()]);
             }

@@ -57,6 +57,35 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
         <button type="button" class="mobile-search-btn" id="mobile-search-btn" aria-label="Suche">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </button>
+        <?php
+            // AP15: Notification bell - unread count
+            $__notifCount = 0;
+            try {
+                if (!empty($_SESSION['user_id'])) {
+                    $__notifCount = Notification::countUnread((int) $_SESSION['user_id']);
+                }
+            } catch (Throwable $e) {
+                // Table may not exist yet before migration
+            }
+        ?>
+        <div class="notif-bell-wrap">
+            <button type="button" class="notif-bell-btn" id="notif-bell-btn" aria-label="Benachrichtigungen">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                <span class="notif-badge" id="notif-badge" <?= $__notifCount === 0 ? 'style="display:none"' : '' ?>><?= $__notifCount > 99 ? '99+' : (int) $__notifCount ?></span>
+            </button>
+            <div class="notif-dropdown" id="notif-dropdown">
+                <div class="notif-dropdown-header">
+                    <span>Benachrichtigungen</span>
+                    <a href="<?= Security::esc($baseUrl) ?>/?r=notifications">Alle anzeigen</a>
+                </div>
+                <div id="notif-dropdown-list">
+                    <div class="notif-dropdown-empty">Laden...</div>
+                </div>
+                <div class="notif-dropdown-footer">
+                    <a href="<?= Security::esc($baseUrl) ?>/?r=notifications">Alle Benachrichtigungen</a>
+                </div>
+            </div>
+        </div>
         <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Farbschema wechseln">
             <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
             <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
@@ -108,6 +137,23 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
                     Suche
                 </a>
             </li>
+            <li>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=notifications"
+                   class="nav-link <?= $currentRoute === 'notifications' ? 'active' : '' ?>">
+                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span>
+                    Benachrichtigungen
+                    <?php if ($__notifCount > 0): ?>
+                        <span class="notif-tab-badge" style="margin-left:auto"><?= $__notifCount > 99 ? '99+' : (int) $__notifCount ?></span>
+                    <?php endif; ?>
+                </a>
+            </li>
+            <li>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=settings_notifications"
+                   class="nav-link <?= $currentRoute === 'settings_notifications' ? 'active' : '' ?>">
+                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
+                    Einstellungen
+                </a>
+            </li>
             <?php if (Authz::can(Authz::ADMIN_USERS_MANAGE)): ?>
             <li class="nav-separator"></li>
             <li>
@@ -129,6 +175,13 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
                    class="nav-link <?= $currentRoute === 'admin_system' ? 'active' : '' ?>">
                     <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
                     System
+                </a>
+            </li>
+            <li>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=admin_email_queue"
+                   class="nav-link <?= $currentRoute === 'admin_email_queue' ? 'active' : '' ?>">
+                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+                    E-Mail Queue
                 </a>
             </li>
             <?php endif; ?>
@@ -288,6 +341,7 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
 })();
 </script>
 <script src="<?= Security::esc($baseUrl) ?>/assets/mentions.js"></script>
+<script src="<?= Security::esc($baseUrl) ?>/assets/notifications.js"></script>
 
 </body>
 </html>
