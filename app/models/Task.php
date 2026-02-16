@@ -82,9 +82,11 @@ class Task
             ? (int) $data['column_id']
             : BoardColumn::getDefaultId();
 
+        $teamId = !empty($data['team_id']) ? (int) $data['team_id'] : null;
+
         DB::query(
-            'INSERT INTO tasks (title, description_md, column_id, owner_id, due_date, created_by, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, NOW())',
+            'INSERT INTO tasks (title, description_md, column_id, owner_id, due_date, created_by, team_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
             [
                 $data['title'],
                 $data['description_md'] ?? null,
@@ -92,6 +94,7 @@ class Task
                 !empty($data['owner_id']) ? (int) $data['owner_id'] : null,
                 !empty($data['due_date']) ? $data['due_date'] : null,
                 (int) $data['created_by'],
+                $teamId,
             ]
         );
 
@@ -108,10 +111,14 @@ class Task
             return;
         }
 
+        $teamId = array_key_exists('team_id', $data)
+            ? (!empty($data['team_id']) ? (int) $data['team_id'] : null)
+            : ($task['team_id'] ?? null);
+
         DB::query(
             'UPDATE tasks
              SET title = ?, description_md = ?, column_id = ?, owner_id = ?,
-                 due_date = ?, updated_by = ?, updated_at = NOW()
+                 due_date = ?, updated_by = ?, team_id = ?, updated_at = NOW()
              WHERE id = ?',
             [
                 $data['title'] ?? $task['title'],
@@ -124,6 +131,7 @@ class Task
                     ? (!empty($data['due_date']) ? $data['due_date'] : null)
                     : $task['due_date'],
                 (int) $data['updated_by'],
+                $teamId,
                 $id,
             ]
         );
@@ -212,6 +220,122 @@ class Task
             }
         }
         return array_unique($tags);
+    }
+
+    /**
+     * AP16: Fetch all tasks visible to user, with optional filters and team filtering.
+     */
+    public static function allVisible(array $filters, int $userId, string $globalRole, ?int $filterTeamId = null): array
+    {
+        $where  = [];
+        $params = [];
+        $join   = '';
+
+        // Team visibility
+        [$visSql, $visParams] = TeamService::taskVisibilityWhere($userId, $globalRole, 't', $filterTeamId);
+        $where = array_merge($where, [$visSql]);
+        $params = array_merge($params, $visParams);
+
+        if (!empty($filters['column_id'])) {
+            $where[]  = 't.column_id = ?';
+            $params[] = (int) $filters['column_id'];
+        }
+
+        if (!empty($filters['owner_id'])) {
+            $where[]  = 't.owner_id = ?';
+            $params[] = (int) $filters['owner_id'];
+        }
+
+        if (!empty($filters['due_date'])) {
+            $where[]  = 't.due_date = ?';
+            $params[] = $filters['due_date'];
+        }
+
+        if (!empty($filters['tag'])) {
+            $join     = ' INNER JOIN task_tags tt_filter ON tt_filter.task_id = t.id
+                          INNER JOIN tags tg_filter ON tg_filter.id = tt_filter.tag_id AND tg_filter.name = ?';
+            $params[] = mb_strtolower(trim($filters['tag']), 'UTF-8');
+        }
+
+        $whereSql = 'WHERE ' . implode(' AND ', $where);
+
+        $sql = "SELECT t.*, u.name AS owner_name, c.name AS creator_name,
+                       bc.name AS column_name, bc.slug AS column_slug
+                FROM tasks t
+                LEFT JOIN users u ON u.id = t.owner_id
+                LEFT JOIN users c ON c.id = t.created_by
+                LEFT JOIN board_columns bc ON bc.id = t.column_id
+                {$join}
+                {$whereSql}
+                ORDER BY t.created_at DESC";
+
+        return DB::fetchAll($sql, $params);
+    }
+
+    /**
+     * AP16: Fetch board tasks filtered by team visibility.
+     */
+    public static function allForBoardVisible(array $filters, int $userId, string $globalRole, ?int $filterTeamId = null): array
+    {
+        $where  = [];
+        $params = [];
+        $join   = '';
+
+        // Team visibility
+        [$visSql, $visParams] = TeamService::taskVisibilityWhere($userId, $globalRole, 't', $filterTeamId);
+        $where = array_merge($where, [$visSql]);
+        $params = array_merge($params, $visParams);
+
+        if (!empty($filters['owner_id'])) {
+            $where[]  = 't.owner_id = ?';
+            $params[] = (int) $filters['owner_id'];
+        }
+
+        if (!empty($filters['tag'])) {
+            $join    .= ' INNER JOIN task_tags tt_filter ON tt_filter.task_id = t.id
+                          INNER JOIN tags tg_filter ON tg_filter.id = tt_filter.tag_id AND tg_filter.name = ?';
+            $params[] = mb_strtolower(trim($filters['tag']), 'UTF-8');
+        }
+
+        if (!empty($filters['due'])) {
+            switch ($filters['due']) {
+                case 'overdue':
+                    $where[] = 't.due_date < CURDATE()';
+                    break;
+                case 'today':
+                    $where[] = 't.due_date = CURDATE()';
+                    break;
+                case 'week':
+                    $where[] = 't.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)';
+                    break;
+                case 'none':
+                    $where[] = 't.due_date IS NULL';
+                    break;
+            }
+        }
+
+        if (!empty($filters['q'])) {
+            $where[]  = 't.title LIKE ?';
+            $params[] = '%' . $filters['q'] . '%';
+        }
+
+        $whereSql = 'WHERE ' . implode(' AND ', $where);
+
+        $sql = "SELECT t.*, u.name AS owner_name,
+                       bc.name AS column_name, bc.slug AS column_slug,
+                       bc.position AS column_position,
+                       GROUP_CONCAT(DISTINCT tg.name ORDER BY tg.name SEPARATOR ',') AS tag_list
+                FROM tasks t
+                LEFT JOIN users u ON u.id = t.owner_id
+                LEFT JOIN board_columns bc ON bc.id = t.column_id
+                LEFT JOIN task_tags tt ON tt.task_id = t.id
+                LEFT JOIN tags tg ON tg.id = tt.tag_id
+                {$join}
+                {$whereSql}
+                GROUP BY t.id
+                ORDER BY bc.position ASC, t.position ASC, t.updated_at DESC";
+
+        return DB::fetchAll($sql, $params);
     }
 
     // -- Board (AP6 / AP13) ---------------------------------------------------

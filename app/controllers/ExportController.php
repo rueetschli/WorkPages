@@ -12,6 +12,13 @@ class ExportController
     {
         Authz::requireRole(['admin', 'member']);
 
+        // AP16: Team-filtered export
+        $userId       = (int) $_SESSION['user_id'];
+        $globalRole   = $_SESSION['user_role'] ?? 'viewer';
+        $activeTeamId = TeamService::getActiveTeamId();
+
+        [$visSql, $visParams] = TeamService::taskVisibilityWhere($userId, $globalRole, 't', $activeTeamId);
+
         $tasks = DB::fetchAll(
             "SELECT t.id, t.title,
                     bc.name AS column_name,
@@ -22,7 +29,9 @@ class ExportController
              FROM tasks t
              LEFT JOIN users u ON u.id = t.owner_id
              LEFT JOIN board_columns bc ON bc.id = t.column_id
-             ORDER BY t.created_at DESC"
+             WHERE {$visSql}
+             ORDER BY t.created_at DESC",
+            $visParams
         );
 
         // Collect tags for all tasks
@@ -97,6 +106,12 @@ class ExportController
             http_response_code(404);
             require APP_DIR . '/views/404.php';
             exit;
+        }
+
+        // AP16: Team visibility check
+        $userId = (int) $_SESSION['user_id'];
+        if (!TeamService::canViewPage($userId, $page)) {
+            Authz::deny();
         }
 
         $filename = $page['slug'] . '.md';

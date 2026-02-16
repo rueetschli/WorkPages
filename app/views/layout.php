@@ -12,6 +12,20 @@ $currentRoute = $_GET['r'] ?? 'home';
 $userName     = Security::esc($_SESSION['user_name'] ?? '');
 $userRole     = Security::esc($_SESSION['user_role'] ?? '');
 
+// AP16: Load teams for switcher
+$__activeTeamId = TeamService::getActiveTeamId();
+$__switcherTeams = [];
+try {
+    if (!empty($_SESSION['user_id'])) {
+        $__switcherTeams = TeamService::getTeamsForSwitcher(
+            (int) $_SESSION['user_id'],
+            $_SESSION['user_role'] ?? 'viewer'
+        );
+    }
+} catch (Throwable $e) {
+    // teams table may not exist yet
+}
+
 // Flash messages
 $flashSuccess = $_SESSION['_flash_success'] ?? null;
 $flashError   = $_SESSION['_flash_error'] ?? null;
@@ -54,6 +68,38 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
         </form>
     </div>
     <div class="header-right">
+        <?php if (!empty($__switcherTeams)): ?>
+        <div class="team-switcher-wrap">
+            <button type="button" class="team-switcher-btn" id="team-switcher-btn" aria-label="Team wechseln">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                <span class="team-switcher-label"><?php
+                    if ($__activeTeamId === null) {
+                        echo 'Alle Teams';
+                    } else {
+                        $__activeTeamName = 'Team';
+                        foreach ($__switcherTeams as $__st) {
+                            if ((int) $__st['id'] === $__activeTeamId) {
+                                $__activeTeamName = $__st['name'];
+                                break;
+                            }
+                        }
+                        echo Security::esc($__activeTeamName);
+                    }
+                ?></span>
+            </button>
+            <div class="team-switcher-dropdown" id="team-switcher-dropdown">
+                <div class="team-switcher-dropdown-header">Team wechseln</div>
+                <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=team_switch">
+                    <?= Security::csrfField() ?>
+                    <input type="hidden" name="return_to" value="<?= Security::esc('?' . ($_SERVER['QUERY_STRING'] ?? '')) ?>">
+                    <button type="submit" name="team_id" value="all" class="team-switcher-item<?= $__activeTeamId === null ? ' team-switcher-active' : '' ?>">Alle Teams</button>
+                    <?php foreach ($__switcherTeams as $__st): ?>
+                    <button type="submit" name="team_id" value="<?= (int) $__st['id'] ?>" class="team-switcher-item<?= $__activeTeamId === (int) $__st['id'] ? ' team-switcher-active' : '' ?>"><?= Security::esc($__st['name']) ?></button>
+                    <?php endforeach; ?>
+                </form>
+            </div>
+        </div>
+        <?php endif; ?>
         <button type="button" class="mobile-search-btn" id="mobile-search-btn" aria-label="Suche">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </button>
@@ -185,6 +231,15 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
                 </a>
             </li>
             <?php endif; ?>
+            <?php if (Authz::can(Authz::TEAM_MANAGE)): ?>
+            <li>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=admin_teams"
+                   class="nav-link <?= in_array($currentRoute, ['admin_teams', 'admin_team_edit'], true) ? 'active' : '' ?>">
+                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></span>
+                    Teams
+                </a>
+            </li>
+            <?php endif; ?>
             <?php if (Authz::can(Authz::TASK_CREATE)): ?>
             <li class="nav-separator"></li>
             <li>
@@ -198,7 +253,20 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
         </ul>
 
         <?php
-            $__pageTree = Page::getTree();
+            // AP16: Team-filtered page tree
+            $__pageTree = [];
+            try {
+                if (!empty($_SESSION['user_id'])) {
+                    $__pageTree = Page::getTreeVisible(
+                        (int) $_SESSION['user_id'],
+                        $_SESSION['user_role'] ?? 'viewer',
+                        $__activeTeamId
+                    );
+                }
+            } catch (Throwable $e) {
+                // Fallback for pre-migration
+                $__pageTree = Page::getTree();
+            }
             if (!empty($__pageTree)):
         ?>
         <div class="sidebar-pages">
@@ -322,6 +390,21 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
             if (appHeader.classList.contains('search-active')) {
                 var searchInput = appHeader.querySelector('.search-input');
                 if (searchInput) searchInput.focus();
+            }
+        });
+    }
+
+    /* -- Team Switcher Toggle -- */
+    var teamSwitcherBtn = document.getElementById('team-switcher-btn');
+    var teamSwitcherDropdown = document.getElementById('team-switcher-dropdown');
+    if (teamSwitcherBtn && teamSwitcherDropdown) {
+        teamSwitcherBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            teamSwitcherDropdown.classList.toggle('open');
+        });
+        document.addEventListener('click', function(e) {
+            if (!teamSwitcherDropdown.contains(e.target) && e.target !== teamSwitcherBtn) {
+                teamSwitcherDropdown.classList.remove('open');
             }
         });
     }

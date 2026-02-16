@@ -34,13 +34,18 @@ class SearchController
                 $searched   = true;
                 $searchMode = $GLOBALS['config']['SEARCH_MODE'] ?? 'like';
 
+                // AP16: Team-filtered search
+                $userId       = (int) $_SESSION['user_id'];
+                $globalRole   = $_SESSION['user_role'] ?? 'viewer';
+                $activeTeamId = TeamService::getActiveTeamId();
+
                 try {
                     if ($typeFilter === 'all' || $typeFilter === 'pages') {
-                        $pageResults = SearchService::searchPages($query, self::RESULTS_LIMIT, $searchMode);
+                        $pageResults = SearchService::searchPages($query, self::RESULTS_LIMIT, $searchMode, $userId, $globalRole, $activeTeamId);
                     }
 
                     if ($typeFilter === 'all' || $typeFilter === 'tasks') {
-                        $taskResults = SearchService::searchTasks($query, self::RESULTS_LIMIT, $searchMode);
+                        $taskResults = SearchService::searchTasks($query, self::RESULTS_LIMIT, $searchMode, $userId, $globalRole, $activeTeamId);
                     }
                 } catch (Throwable $e) {
                     Logger::error('Search failed', [

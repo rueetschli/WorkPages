@@ -138,6 +138,11 @@ require_once APP_DIR . '/services/WatcherService.php';
 require_once APP_DIR . '/services/EmailService.php';
 require_once APP_DIR . '/services/DigestService.php';
 
+// AP16: Teams and team-based access control
+require_once APP_DIR . '/models/Team.php';
+require_once APP_DIR . '/models/TeamUser.php';
+require_once APP_DIR . '/services/TeamService.php';
+
 // ── Database (lazy) ─────────────────────────────────────────────────
 DB::setConfig($config);
 
@@ -229,6 +234,13 @@ $routes = [
     'admin_email_retry'        => ['controller' => 'AdminEmailController', 'action' => 'retry'],
     'admin_email_digest_daily' => ['controller' => 'AdminEmailController', 'action' => 'digestDaily'],
     'admin_email_digest_weekly'=> ['controller' => 'AdminEmailController', 'action' => 'digestWeekly'],
+
+    // AP16: Teams
+    'admin_teams'              => ['controller' => 'TeamAdminController', 'action' => 'index'],
+    'admin_team_create'        => ['controller' => 'TeamAdminController', 'action' => 'create'],
+    'admin_team_edit'          => ['controller' => 'TeamAdminController', 'action' => 'edit'],
+    'admin_team_delete'        => ['controller' => 'TeamAdminController', 'action' => 'delete'],
+    'team_switch'              => ['controller' => 'TeamAdminController', 'action' => 'switchTeam'],
 ];
 
 if (!isset($routes[$route])) {

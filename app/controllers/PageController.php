@@ -5,11 +5,26 @@
 class PageController
 {
     /**
-     * List all pages.
+     * List all pages (filtered by team visibility).
      */
     public function index(): void
     {
-        $pages = Page::all();
+        $userId       = (int) $_SESSION['user_id'];
+        $globalRole   = $_SESSION['user_role'] ?? 'viewer';
+        $activeTeamId = TeamService::getActiveTeamId();
+
+        $pages = Page::allVisible($userId, $globalRole, $activeTeamId);
+
+        // AP16: Load teams for team badge display
+        $teamsById = [];
+        try {
+            foreach (Team::all() as $t) {
+                $teamsById[(int) $t['id']] = $t;
+            }
+        } catch (Throwable $e) {
+            // teams table may not exist yet
+        }
+
         $pageTitle   = 'Pages';
         $contentView = APP_DIR . '/views/pages/index.php';
         require APP_DIR . '/views/layout.php';
@@ -31,6 +46,12 @@ class PageController
             http_response_code(404);
             require APP_DIR . '/views/404.php';
             return;
+        }
+
+        // AP16: Team visibility check
+        $userId = (int) $_SESSION['user_id'];
+        if (!TeamService::canViewPage($userId, $page)) {
+            Authz::deny();
         }
 
         $breadcrumb = Page::getBreadcrumb((int) $page['id']);
@@ -64,8 +85,14 @@ class PageController
         Authz::require(Authz::PAGE_CREATE);
 
         $error = null;
-        $formData = ['title' => '', 'parent_id' => '', 'content_md' => ''];
+        $activeTeamId = TeamService::getActiveTeamId();
+        $formData = ['title' => '', 'parent_id' => '', 'content_md' => '', 'team_id' => $activeTeamId !== null ? (string) $activeTeamId : ''];
         $parentPages = Page::allForDropdown();
+
+        // AP16: Load teams for dropdown
+        $userId     = (int) $_SESSION['user_id'];
+        $globalRole = $_SESSION['user_role'] ?? 'viewer';
+        $availableTeams = TeamService::getTeamsForSwitcher($userId, $globalRole);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Security::csrfGuard();
@@ -73,6 +100,7 @@ class PageController
             $formData['title']      = trim($_POST['title'] ?? '');
             $formData['parent_id']  = $_POST['parent_id'] ?? '';
             $formData['content_md'] = $_POST['content_md'] ?? '';
+            $formData['team_id']    = $_POST['team_id'] ?? '';
 
             if ($formData['title'] === '') {
                 $error = 'Titel darf nicht leer sein.';
@@ -90,6 +118,7 @@ class PageController
                         'parent_id'  => $formData['parent_id'] !== '' ? (int) $formData['parent_id'] : null,
                         'content_md' => $cleanedContent,
                         'created_by' => $userId,
+                        'team_id'    => $formData['team_id'] !== '' ? (int) $formData['team_id'] : null,
                     ]);
 
                     // AP14: Execute commands now that page_id exists
@@ -157,13 +186,24 @@ class PageController
             return;
         }
 
+        // AP16: Team edit check
+        $userId = (int) $_SESSION['user_id'];
+        if (!TeamService::canEditPage($userId, $page)) {
+            Authz::deny();
+        }
+
         $error = null;
         $formData = [
             'title'      => $page['title'],
             'parent_id'  => $page['parent_id'] ?? '',
             'content_md' => $page['content_md'],
+            'team_id'    => $page['team_id'] ?? '',
         ];
         $parentPages = Page::allForDropdown((int) $page['id']);
+
+        // AP16: Load teams for dropdown
+        $globalRole = $_SESSION['user_role'] ?? 'viewer';
+        $availableTeams = TeamService::getTeamsForSwitcher($userId, $globalRole);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Security::csrfGuard();
@@ -171,12 +211,12 @@ class PageController
             $formData['title']      = trim($_POST['title'] ?? '');
             $formData['parent_id']  = $_POST['parent_id'] ?? '';
             $formData['content_md'] = $_POST['content_md'] ?? '';
+            $formData['team_id']    = $_POST['team_id'] ?? '';
 
             if ($formData['title'] === '') {
                 $error = 'Titel darf nicht leer sein.';
             } else {
                 try {
-                    $userId = (int) $_SESSION['user_id'];
                     $pageId = (int) $page['id'];
 
                     // AP14: Process /commands before saving
@@ -190,6 +230,7 @@ class PageController
                         'parent_id'  => $formData['parent_id'] !== '' ? (int) $formData['parent_id'] : null,
                         'content_md' => $cleanedContent,
                         'updated_by' => $userId,
+                        'team_id'    => $formData['team_id'] !== '' ? (int) $formData['team_id'] : null,
                     ]);
 
                     // AP14: Sync mentions
@@ -254,8 +295,13 @@ class PageController
             return;
         }
 
+        // AP16: Team edit check
+        $userId = (int) $_SESSION['user_id'];
+        if (!TeamService::canEditPage($userId, $page)) {
+            Authz::deny();
+        }
+
         try {
-            $userId = (int) $_SESSION['user_id'];
             Page::softDelete((int) $page['id']);
             ActivityService::log('page', (int) $page['id'], 'page_deleted', $userId, ['title' => $page['title']]);
             Logger::info('Page deleted', ['page_id' => $page['id'], 'title' => $page['title']]);
@@ -358,6 +404,7 @@ class PageController
                                 'owner_id'       => $ownerId !== '' ? (int) $ownerId : null,
                                 'due_date'       => $dueDate !== '' ? $dueDate : null,
                                 'created_by'     => $userId,
+                                'team_id'        => $page['team_id'] ?? null,
                             ]);
 
                             ActivityService::log('task', $taskId, 'task_created', $userId, [

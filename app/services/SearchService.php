@@ -64,25 +64,32 @@ class SearchService
      * @param string $configMode 'auto'|'fulltext'|'like'
      * @return array Array of page result rows
      */
-    public static function searchPages(string $q, int $limit = 20, string $configMode = 'like'): array
+    public static function searchPages(string $q, int $limit = 20, string $configMode = 'like', ?int $userId = null, ?string $globalRole = null, ?int $filterTeamId = null): array
     {
         $mode = self::resolveMode($configMode);
 
+        // AP16: Build team visibility clause
+        $visSql = '1=1';
+        $visParams = [];
+        if ($userId !== null && $globalRole !== null) {
+            [$visSql, $visParams] = TeamService::pageVisibilityWhere($userId, $globalRole, 'p', $filterTeamId);
+        }
+
         if ($mode === 'fulltext') {
             try {
-                return self::searchPagesFulltext($q, $limit);
+                return self::searchPagesFulltext($q, $limit, $visSql, $visParams);
             } catch (Throwable $e) {
                 Logger::error('FULLTEXT page search failed, falling back to LIKE', [
                     'error' => $e->getMessage(),
                 ]);
-                return self::searchPagesLike($q, $limit);
+                return self::searchPagesLike($q, $limit, $visSql, $visParams);
             }
         }
 
-        return self::searchPagesLike($q, $limit);
+        return self::searchPagesLike($q, $limit, $visSql, $visParams);
     }
 
-    private static function searchPagesFulltext(string $q, int $limit): array
+    private static function searchPagesFulltext(string $q, int $limit, string $visSql = '1=1', array $visParams = []): array
     {
         $sql = "SELECT p.id, p.title, p.slug, p.content_md, p.parent_id,
                        p.created_at, p.updated_at,
@@ -93,14 +100,16 @@ class SearchService
                 LEFT JOIN pages par ON par.id = p.parent_id AND par.deleted_at IS NULL
                 WHERE p.deleted_at IS NULL
                   AND MATCH(p.title, p.content_md) AGAINST(? IN BOOLEAN MODE)
+                  AND {$visSql}
                 ORDER BY title_boost DESC, relevance DESC, p.updated_at DESC
                 LIMIT ?";
 
         $likeTerm = '%' . $q . '%';
-        return DB::fetchAll($sql, [$q, $likeTerm, $q, $limit]);
+        $params = array_merge([$q, $likeTerm, $q], $visParams, [$limit]);
+        return DB::fetchAll($sql, $params);
     }
 
-    private static function searchPagesLike(string $q, int $limit): array
+    private static function searchPagesLike(string $q, int $limit, string $visSql = '1=1', array $visParams = []): array
     {
         $likeTerm = '%' . $q . '%';
 
@@ -112,10 +121,12 @@ class SearchService
                 LEFT JOIN pages par ON par.id = p.parent_id AND par.deleted_at IS NULL
                 WHERE p.deleted_at IS NULL
                   AND (p.title LIKE ? OR p.content_md LIKE ?)
+                  AND {$visSql}
                 ORDER BY title_boost DESC, p.updated_at DESC
                 LIMIT ?";
 
-        return DB::fetchAll($sql, [$likeTerm, $likeTerm, $likeTerm, $limit]);
+        $params = array_merge([$likeTerm, $likeTerm, $likeTerm], $visParams, [$limit]);
+        return DB::fetchAll($sql, $params);
     }
 
     // ── Task search ─────────────────────────────────────────────────
@@ -129,25 +140,32 @@ class SearchService
      * @param string $configMode 'auto'|'fulltext'|'like'
      * @return array Array of task result rows
      */
-    public static function searchTasks(string $q, int $limit = 20, string $configMode = 'like'): array
+    public static function searchTasks(string $q, int $limit = 20, string $configMode = 'like', ?int $userId = null, ?string $globalRole = null, ?int $filterTeamId = null): array
     {
         $mode = self::resolveMode($configMode);
 
+        // AP16: Build team visibility clause
+        $visSql = '1=1';
+        $visParams = [];
+        if ($userId !== null && $globalRole !== null) {
+            [$visSql, $visParams] = TeamService::taskVisibilityWhere($userId, $globalRole, 't', $filterTeamId);
+        }
+
         if ($mode === 'fulltext') {
             try {
-                return self::searchTasksFulltext($q, $limit);
+                return self::searchTasksFulltext($q, $limit, $visSql, $visParams);
             } catch (Throwable $e) {
                 Logger::error('FULLTEXT task search failed, falling back to LIKE', [
                     'error' => $e->getMessage(),
                 ]);
-                return self::searchTasksLike($q, $limit);
+                return self::searchTasksLike($q, $limit, $visSql, $visParams);
             }
         }
 
-        return self::searchTasksLike($q, $limit);
+        return self::searchTasksLike($q, $limit, $visSql, $visParams);
     }
 
-    private static function searchTasksFulltext(string $q, int $limit): array
+    private static function searchTasksFulltext(string $q, int $limit, string $visSql = '1=1', array $visParams = []): array
     {
         $likeTerm = '%' . $q . '%';
 
@@ -164,14 +182,16 @@ class SearchService
                 LEFT JOIN task_tags tt ON tt.task_id = t.id
                 LEFT JOIN tags tg ON tg.id = tt.tag_id
                 WHERE MATCH(t.title, t.description_md) AGAINST(? IN BOOLEAN MODE)
+                  AND {$visSql}
                 GROUP BY t.id
                 ORDER BY title_boost DESC, relevance DESC, t.updated_at DESC
                 LIMIT ?";
 
-        return DB::fetchAll($sql, [$q, $likeTerm, $q, $limit]);
+        $params = array_merge([$q, $likeTerm, $q], $visParams, [$limit]);
+        return DB::fetchAll($sql, $params);
     }
 
-    private static function searchTasksLike(string $q, int $limit): array
+    private static function searchTasksLike(string $q, int $limit, string $visSql = '1=1', array $visParams = []): array
     {
         $likeTerm = '%' . $q . '%';
 
@@ -187,11 +207,13 @@ class SearchService
                 LEFT JOIN task_tags tt ON tt.task_id = t.id
                 LEFT JOIN tags tg ON tg.id = tt.tag_id
                 WHERE (t.title LIKE ? OR t.description_md LIKE ?)
+                  AND {$visSql}
                 GROUP BY t.id
                 ORDER BY title_boost DESC, t.updated_at DESC
                 LIMIT ?";
 
-        return DB::fetchAll($sql, [$likeTerm, $likeTerm, $likeTerm, $limit]);
+        $params = array_merge([$likeTerm, $likeTerm, $likeTerm], $visParams, [$limit]);
+        return DB::fetchAll($sql, $params);
     }
 
     // ── Snippet generation ──────────────────────────────────────────

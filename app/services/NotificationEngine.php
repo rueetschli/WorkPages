@@ -108,7 +108,23 @@ class NotificationEngine
             }
         }
 
-        return $filtered;
+        // 5) AP16: Filter by team access - recipients must have access to the entity
+        $checkEntityType = $watchEntityType ?: $entityType;
+        $checkEntityId   = $watchEntityId ?: $entityId;
+
+        $teamFiltered = [];
+        foreach ($filtered as $uid => $recipient) {
+            try {
+                if (TeamService::userHasAccessToEntity($uid, $checkEntityType, $checkEntityId)) {
+                    $teamFiltered[$uid] = $recipient;
+                }
+            } catch (\Throwable $e) {
+                // If team check fails, include the recipient (fail-open for notifications)
+                $teamFiltered[$uid] = $recipient;
+            }
+        }
+
+        return $teamFiltered;
     }
 
     /**

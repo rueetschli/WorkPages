@@ -88,6 +88,11 @@ class ShareController
             return;
         }
 
+        // AP16: Team edit check
+        if (!TeamService::canEditPage($userId, $page)) {
+            Authz::deny();
+        }
+
         // Validate optional expiry date
         $expiresValue = null;
         if ($expiresAt !== '') {

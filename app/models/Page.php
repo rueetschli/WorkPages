@@ -42,21 +42,40 @@ class Page
     }
 
     /**
+     * AP16: Fetch all pages visible to a user, filtered by team.
+     */
+    public static function allVisible(int $userId, string $globalRole, ?int $filterTeamId = null): array
+    {
+        [$visSql, $visParams] = TeamService::pageVisibilityWhere($userId, $globalRole, 'p', $filterTeamId);
+
+        $sql = "SELECT p.*, u.name AS creator_name, par.title AS parent_title
+                FROM pages p
+                LEFT JOIN users u ON u.id = p.created_by
+                LEFT JOIN pages par ON par.id = p.parent_id AND par.deleted_at IS NULL
+                WHERE p.deleted_at IS NULL AND {$visSql}
+                ORDER BY p.title ASC";
+
+        return DB::fetchAll($sql, $visParams);
+    }
+
+    /**
      * Create a new page. Returns the new page ID.
      */
     public static function create(array $data): int
     {
         $slug = self::generateUniqueSlug($data['title']);
+        $teamId = !empty($data['team_id']) ? (int) $data['team_id'] : null;
 
         DB::query(
-            'INSERT INTO pages (title, slug, parent_id, content_md, created_by, created_at)
-             VALUES (?, ?, ?, ?, ?, NOW())',
+            'INSERT INTO pages (title, slug, parent_id, content_md, created_by, team_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, NOW())',
             [
                 $data['title'],
                 $slug,
                 $data['parent_id'] ?: null,
                 $data['content_md'] ?? '',
                 $data['created_by'],
+                $teamId,
             ]
         );
 
@@ -78,9 +97,13 @@ class Page
             $slug = self::generateUniqueSlug($data['title'], $id);
         }
 
+        $teamId = array_key_exists('team_id', $data)
+            ? (!empty($data['team_id']) ? (int) $data['team_id'] : null)
+            : ($page['team_id'] ?? null);
+
         DB::query(
             'UPDATE pages
-             SET title = ?, slug = ?, parent_id = ?, content_md = ?, updated_by = ?, updated_at = NOW()
+             SET title = ?, slug = ?, parent_id = ?, content_md = ?, updated_by = ?, team_id = ?, updated_at = NOW()
              WHERE id = ?',
             [
                 $data['title'] ?? $page['title'],
@@ -88,6 +111,7 @@ class Page
                 $data['parent_id'] ?: null,
                 $data['content_md'] ?? $page['content_md'],
                 $data['updated_by'],
+                $teamId,
                 $id,
             ]
         );
@@ -115,6 +139,24 @@ class Page
              FROM pages
              WHERE deleted_at IS NULL
              ORDER BY title ASC'
+        );
+
+        return self::buildTree($pages, null);
+    }
+
+    /**
+     * AP16: Build a hierarchical tree filtered by team visibility.
+     */
+    public static function getTreeVisible(int $userId, string $globalRole, ?int $filterTeamId = null): array
+    {
+        [$visSql, $visParams] = TeamService::pageVisibilityWhere($userId, $globalRole, 'p', $filterTeamId);
+
+        $pages = DB::fetchAll(
+            "SELECT p.id, p.title, p.slug, p.parent_id
+             FROM pages p
+             WHERE p.deleted_at IS NULL AND {$visSql}
+             ORDER BY p.title ASC",
+            $visParams
         );
 
         return self::buildTree($pages, null);
