@@ -22,16 +22,21 @@ $canEdit = Authz::can(Authz::TASK_EDIT);
 <div class="page-header">
     <div class="page-header-row">
         <h1><?= Security::esc($task['title']) ?></h1>
-        <?php if ($canEdit): ?>
         <div class="page-actions">
+            <?php
+                $watchEntityType = 'task';
+                $watchEntityId = (int) $task['id'];
+                require APP_DIR . '/views/partials/watch_button.php';
+            ?>
+            <?php if ($canEdit): ?>
             <a href="<?= Security::esc($baseUrl) ?>/?r=task_edit&amp;id=<?= (int) $task['id'] ?>" class="btn btn-primary">Bearbeiten</a>
             <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=task_delete&amp;id=<?= (int) $task['id'] ?>"
                   class="inline-form" onsubmit="return confirm('Aufgabe wirklich loeschen?');">
                 <?= Security::csrfField() ?>
                 <button type="submit" class="btn btn-danger">Loeschen</button>
             </form>
+            <?php endif; ?>
         </div>
-        <?php endif; ?>
     </div>
 </div>
 

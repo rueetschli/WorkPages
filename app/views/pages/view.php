@@ -39,16 +39,21 @@ if ($canShare) {
 <div class="page-header">
     <div class="page-header-row">
         <h1><?= Security::esc($page['title']) ?></h1>
-        <?php if ($canEdit): ?>
         <div class="page-actions">
+            <?php
+                $watchEntityType = 'page';
+                $watchEntityId = (int) $page['id'];
+                require APP_DIR . '/views/partials/watch_button.php';
+            ?>
+            <?php if ($canEdit): ?>
             <a href="<?= Security::esc($baseUrl) ?>/?r=page_edit&slug=<?= Security::esc($page['slug']) ?>" class="btn btn-primary">Bearbeiten</a>
             <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=page_delete&slug=<?= Security::esc($page['slug']) ?>"
                   class="inline-form" onsubmit="return confirm('Seite wirklich loeschen?');">
                 <?= Security::csrfField() ?>
                 <button type="submit" class="btn btn-danger">Loeschen</button>
             </form>
+            <?php endif; ?>
         </div>
-        <?php endif; ?>
     </div>
 </div>
 

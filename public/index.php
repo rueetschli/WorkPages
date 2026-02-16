@@ -127,6 +127,17 @@ require_once APP_DIR . '/models/BoardColumn.php';
 require_once APP_DIR . '/models/Mention.php';
 require_once APP_DIR . '/services/TextCommands.php';
 
+// AP15: Notifications, Watchers, Email
+require_once APP_DIR . '/models/Notification.php';
+require_once APP_DIR . '/models/Watcher.php';
+require_once APP_DIR . '/models/NotificationSetting.php';
+require_once APP_DIR . '/models/EmailOutbox.php';
+require_once APP_DIR . '/services/EventService.php';
+require_once APP_DIR . '/services/NotificationEngine.php';
+require_once APP_DIR . '/services/WatcherService.php';
+require_once APP_DIR . '/services/EmailService.php';
+require_once APP_DIR . '/services/DigestService.php';
+
 // ── Database (lazy) ─────────────────────────────────────────────────
 DB::setConfig($config);
 
@@ -198,6 +209,26 @@ $routes = [
     // AP14: Smart Text Commands - API endpoints for autocomplete
     'api_users'          => ['controller' => 'ApiController', 'action' => 'users'],
     'api_tags'           => ['controller' => 'ApiController', 'action' => 'tags'],
+
+    // AP15: Notifications
+    'notifications'            => ['controller' => 'NotificationsController', 'action' => 'index'],
+    'notification_read'        => ['controller' => 'NotificationsController', 'action' => 'markRead'],
+    'notifications_read_all'   => ['controller' => 'NotificationsController', 'action' => 'markAllRead'],
+    'api_notifications_unread' => ['controller' => 'ApiNotificationsController', 'action' => 'unreadCount'],
+    'api_notifications_latest' => ['controller' => 'ApiNotificationsController', 'action' => 'latest'],
+
+    // AP15: Watchers
+    'watch_toggle'             => ['controller' => 'WatchController', 'action' => 'toggle'],
+
+    // AP15: Notification Settings
+    'settings_notifications'   => ['controller' => 'NotificationSettingsController', 'action' => 'index'],
+
+    // AP15: Admin Email Queue
+    'admin_email_queue'        => ['controller' => 'AdminEmailController', 'action' => 'queue'],
+    'admin_email_send'         => ['controller' => 'AdminEmailController', 'action' => 'send'],
+    'admin_email_retry'        => ['controller' => 'AdminEmailController', 'action' => 'retry'],
+    'admin_email_digest_daily' => ['controller' => 'AdminEmailController', 'action' => 'digestDaily'],
+    'admin_email_digest_weekly'=> ['controller' => 'AdminEmailController', 'action' => 'digestWeekly'],
 ];
 
 if (!isset($routes[$route])) {

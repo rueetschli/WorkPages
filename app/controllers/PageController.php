@@ -104,6 +104,22 @@ class PageController
                     ActivityService::log('page', $pageId, 'page_created', $userId, ['title' => $formData['title']]);
                     Logger::info('Page created', ['page_id' => $pageId, 'title' => $formData['title']]);
 
+                    // AP15: Auto-watch + event
+                    WatcherService::autoWatchOnCreate('page', $pageId, $userId);
+                    EventService::emit('page.created', 'page', $pageId, $userId, [
+                        'title' => $formData['title'],
+                    ]);
+
+                    // AP15: Mention events
+                    $mentionedIds = TextCommands::extractMentions($cleanedContent);
+                    foreach ($mentionedIds as $mentionedId) {
+                        EventService::emit('mention.created', 'page', $pageId, $userId, [
+                            'mentioned_user_id'  => $mentionedId,
+                            'parent_entity_type' => 'page',
+                            'parent_entity_id'   => $pageId,
+                        ]);
+                    }
+
                     // AP14: Flash command results
                     $this->flashCommandResults($cmdResult['results']);
 
@@ -181,6 +197,21 @@ class PageController
 
                     ActivityService::log('page', $pageId, 'page_updated', $userId, ['title' => $formData['title']]);
                     Logger::info('Page updated', ['page_id' => $page['id'], 'title' => $formData['title']]);
+
+                    // AP15: Events
+                    EventService::emit('page.updated', 'page', $pageId, $userId, [
+                        'title' => $formData['title'],
+                    ]);
+
+                    // AP15: Mention events
+                    $mentionedIds = TextCommands::extractMentions($cleanedContent);
+                    foreach ($mentionedIds as $mentionedId) {
+                        EventService::emit('mention.created', 'page', $pageId, $userId, [
+                            'mentioned_user_id'  => $mentionedId,
+                            'parent_entity_type' => 'page',
+                            'parent_entity_id'   => $pageId,
+                        ]);
+                    }
 
                     // AP14: Flash command results
                     $this->flashCommandResults($cmdResult['results']);
@@ -282,6 +313,13 @@ class PageController
                                     'page_title' => $page['title'],
                                 ]);
                                 Logger::info('Task linked to page', ['page_id' => $pageId, 'task_id' => $taskId]);
+
+                                // AP15: Link event
+                                EventService::emit('page_task.linked', 'page', $pageId, $userId, [
+                                    'task_id'    => $taskId,
+                                    'task_title' => $task['title'],
+                                ]);
+
                                 $this->redirect('page_view&slug=' . urlencode($page['slug']));
                                 return;
                             } else {
@@ -339,6 +377,16 @@ class PageController
                                 'page_id' => $pageId,
                                 'task_id' => $taskId,
                                 'title'   => $title,
+                            ]);
+
+                            // AP15: Auto-watch + events
+                            WatcherService::autoWatchOnCreate('task', $taskId, $userId);
+                            EventService::emit('task.created', 'task', $taskId, $userId, [
+                                'title' => $title,
+                            ]);
+                            EventService::emit('page_task.linked', 'page', $pageId, $userId, [
+                                'task_id'    => $taskId,
+                                'task_title' => $title,
                             ]);
 
                             $this->redirect('page_view&slug=' . urlencode($page['slug']));
@@ -400,6 +448,12 @@ class PageController
                 'page_title' => $page['title'],
             ]);
             Logger::info('Task unlinked from page', ['page_id' => $page['id'], 'task_id' => $taskId]);
+
+            // AP15: Unlink event
+            EventService::emit('page_task.unlinked', 'page', (int) $page['id'], $userId, [
+                'task_id'    => $taskId,
+                'task_title' => $task ? $task['title'] : '',
+            ]);
         } catch (Throwable $e) {
             Logger::error('Failed to unlink task from page', ['error' => $e->getMessage()]);
         }

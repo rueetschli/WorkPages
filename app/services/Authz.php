@@ -57,6 +57,9 @@ class Authz
     const API_USERS_SEARCH = 'api.users.search';
     const API_TAGS_SEARCH  = 'api.tags.search';
 
+    // AP15: Notifications and Watchers
+    const WATCH_TOGGLE = 'watch.toggle';
+
     // ── Action-to-roles mapping ─────────────────────────────────────
 
     /**
@@ -110,6 +113,9 @@ class Authz
         // AP14: Smart Text Commands - API endpoints (all logged-in users can search)
         self::API_USERS_SEARCH => ['admin', 'member', 'viewer'],
         self::API_TAGS_SEARCH  => ['admin', 'member', 'viewer'],
+
+        // AP15: Watchers (member + admin can watch; viewer is read-only)
+        self::WATCH_TOGGLE => ['admin', 'member'],
     ];
 
     /**

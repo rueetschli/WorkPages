@@ -35,4 +35,17 @@ return [
     // Pfade (normalerweise keine Aenderung noetig)
     'LOG_FILE'  => __DIR__ . '/../storage/logs/app.log',
     'UPLOAD_DIR'=> __DIR__ . '/../storage/uploads',
+
+    // AP15: E-Mail Versand
+    // Modus: 'mail' (PHP mail()), 'smtp' (SMTP via fsockopen)
+    'MAIL_MODE'      => 'mail',
+    'MAIL_FROM'      => 'noreply@example.com',
+    'MAIL_FROM_NAME' => 'WorkPages',
+
+    // SMTP Einstellungen (nur bei MAIL_MODE = 'smtp')
+    'SMTP_HOST'    => 'smtp.example.com',
+    'SMTP_PORT'    => 587,
+    'SMTP_USER'    => '',
+    'SMTP_PASS'    => '',
+    'SMTP_SECURE'  => 'tls', // 'tls' oder 'ssl'
 ];
