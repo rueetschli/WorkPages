@@ -43,6 +43,14 @@ class WatchController
             return;
         }
 
+        // AP16: Check team access before allowing watch
+        if ($entityType === 'page' && !TeamService::canViewPage($userId, $entity)) {
+            Authz::deny();
+        }
+        if ($entityType === 'task' && !TeamService::canViewTask($userId, $entity)) {
+            Authz::deny();
+        }
+
         if ($state === 'on') {
             Watcher::watch($entityType, $entityId, $userId);
         } else {

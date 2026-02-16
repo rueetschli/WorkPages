@@ -6,7 +6,7 @@
 class TaskController
 {
     /**
-     * List all tasks with optional filters.
+     * List all tasks with optional filters (team-aware).
      */
     public function index(): void
     {
@@ -22,7 +22,12 @@ class TaskController
             $filters['tag'] = $_GET['tag'];
         }
 
-        $tasks      = Task::all($filters);
+        // AP16: Team-filtered task list
+        $userId       = (int) $_SESSION['user_id'];
+        $globalRole   = $_SESSION['user_role'] ?? 'viewer';
+        $activeTeamId = TeamService::getActiveTeamId();
+
+        $tasks      = Task::allVisible($filters, $userId, $globalRole, $activeTeamId);
         $users      = User::allForDropdown();
         $allTags    = Task::allTags();
         $tagsByTask = [];
@@ -30,6 +35,16 @@ class TaskController
 
         foreach ($tasks as $task) {
             $tagsByTask[(int) $task['id']] = Task::getTags((int) $task['id']);
+        }
+
+        // AP16: Load teams for team badge display
+        $teamsById = [];
+        try {
+            foreach (Team::all() as $t) {
+                $teamsById[(int) $t['id']] = $t;
+            }
+        } catch (Throwable $e) {
+            // teams table may not exist yet
         }
 
         $pageTitle   = 'Tasks';
@@ -53,6 +68,12 @@ class TaskController
             http_response_code(404);
             require APP_DIR . '/views/404.php';
             return;
+        }
+
+        // AP16: Team visibility check
+        $userId = (int) $_SESSION['user_id'];
+        if (!TeamService::canViewTask($userId, $task)) {
+            Authz::deny();
         }
 
         $tags             = Task::getTags($id);
@@ -84,6 +105,7 @@ class TaskController
         $error    = null;
         $boardColumns = BoardColumn::allOrdered();
         $defaultColumnId = BoardColumn::getDefaultId();
+        $activeTeamId = TeamService::getActiveTeamId();
         $formData = [
             'title'          => '',
             'description_md' => '',
@@ -91,8 +113,14 @@ class TaskController
             'owner_id'       => '',
             'due_date'       => '',
             'tags'           => '',
+            'team_id'        => $activeTeamId !== null ? (string) $activeTeamId : '',
         ];
         $users = User::allForDropdown();
+
+        // AP16: Load teams for dropdown
+        $userId     = (int) $_SESSION['user_id'];
+        $globalRole = $_SESSION['user_role'] ?? 'viewer';
+        $availableTeams = TeamService::getTeamsForSwitcher($userId, $globalRole);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Security::csrfGuard();
@@ -103,6 +131,7 @@ class TaskController
             $formData['owner_id']       = $_POST['owner_id'] ?? '';
             $formData['due_date']       = trim($_POST['due_date'] ?? '');
             $formData['tags']           = trim($_POST['tags'] ?? '');
+            $formData['team_id']        = $_POST['team_id'] ?? '';
 
             $error = $this->validate($formData);
 
@@ -124,6 +153,7 @@ class TaskController
                         'owner_id'       => $formData['owner_id'] !== '' ? (int) $formData['owner_id'] : null,
                         'due_date'       => $formData['due_date'] !== '' ? $formData['due_date'] : null,
                         'created_by'     => $userId,
+                        'team_id'        => $formData['team_id'] !== '' ? (int) $formData['team_id'] : null,
                     ]);
 
                     $tagNames = Task::parseTagString($formData['tags']);
@@ -207,6 +237,12 @@ class TaskController
             return;
         }
 
+        // AP16: Team edit check
+        $userId = (int) $_SESSION['user_id'];
+        if (!TeamService::canEditTask($userId, $task)) {
+            Authz::deny();
+        }
+
         $error    = null;
         $tags     = Task::getTags($id);
         $tagStr   = implode(', ', array_column($tags, 'name'));
@@ -218,8 +254,13 @@ class TaskController
             'owner_id'       => $task['owner_id'] ?? '',
             'due_date'       => $task['due_date'] ?? '',
             'tags'           => $tagStr,
+            'team_id'        => $task['team_id'] ?? '',
         ];
         $users = User::allForDropdown();
+
+        // AP16: Load teams for dropdown
+        $globalRole = $_SESSION['user_role'] ?? 'viewer';
+        $availableTeams = TeamService::getTeamsForSwitcher($userId, $globalRole);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Security::csrfGuard();
@@ -230,6 +271,7 @@ class TaskController
             $formData['owner_id']       = $_POST['owner_id'] ?? '';
             $formData['due_date']       = trim($_POST['due_date'] ?? '');
             $formData['tags']           = trim($_POST['tags'] ?? '');
+            $formData['team_id']        = $_POST['team_id'] ?? '';
 
             $error = $this->validate($formData);
 
@@ -252,6 +294,7 @@ class TaskController
                         'owner_id'       => $formData['owner_id'] !== '' ? (int) $formData['owner_id'] : null,
                         'due_date'       => $formData['due_date'] !== '' ? $formData['due_date'] : null,
                         'updated_by'     => $userId,
+                        'team_id'        => $formData['team_id'] !== '' ? (int) $formData['team_id'] : null,
                     ]);
 
                     $tagNames = Task::parseTagString($formData['tags']);
@@ -356,8 +399,13 @@ class TaskController
             return;
         }
 
+        // AP16: Team edit check
+        $userId = (int) $_SESSION['user_id'];
+        if (!TeamService::canEditTask($userId, $task)) {
+            Authz::deny();
+        }
+
         try {
-            $userId = (int) $_SESSION['user_id'];
             Task::delete($id);
             ActivityService::log('task', $id, 'task_deleted', $userId, ['title' => $task['title']]);
             Logger::info('Task deleted', ['task_id' => $id, 'title' => $task['title']]);
@@ -393,13 +441,18 @@ class TaskController
             return;
         }
 
+        // AP16: Team edit check
+        $userId = (int) $_SESSION['user_id'];
+        if (!TeamService::canEditTask($userId, $task)) {
+            Authz::deny();
+        }
+
         $targetColumn = BoardColumn::findById($columnId);
         if (!$targetColumn) {
             $this->redirect('tasks');
             return;
         }
 
-        $userId      = (int) $_SESSION['user_id'];
         $oldColumnId = (int) $task['column_id'];
 
         if ($oldColumnId !== $columnId) {

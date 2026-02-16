@@ -3268,3 +3268,142 @@ a.tag-ref:hover {
         padding: var(--sp-3);
     }
 }
+
+/* ===================================================================
+   AP16: Team Switcher
+   =================================================================== */
+
+.team-switcher-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.team-switcher-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius, 6px);
+    background: var(--bg-card, #fff);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    transition: background 150ms, border-color 150ms;
+}
+.team-switcher-btn:hover {
+    background: var(--bg-hover, #f3f4f6);
+    border-color: var(--primary, #3b82f6);
+}
+.team-switcher-btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+.team-switcher-label {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.team-switcher-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 200px;
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border);
+    border-radius: var(--radius, 6px);
+    box-shadow: var(--shadow-lg, 0 4px 16px rgba(0,0,0,0.12));
+    z-index: 120;
+    overflow: hidden;
+}
+.team-switcher-dropdown.open {
+    display: block;
+}
+.team-switcher-dropdown-header {
+    padding: 8px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border);
+}
+.team-switcher-item {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    color: var(--text);
+    text-align: left;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: background 100ms;
+}
+.team-switcher-item:hover {
+    background: var(--bg-hover, #f3f4f6);
+}
+.team-switcher-item.team-switcher-active {
+    background: var(--primary-bg, #eff6ff);
+    color: var(--primary, #3b82f6);
+    font-weight: 600;
+}
+
+/* ===================================================================
+   AP16: Team badge on lists
+   =================================================================== */
+.team-badge {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    background: var(--bg-hover, #f3f4f6);
+    color: var(--text-muted);
+    white-space: nowrap;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+/* ===================================================================
+   AP16: Form row for inline forms (team edit page)
+   =================================================================== */
+.form-row {
+    display: flex;
+    gap: var(--sp-3, 12px);
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+.form-group-inline {
+    flex: 1;
+    min-width: 150px;
+}
+.form-control-inline {
+    font-size: 0.85rem;
+    padding: 4px 8px;
+}
+
+/* ===================================================================
+   AP16: Team dropdown in create/edit forms
+   =================================================================== */
+.form-group .team-select {
+    max-width: 300px;
+}
+
+/* ===================================================================
+   AP16: Responsive team switcher
+   =================================================================== */
+@media (max-width: 768px) {
+    .team-switcher-dropdown {
+        width: calc(100vw - 24px);
+        right: -8px;
+    }
+    .team-switcher-label {
+        max-width: 80px;
+    }
+}

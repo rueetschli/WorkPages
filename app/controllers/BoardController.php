@@ -31,8 +31,12 @@ class BoardController
         // Load board columns
         $boardColumns = BoardColumn::allOrdered();
 
-        // Load tasks in one query with GROUP_CONCAT tags
-        $allTasks = Task::allForBoard($filters);
+        // AP16: Load tasks filtered by team visibility
+        $userId       = (int) $_SESSION['user_id'];
+        $globalRole   = $_SESSION['user_role'] ?? 'viewer';
+        $activeTeamId = TeamService::getActiveTeamId();
+
+        $allTasks = Task::allForBoardVisible($filters, $userId, $globalRole, $activeTeamId);
 
         // Group tasks by column_id
         $tasksByColumn = [];
@@ -81,6 +85,12 @@ class BoardController
             http_response_code(404);
             require APP_DIR . '/views/404.php';
             return;
+        }
+
+        // AP16: Team edit check
+        $currentUserId = (int) $_SESSION['user_id'];
+        if (!TeamService::canEditTask($currentUserId, $task)) {
+            Authz::deny();
         }
 
         // Validate target column exists

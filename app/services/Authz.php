@@ -60,6 +60,9 @@ class Authz
     // AP15: Notifications and Watchers
     const WATCH_TOGGLE = 'watch.toggle';
 
+    // AP16: Team management
+    const TEAM_MANAGE = 'team.manage';
+
     // ── Action-to-roles mapping ─────────────────────────────────────
 
     /**
@@ -116,6 +119,9 @@ class Authz
 
         // AP15: Watchers (member + admin can watch; viewer is read-only)
         self::WATCH_TOGGLE => ['admin', 'member'],
+
+        // AP16: Team management (admin globally, team_admin per team checked in controller)
+        self::TEAM_MANAGE => ['admin', 'member'],
     ];
 
     /**

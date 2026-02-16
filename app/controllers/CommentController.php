@@ -50,6 +50,14 @@ class CommentController
             return;
         }
 
+        // AP16: Team access check
+        if ($entityType === 'page' && !TeamService::canEditPage($userId, $entity)) {
+            Authz::deny();
+        }
+        if ($entityType === 'task' && !TeamService::canEditTask($userId, $entity)) {
+            Authz::deny();
+        }
+
         // Validate body
         $bodyMd = trim($bodyMd);
         $validationError = Comment::validateBody($bodyMd);

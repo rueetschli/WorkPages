@@ -68,6 +68,21 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
             </div>
         </div>
 
+        <?php if (!empty($availableTeams)): ?>
+        <div class="form-group">
+            <label for="team_id">Team (optional)</label>
+            <select id="team_id" name="team_id" class="form-input team-select">
+                <option value="">-- Global (kein Team) --</option>
+                <?php foreach ($availableTeams as $__t): ?>
+                    <option value="<?= (int) $__t['id'] ?>"
+                        <?= (string) ($formData['team_id'] ?? '') === (string) $__t['id'] ? 'selected' : '' ?>>
+                        <?= Security::esc($__t['name']) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <?php endif; ?>
+
         <div class="form-group">
             <label for="description_md">Beschreibung (Markdown)</label>
             <textarea id="description_md" name="description_md" class="form-input form-textarea"
