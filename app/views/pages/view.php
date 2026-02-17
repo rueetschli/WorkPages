@@ -217,10 +217,15 @@ if ($canShare) {
     <?php endif; ?>
 </div>
 
-<!-- AP8: Comments -->
+<!-- AP17: Attachments -->
 <?php
     $entityType = 'page';
     $entityId   = (int) $page['id'];
+    require APP_DIR . '/views/partials/attachments.php';
+?>
+
+<!-- AP8: Comments -->
+<?php
     require APP_DIR . '/views/partials/comments.php';
 ?>
 

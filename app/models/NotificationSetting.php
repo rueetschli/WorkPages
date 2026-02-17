@@ -138,6 +138,7 @@ class NotificationSetting
             'page.commented'     => 'notify_on_comments',
             'page_task.linked'   => 'notify_on_task_updates',
             'page_task.unlinked' => 'notify_on_task_updates',
+            // AP17: attachment.uploaded not mapped = always notify watchers (no separate setting)
         ];
 
         $settingKey = $map[$eventType] ?? null;

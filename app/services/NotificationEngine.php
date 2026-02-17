@@ -382,6 +382,21 @@ class NotificationEngine
                     : $baseUrl . '/?r=pages';
                 break;
 
+            // AP17: Attachment events
+            case 'attachment.uploaded':
+                $title = $actorName . ' hat eine Datei hochgeladen';
+                $fileName = $meta['original_name'] ?? '';
+                $body = $fileName !== '' ? mb_substr($fileName, 0, 200, 'UTF-8') : null;
+                if ($entityType === 'page') {
+                    $page = Page::findById($entityId);
+                    $url = $page
+                        ? $baseUrl . '/?r=page_view&slug=' . urlencode($page['slug'])
+                        : $baseUrl . '/?r=pages';
+                } elseif ($entityType === 'task') {
+                    $url = $baseUrl . '/?r=task_view&id=' . $entityId;
+                }
+                break;
+
             default:
                 $title = $actorName . ' hat eine Aktion ausgefuehrt';
                 break;

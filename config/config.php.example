@@ -48,4 +48,23 @@ return [
     'SMTP_USER'    => '',
     'SMTP_PASS'    => '',
     'SMTP_SECURE'  => 'tls', // 'tls' oder 'ssl'
+
+    // AP17: File Uploads
+    'UPLOAD_MAX_MB'         => 20,
+    'UPLOAD_MAX_PER_ENTITY' => 50,
+    'UPLOAD_ALLOWED_MIME'   => [
+        'application/pdf',
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'text/plain',
+        'text/csv',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ],
+    'UPLOAD_ALLOWED_EXT'    => [
+        'pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp',
+        'txt', 'csv', 'docx', 'xlsx',
+    ],
 ];

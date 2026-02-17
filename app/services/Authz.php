@@ -63,6 +63,11 @@ class Authz
     // AP16: Team management
     const TEAM_MANAGE = 'team.manage';
 
+    // AP17: Attachments
+    const ATTACHMENT_UPLOAD   = 'attachment.upload';
+    const ATTACHMENT_DOWNLOAD = 'attachment.download';
+    const ATTACHMENT_DELETE   = 'attachment.delete';
+
     // ── Action-to-roles mapping ─────────────────────────────────────
 
     /**
@@ -122,6 +127,11 @@ class Authz
 
         // AP16: Team management (admin globally, team_admin per team checked in controller)
         self::TEAM_MANAGE => ['admin', 'member'],
+
+        // AP17: Attachments (upload/delete = member+, download = all logged-in)
+        self::ATTACHMENT_UPLOAD   => ['admin', 'member'],
+        self::ATTACHMENT_DOWNLOAD => ['admin', 'member', 'viewer'],
+        self::ATTACHMENT_DELETE   => ['admin', 'member'],
     ];
 
     /**
