@@ -201,6 +201,15 @@ class ActivityService
                 $version = isset($meta['new_version']) ? ' (Version ' . Security::esc((string) $meta['new_version']) . ')' : '';
                 return $user . ' hat eine Migration ausgefuehrt' . $file . $version;
 
+            // AP17: Attachment actions
+            case 'attachment_uploaded':
+                $fileName = isset($meta['original_name']) ? ' "' . Security::esc($meta['original_name']) . '"' : '';
+                return $user . ' hat eine Datei' . $fileName . ' hochgeladen';
+
+            case 'attachment_deleted':
+                $fileName = isset($meta['original_name']) ? ' "' . Security::esc($meta['original_name']) . '"' : '';
+                return $user . ' hat eine Datei' . $fileName . ' entfernt';
+
             // Legacy action names (backward compatibility with pre-AP8 data)
             case 'created':
                 $title = isset($meta['title']) ? ' "' . Security::esc($meta['title']) . '"' : '';

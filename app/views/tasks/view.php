@@ -123,10 +123,15 @@ $canEdit = Authz::can(Authz::TASK_EDIT);
     <?php endif; ?>
 </div>
 
-<!-- AP8: Comments -->
+<!-- AP17: Attachments -->
 <?php
     $entityType = 'task';
     $entityId   = (int) $task['id'];
+    require APP_DIR . '/views/partials/attachments.php';
+?>
+
+<!-- AP8: Comments -->
+<?php
     require APP_DIR . '/views/partials/comments.php';
 ?>
 

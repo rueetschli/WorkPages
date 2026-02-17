@@ -158,6 +158,13 @@ class InstallController
             'ok'    => extension_loaded('json'),
         ];
 
+        // AP17: fileinfo extension (for upload MIME detection)
+        $checks[] = [
+            'label' => 'PHP Extension: fileinfo',
+            'value' => extension_loaded('fileinfo') ? 'Geladen' : 'Fehlt',
+            'ok'    => extension_loaded('fileinfo'),
+        ];
+
         // Write permissions: storage/logs
         $logsDir = ROOT_DIR . '/storage/logs';
         $checks[] = [
@@ -311,6 +318,10 @@ class InstallController
             $content .= "    // Pfade (normalerweise keine Aenderung noetig)\n";
             $content .= "    'LOG_FILE'  => __DIR__ . '/../storage/logs/app.log',\n";
             $content .= "    'UPLOAD_DIR'=> __DIR__ . '/../storage/uploads',\n";
+            $content .= "\n";
+            $content .= "    // AP17: File Uploads\n";
+            $content .= "    'UPLOAD_MAX_MB'         => 20,\n";
+            $content .= "    'UPLOAD_MAX_PER_ENTITY' => 50,\n";
             $content .= "];\n";
 
             $result = file_put_contents($this->configFile, $content);

@@ -143,6 +143,10 @@ require_once APP_DIR . '/models/Team.php';
 require_once APP_DIR . '/models/TeamUser.php';
 require_once APP_DIR . '/services/TeamService.php';
 
+// AP17: File Attachments
+require_once APP_DIR . '/models/Attachment.php';
+require_once APP_DIR . '/services/AttachmentService.php';
+
 // ── Database (lazy) ─────────────────────────────────────────────────
 DB::setConfig($config);
 
@@ -241,6 +245,11 @@ $routes = [
     'admin_team_edit'          => ['controller' => 'TeamAdminController', 'action' => 'edit'],
     'admin_team_delete'        => ['controller' => 'TeamAdminController', 'action' => 'delete'],
     'team_switch'              => ['controller' => 'TeamAdminController', 'action' => 'switchTeam'],
+
+    // AP17: File Attachments
+    'attachment_upload'        => ['controller' => 'AttachmentController', 'action' => 'upload'],
+    'attachment_download'      => ['controller' => 'AttachmentController', 'action' => 'download'],
+    'attachment_delete'        => ['controller' => 'AttachmentController', 'action' => 'delete'],
 ];
 
 if (!isset($routes[$route])) {

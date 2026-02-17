@@ -10,6 +10,7 @@ storage/cache/*
 storage/install.lock
 !storage/logs/.gitkeep
 !storage/uploads/.gitkeep
+!storage/uploads/.htaccess
 !storage/cache/.gitkeep
 
 # OS files
