@@ -35,5 +35,42 @@ class EventService
                 'error'  => $e->getMessage(),
             ]);
         }
+
+        // AP19: Enqueue webhook deliveries for supported events
+        try {
+            if (in_array($eventName, WebhookService::EVENTS, true)) {
+                // Resolve team_id from entity
+                $teamId = null;
+                if ($entityType === 'task') {
+                    $entity = Task::findById($entityId);
+                    $teamId = $entity ? ($entity['team_id'] ?? null) : null;
+                    if ($teamId !== null) {
+                        $teamId = (int) $teamId;
+                    }
+                } elseif ($entityType === 'page') {
+                    $entity = Page::findById($entityId);
+                    $teamId = $entity ? ($entity['team_id'] ?? null) : null;
+                    if ($teamId !== null) {
+                        $teamId = (int) $teamId;
+                    }
+                }
+
+                $payload = WebhookService::buildPayload(
+                    $eventName,
+                    $entityType,
+                    $entityId,
+                    $actorUserId,
+                    $teamId,
+                    $meta
+                );
+
+                WebhookService::enqueue($eventName, $payload, $teamId);
+            }
+        } catch (\Throwable $e) {
+            Logger::error('EventService webhook enqueue failed', [
+                'event' => $eventName,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

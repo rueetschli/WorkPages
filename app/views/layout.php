@@ -209,6 +209,13 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
                     Einstellungen
                 </a>
             </li>
+            <li>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=settings_api_keys"
+                   class="nav-link <?= in_array($currentRoute, ['settings_api_keys', 'settings_api_key_create'], true) ? 'active' : '' ?>">
+                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.78 7.78 5.5 5.5 0 017.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></span>
+                    API-Schluessel
+                </a>
+            </li>
             <?php if (Authz::can(Authz::ADMIN_USERS_MANAGE)): ?>
             <li class="nav-separator"></li>
             <li>
@@ -237,6 +244,20 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
                    class="nav-link <?= $currentRoute === 'admin_email_queue' ? 'active' : '' ?>">
                     <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
                     E-Mail Queue
+                </a>
+            </li>
+            <li>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=admin_webhooks"
+                   class="nav-link <?= in_array($currentRoute, ['admin_webhooks', 'admin_webhook_create', 'admin_webhook_edit'], true) ? 'active' : '' ?>">
+                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></span>
+                    Webhooks
+                </a>
+            </li>
+            <li>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=admin_webhook_queue"
+                   class="nav-link <?= $currentRoute === 'admin_webhook_queue' ? 'active' : '' ?>">
+                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+                    Webhook Queue
                 </a>
             </li>
             <?php endif; ?>
