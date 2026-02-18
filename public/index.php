@@ -152,11 +152,45 @@ require_once APP_DIR . '/services/TaskFlowService.php';
 require_once APP_DIR . '/services/ReportingService.php';
 require_once APP_DIR . '/services/ReportCacheService.php';
 
+// AP19: API and Integrations
+require_once APP_DIR . '/services/ApiResponse.php';
+require_once APP_DIR . '/services/ApiAuthService.php';
+require_once APP_DIR . '/services/ApiScopeService.php';
+require_once APP_DIR . '/services/RateLimitService.php';
+require_once APP_DIR . '/services/IdempotencyService.php';
+require_once APP_DIR . '/services/WebhookService.php';
+require_once APP_DIR . '/services/WebhookDeliveryService.php';
+require_once APP_DIR . '/services/ApiRouter.php';
+
 // ── Database (lazy) ─────────────────────────────────────────────────
 DB::setConfig($config);
 
 // ── Make config available to controllers/views ──────────────────────
 $GLOBALS['config'] = $config;
+
+// ── AP19: REST API v1 routing ────────────────────────────────────────
+// Intercept /api/v1/* requests before normal UI routing.
+$requestUri = $_SERVER['REQUEST_URI'] ?? '';
+$scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/public/index.php');
+$pathInfo = parse_url($requestUri, PHP_URL_PATH);
+// Strip script directory prefix to get the relative path
+if ($scriptDir !== '/' && $scriptDir !== '' && str_starts_with($pathInfo, $scriptDir)) {
+    $pathInfo = substr($pathInfo, strlen($scriptDir));
+}
+
+if (preg_match('#^/api/v1/(.+)$#', $pathInfo, $apiMatches)) {
+    try {
+        ApiRouter::handle($apiMatches[1]);
+    } catch (Throwable $e) {
+        Logger::error('API unhandled exception', [
+            'message' => $e->getMessage(),
+            'file'    => $e->getFile(),
+            'line'    => $e->getLine(),
+        ]);
+        ApiResponse::serverError('Interner Serverfehler.');
+    }
+    exit;
+}
 
 // ── Routing ─────────────────────────────────────────────────────────
 
@@ -261,6 +295,23 @@ $routes = [
     'reports_flow'             => ['controller' => 'ReportsController', 'action' => 'flow'],
     'reports_aging'            => ['controller' => 'ReportsController', 'action' => 'aging'],
     'reports_export_csv'       => ['controller' => 'ReportsController', 'action' => 'exportCsv'],
+
+    // AP19: API Key Management (UI)
+    'settings_api_keys'        => ['controller' => 'ApiKeysController', 'action' => 'index'],
+    'settings_api_key_create'  => ['controller' => 'ApiKeysController', 'action' => 'create'],
+    'settings_api_key_revoke'  => ['controller' => 'ApiKeysController', 'action' => 'revoke'],
+
+    // AP19: Webhooks Admin (UI)
+    'admin_webhooks'           => ['controller' => 'WebhooksAdminController', 'action' => 'index'],
+    'admin_webhook_create'     => ['controller' => 'WebhooksAdminController', 'action' => 'create'],
+    'admin_webhook_edit'       => ['controller' => 'WebhooksAdminController', 'action' => 'edit'],
+    'admin_webhook_delete'     => ['controller' => 'WebhooksAdminController', 'action' => 'delete'],
+    'admin_webhook_regen_secret' => ['controller' => 'WebhooksAdminController', 'action' => 'regenerateSecret'],
+
+    // AP19: Webhook Queue Admin (UI)
+    'admin_webhook_queue'      => ['controller' => 'WebhookQueueAdminController', 'action' => 'index'],
+    'admin_webhook_queue_send' => ['controller' => 'WebhookQueueAdminController', 'action' => 'send'],
+    'admin_webhook_queue_retry'=> ['controller' => 'WebhookQueueAdminController', 'action' => 'retry'],
 ];
 
 if (!isset($routes[$route])) {
