@@ -76,16 +76,20 @@ class BoardColumn
     public static function create(array $data): int
     {
         $slug = self::generateSlug($data['name']);
+        $category = (!empty($data['category']) && in_array($data['category'], ['backlog', 'active', 'done'], true))
+            ? $data['category']
+            : 'active';
 
         DB::query(
-            'INSERT INTO board_columns (name, slug, position, color, wip_limit, is_default, created_at)
-             VALUES (?, ?, ?, ?, ?, 0, NOW())',
+            'INSERT INTO board_columns (name, slug, position, color, wip_limit, category, is_default, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, 0, NOW())',
             [
                 $data['name'],
                 $slug,
                 (int) ($data['position'] ?? self::nextPosition()),
                 !empty($data['color']) ? $data['color'] : null,
                 !empty($data['wip_limit']) ? (int) $data['wip_limit'] : null,
+                $category,
             ]
         );
 
@@ -120,6 +124,12 @@ class BoardColumn
         if (array_key_exists('wip_limit', $data)) {
             $sets[]   = 'wip_limit = ?';
             $params[] = !empty($data['wip_limit']) ? (int) $data['wip_limit'] : null;
+        }
+
+        // AP18: Category support
+        if (array_key_exists('category', $data) && in_array($data['category'], ['backlog', 'active', 'done'], true)) {
+            $sets[]   = 'category = ?';
+            $params[] = $data['category'];
         }
 
         if (empty($sets)) {

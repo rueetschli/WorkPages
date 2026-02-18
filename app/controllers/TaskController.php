@@ -156,6 +156,9 @@ class TaskController
                         'team_id'        => $formData['team_id'] !== '' ? (int) $formData['team_id'] : null,
                     ]);
 
+                    // AP18: Set initial flow dates based on column category
+                    TaskFlowService::onTaskCreated($taskId, $columnId);
+
                     $tagNames = Task::parseTagString($formData['tags']);
                     Task::setTags($taskId, $tagNames);
 
@@ -302,6 +305,11 @@ class TaskController
 
                     // AP14: Sync mentions
                     TextCommands::syncMentions($cleanedDesc, 'task', $id, $userId);
+
+                    // AP18: Update flow timestamps on column change
+                    if ($oldColumnId !== $newColumnId) {
+                        TaskFlowService::onColumnChange($id, $oldColumnId, $newColumnId);
+                    }
 
                     // Log column change separately
                     if ($oldColumnId !== $newColumnId) {
@@ -461,6 +469,9 @@ class TaskController
                     'column_id'  => $columnId,
                     'updated_by' => $userId,
                 ]);
+
+                // AP18: Update flow timestamps
+                TaskFlowService::onColumnChange($id, $oldColumnId, $columnId);
 
                 $oldColumn = BoardColumn::findById($oldColumnId);
                 $meta = [

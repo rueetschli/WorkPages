@@ -108,6 +108,11 @@ class BoardController
         try {
             Task::moveToColumn($taskId, $newColumnId, $afterId, $beforeId, $userId);
 
+            // AP18: Update flow timestamps
+            if ($oldColumnId !== $newColumnId) {
+                TaskFlowService::onColumnChange($taskId, $oldColumnId, $newColumnId);
+            }
+
             // Log column change if column actually changed
             if ($oldColumnId !== $newColumnId) {
                 $oldColumn = BoardColumn::findById($oldColumnId);
@@ -249,6 +254,7 @@ class BoardController
         $name     = trim($_POST['name'] ?? '');
         $color    = trim($_POST['color'] ?? '');
         $wipLimit = trim($_POST['wip_limit'] ?? '');
+        $category = trim($_POST['category'] ?? 'active');
 
         if ($name === '') {
             $_SESSION['_flash_error'] = 'Name der Spalte ist erforderlich.';
@@ -268,6 +274,7 @@ class BoardController
             'name'      => $name,
             'color'     => $color,
             'wip_limit' => $wipLimit !== '' ? (int) $wipLimit : null,
+            'category'  => $category,
         ]);
 
         ActivityService::log('board_column', $id, 'column_created', $userId, [
@@ -296,6 +303,7 @@ class BoardController
         $name     = trim($_POST['name'] ?? '');
         $color    = trim($_POST['color'] ?? '');
         $wipLimit = trim($_POST['wip_limit'] ?? '');
+        $category = trim($_POST['category'] ?? '');
 
         $column = BoardColumn::findById($id);
         if (!$column) {
@@ -319,11 +327,15 @@ class BoardController
         $userId  = (int) $_SESSION['user_id'];
         $oldName = $column['name'];
 
-        BoardColumn::update($id, [
+        $updateData = [
             'name'      => $name,
             'color'     => $color,
             'wip_limit' => $wipLimit !== '' ? (int) $wipLimit : null,
-        ]);
+        ];
+        if ($category !== '' && in_array($category, ['backlog', 'active', 'done'], true)) {
+            $updateData['category'] = $category;
+        }
+        BoardColumn::update($id, $updateData);
 
         ActivityService::log('board_column', $id, 'column_updated', $userId, [
             'old_name'    => $oldName,
