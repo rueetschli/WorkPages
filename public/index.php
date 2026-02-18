@@ -147,6 +147,11 @@ require_once APP_DIR . '/services/TeamService.php';
 require_once APP_DIR . '/models/Attachment.php';
 require_once APP_DIR . '/services/AttachmentService.php';
 
+// AP18: Reporting and Flow Metrics
+require_once APP_DIR . '/services/TaskFlowService.php';
+require_once APP_DIR . '/services/ReportingService.php';
+require_once APP_DIR . '/services/ReportCacheService.php';
+
 // ── Database (lazy) ─────────────────────────────────────────────────
 DB::setConfig($config);
 
@@ -250,6 +255,12 @@ $routes = [
     'attachment_upload'        => ['controller' => 'AttachmentController', 'action' => 'upload'],
     'attachment_download'      => ['controller' => 'AttachmentController', 'action' => 'download'],
     'attachment_delete'        => ['controller' => 'AttachmentController', 'action' => 'delete'],
+
+    // AP18: Reports and Flow Metrics
+    'reports_overview'         => ['controller' => 'ReportsController', 'action' => 'overview'],
+    'reports_flow'             => ['controller' => 'ReportsController', 'action' => 'flow'],
+    'reports_aging'            => ['controller' => 'ReportsController', 'action' => 'aging'],
+    'reports_export_csv'       => ['controller' => 'ReportsController', 'action' => 'exportCsv'],
 ];
 
 if (!isset($routes[$route])) {

@@ -176,6 +176,15 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
                     Board
                 </a>
             </li>
+            <?php if (Authz::can(Authz::REPORT_VIEW)): ?>
+            <li>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=reports_overview"
+                   class="nav-link <?= in_array($currentRoute, ['reports_overview', 'reports_flow', 'reports_aging'], true) ? 'active' : '' ?>">
+                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+                    Reports
+                </a>
+            </li>
+            <?php endif; ?>
             <li>
                 <a href="<?= Security::esc($baseUrl) ?>/?r=search"
                    class="nav-link <?= $currentRoute === 'search' ? 'active' : '' ?>">

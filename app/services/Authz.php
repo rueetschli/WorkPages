@@ -68,6 +68,10 @@ class Authz
     const ATTACHMENT_DOWNLOAD = 'attachment.download';
     const ATTACHMENT_DELETE   = 'attachment.delete';
 
+    // AP18: Reports
+    const REPORT_VIEW   = 'report.view';
+    const REPORT_EXPORT = 'report.export';
+
     // ── Action-to-roles mapping ─────────────────────────────────────
 
     /**
@@ -132,6 +136,10 @@ class Authz
         self::ATTACHMENT_UPLOAD   => ['admin', 'member'],
         self::ATTACHMENT_DOWNLOAD => ['admin', 'member', 'viewer'],
         self::ATTACHMENT_DELETE   => ['admin', 'member'],
+
+        // AP18: Reports (view = all logged-in, export = member+)
+        self::REPORT_VIEW   => ['admin', 'member', 'viewer'],
+        self::REPORT_EXPORT => ['admin', 'member'],
     ];
 
     /**

@@ -42,6 +42,14 @@ $totalCols = count($columns);
                 <input type="number" id="col-wip" name="wip_limit" class="form-input form-input-sm"
                        min="1" max="999" placeholder="(kein Limit)" style="width: 100px;">
             </div>
+            <div class="filter-group">
+                <label for="col-category">Kategorie</label>
+                <select id="col-category" name="category" class="form-input form-input-sm">
+                    <option value="backlog">Backlog</option>
+                    <option value="active" selected>Aktiv</option>
+                    <option value="done">Done</option>
+                </select>
+            </div>
             <div class="filter-group filter-actions">
                 <button type="submit" class="btn btn-primary btn-sm-pad">Spalte erstellen</button>
             </div>
@@ -63,6 +71,7 @@ $totalCols = count($columns);
                     <tr>
                         <th>Reihenfolge</th>
                         <th>Name</th>
+                        <th>Kategorie</th>
                         <th>Farbe</th>
                         <th>WIP-Limit</th>
                         <th>Tasks</th>
@@ -103,6 +112,15 @@ $totalCols = count($columns);
                         <!-- Name (editable form) -->
                         <td class="card-cell-title" data-label="Name">
                             <strong><?= Security::esc($colName) ?></strong>
+                        </td>
+
+                        <!-- Category (AP18) -->
+                        <td data-label="Kategorie">
+                            <?php
+                                $catLabel = ['backlog' => 'Backlog', 'active' => 'Aktiv', 'done' => 'Done'];
+                                $catVal = $col['category'] ?? 'active';
+                            ?>
+                            <span class="status-badge status-<?= Security::esc($catVal) ?>"><?= Security::esc($catLabel[$catVal] ?? $catVal) ?></span>
                         </td>
 
                         <!-- Color -->
@@ -158,7 +176,7 @@ $totalCols = count($columns);
                     <!-- Inline edit row (hidden by default) -->
                     <?php if ($canManage): ?>
                     <tr id="edit-row-<?= $colId ?>" style="display: none;" class="column-edit-row">
-                        <td colspan="7">
+                        <td colspan="8">
                             <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=board_column_update" class="column-inline-form">
                                 <?= Security::csrfField() ?>
                                 <input type="hidden" name="id" value="<?= $colId ?>">
@@ -181,6 +199,14 @@ $totalCols = count($columns);
                                                value="<?= $colWip !== null ? (int) $colWip : '' ?>"
                                                placeholder="(kein)">
                                     </div>
+                                    <div class="filter-group">
+                                        <label>Kategorie</label>
+                                        <select name="category" class="form-input form-input-sm">
+                                            <option value="backlog"<?= ($col['category'] ?? '') === 'backlog' ? ' selected' : '' ?>>Backlog</option>
+                                            <option value="active"<?= ($col['category'] ?? 'active') === 'active' ? ' selected' : '' ?>>Aktiv</option>
+                                            <option value="done"<?= ($col['category'] ?? '') === 'done' ? ' selected' : '' ?>>Done</option>
+                                        </select>
+                                    </div>
                                     <div class="filter-group filter-actions">
                                         <button type="submit" class="btn btn-primary btn-sm-pad">Speichern</button>
                                         <button type="button" class="btn btn-secondary btn-sm-pad"
@@ -194,7 +220,7 @@ $totalCols = count($columns);
                     <!-- Inline delete confirmation (hidden by default) -->
                     <?php if ($totalCols > 1): ?>
                     <tr id="delete-row-<?= $colId ?>" style="display: none;" class="column-delete-row">
-                        <td colspan="7">
+                        <td colspan="8">
                             <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=board_column_delete" class="column-inline-form">
                                 <?= Security::csrfField() ?>
                                 <input type="hidden" name="id" value="<?= $colId ?>">
