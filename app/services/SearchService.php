@@ -68,6 +68,11 @@ class SearchService
     {
         $mode = self::resolveMode($configMode);
 
+        // Force LIKE mode if query is too short for standard fulltext (typically 4 chars)
+        if (mb_strlen($q, 'UTF-8') < 4) {
+            $mode = 'like';
+        }
+
         // AP16: Build team visibility clause
         $visSql = '1=1';
         $visParams = [];
@@ -143,6 +148,11 @@ class SearchService
     public static function searchTasks(string $q, int $limit = 20, string $configMode = 'like', ?int $userId = null, ?string $globalRole = null, ?int $filterTeamId = null): array
     {
         $mode = self::resolveMode($configMode);
+
+        // Force LIKE mode if query is too short for standard fulltext (typically 4 chars)
+        if (mb_strlen($q, 'UTF-8') < 4) {
+            $mode = 'like';
+        }
 
         // AP16: Build team visibility clause
         $visSql = '1=1';
