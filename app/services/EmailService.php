@@ -62,7 +62,11 @@ class EmailService
      */
     public static function renderNotificationEmail(array $notification, array $user, string $baseUrl): array
     {
-        $appName = $GLOBALS['config']['APP_NAME'] ?? 'WorkPages';
+        try {
+            $appName = SystemSettingsService::companyName();
+        } catch (Throwable $e) {
+            $appName = $GLOBALS['config']['APP_NAME'] ?? 'WorkPages';
+        }
         $title   = $notification['title'] ?? '';
         $body    = $notification['body'] ?? '';
         $url     = $notification['url'] ?? $baseUrl;
@@ -103,7 +107,11 @@ class EmailService
      */
     public static function renderDigestEmail(array $notifications, array $user, string $baseUrl, string $period): array
     {
-        $appName = $GLOBALS['config']['APP_NAME'] ?? 'WorkPages';
+        try {
+            $appName = SystemSettingsService::companyName();
+        } catch (Throwable $e) {
+            $appName = $GLOBALS['config']['APP_NAME'] ?? 'WorkPages';
+        }
         $count = count($notifications);
         $periodLabel = $period === 'daily' ? 'Tages' : 'Wochen';
 
@@ -166,7 +174,11 @@ class EmailService
      */
     private static function sendMail(array $row): true|string
     {
-        $appName = $GLOBALS['config']['APP_NAME'] ?? 'WorkPages';
+        try {
+            $appName = SystemSettingsService::companyName();
+        } catch (Throwable $e) {
+            $appName = $GLOBALS['config']['APP_NAME'] ?? 'WorkPages';
+        }
         $fromEmail = $GLOBALS['config']['MAIL_FROM'] ?? ('noreply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost'));
         $fromName  = $GLOBALS['config']['MAIL_FROM_NAME'] ?? $appName;
 
@@ -206,7 +218,12 @@ class EmailService
         $pass    = $GLOBALS['config']['SMTP_PASS'] ?? '';
         $secure  = $GLOBALS['config']['SMTP_SECURE'] ?? 'tls';
         $from    = $GLOBALS['config']['MAIL_FROM'] ?? ('noreply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost'));
-        $fromName = $GLOBALS['config']['MAIL_FROM_NAME'] ?? ($GLOBALS['config']['APP_NAME'] ?? 'WorkPages');
+        try {
+            $__smtpAppName = SystemSettingsService::companyName();
+        } catch (Throwable $e) {
+            $__smtpAppName = $GLOBALS['config']['APP_NAME'] ?? 'WorkPages';
+        }
+        $fromName = $GLOBALS['config']['MAIL_FROM_NAME'] ?? $__smtpAppName;
 
         $prefix = ($secure === 'ssl') ? 'ssl://' : '';
         $fp = @fsockopen($prefix . $host, $port, $errno, $errstr, 10);

@@ -61,8 +61,8 @@
     --color-sidebar-hover:   var(--c-gray-800);
     --color-sidebar-active:  rgba(255, 255, 255, 0.12);
     --color-header:          #ffffff;
-    --color-primary:         var(--c-blue-600);
-    --color-primary-hover:   var(--c-blue-700);
+    --color-primary:         var(--wp-color-primary, var(--c-blue-600));
+    --color-primary-hover:   var(--wp-color-accent, var(--c-blue-700));
     --color-primary-subtle:  var(--c-blue-50);
     --color-text:            var(--c-gray-900);
     --color-text-secondary:  var(--c-gray-500);
@@ -153,8 +153,8 @@
     --color-sidebar-hover:   #151821;
     --color-sidebar-active:  rgba(255, 255, 255, 0.1);
     --color-header:          #151821;
-    --color-primary:         var(--c-blue-500);
-    --color-primary-hover:   var(--c-blue-600);
+    --color-primary:         var(--wp-color-primary, var(--c-blue-500));
+    --color-primary-hover:   var(--wp-color-accent, var(--c-blue-600));
     --color-primary-subtle:  rgba(59, 130, 246, 0.12);
     --color-text:            var(--c-gray-200);
     --color-text-secondary:  var(--c-gray-400);
@@ -3974,5 +3974,301 @@ a.tag-ref:hover {
 
     .report-export-link {
         margin-left: 0;
+    }
+}
+
+
+/* ============================================================================
+   AP20 - Finalization, Branding, Personalization
+   ============================================================================ */
+
+/* --- Logo in header --- */
+.app-logo-img {
+    height: 28px;
+    width: auto;
+    max-width: 160px;
+    object-fit: contain;
+    vertical-align: middle;
+}
+
+/* --- Logo on login page --- */
+.login-logo {
+    display: block;
+    max-height: 56px;
+    max-width: 200px;
+    width: auto;
+    margin: 0 auto var(--sp-4);
+    object-fit: contain;
+}
+
+/* --- Maintenance banner --- */
+.maintenance-banner {
+    padding: var(--sp-2) var(--sp-4);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    text-align: center;
+    line-height: var(--leading-normal);
+}
+
+.maintenance-info {
+    background: var(--c-blue-50, #eff6ff);
+    color: var(--c-blue-700, #1d4ed8);
+    border-bottom: 1px solid var(--c-blue-200, #bfdbfe);
+}
+
+.maintenance-warning {
+    background: var(--c-amber-50, #fffbeb);
+    color: var(--c-amber-700, #b45309);
+    border-bottom: 1px solid var(--c-amber-200, #fde68a);
+}
+
+.maintenance-critical {
+    background: var(--c-red-50, #fef2f2);
+    color: var(--c-red-700, #b91c1c);
+    border-bottom: 1px solid var(--c-red-200, #fecaca);
+}
+
+[data-theme="dark"] .maintenance-info {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--c-blue-200, #bfdbfe);
+    border-bottom-color: rgba(59, 130, 246, 0.2);
+}
+
+[data-theme="dark"] .maintenance-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #fcd34d;
+    border-bottom-color: rgba(245, 158, 11, 0.2);
+}
+
+[data-theme="dark"] .maintenance-critical {
+    background: rgba(239, 68, 68, 0.1);
+    color: #fca5a5;
+    border-bottom-color: rgba(239, 68, 68, 0.2);
+}
+
+/* --- App Footer --- */
+.app-footer {
+    padding: var(--sp-3) var(--sp-6);
+    margin-left: var(--sidebar-width);
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    text-align: center;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+}
+
+.app-footer a {
+    color: var(--color-text-secondary);
+    text-decoration: none;
+}
+
+.app-footer a:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+}
+
+.app-footer-sep {
+    margin: 0 var(--sp-2);
+    color: var(--color-border-strong);
+}
+
+@media (max-width: 768px) {
+    .app-footer {
+        margin-left: 0;
+        padding: var(--sp-3);
+    }
+}
+
+/* --- Admin Settings Tabs --- */
+.admin-settings-tabs {
+    display: flex;
+    gap: var(--sp-1);
+    margin-bottom: var(--sp-4);
+    border-bottom: 2px solid var(--color-border);
+    padding-bottom: 0;
+    overflow-x: auto;
+}
+
+.admin-settings-tab {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--sp-2) var(--sp-4);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+}
+
+.admin-settings-tab:hover {
+    color: var(--color-text);
+}
+
+.admin-settings-tab-active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+}
+
+/* --- Preset Grid --- */
+.preset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--sp-3);
+}
+
+.preset-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-3);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    background: var(--color-surface);
+}
+
+.preset-card:hover {
+    border-color: var(--color-primary);
+}
+
+.preset-card-active {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-focus-ring);
+}
+
+.preset-radio {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.preset-colors {
+    display: flex;
+    gap: var(--sp-1);
+}
+
+.preset-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-full);
+    border: 2px solid var(--color-surface);
+    box-shadow: var(--shadow-xs);
+}
+
+.preset-name {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+/* --- Radio Group --- */
+.radio-group {
+    display: flex;
+    gap: var(--sp-4);
+    margin-bottom: var(--sp-2);
+}
+
+.radio-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    font-size: var(--text-sm);
+    cursor: pointer;
+}
+
+/* --- Color Input --- */
+.color-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--sp-3);
+}
+
+.color-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+}
+
+.color-input-wrap input[type="color"] {
+    width: 40px;
+    height: 36px;
+    padding: 2px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    background: var(--color-surface);
+}
+
+/* --- Color Preview --- */
+.color-preview {
+    margin-top: var(--sp-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.color-preview-header {
+    padding: var(--sp-3) var(--sp-4);
+}
+
+.color-preview-body {
+    padding: var(--sp-4);
+    display: flex;
+    gap: var(--sp-2);
+    background: var(--color-surface);
+}
+
+/* --- Logo Preview --- */
+.logo-preview {
+    margin-bottom: var(--sp-3);
+    padding: var(--sp-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-sunken);
+    display: inline-block;
+}
+
+.logo-preview-img {
+    max-height: 48px;
+    max-width: 200px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* --- Form Actions --- */
+.form-actions {
+    display: flex;
+    gap: var(--sp-2);
+    margin-top: var(--sp-4);
+    padding-top: var(--sp-3);
+    border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 768px) {
+    .preset-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .color-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .radio-group {
+        flex-direction: column;
+        gap: var(--sp-2);
+    }
+
+    .admin-settings-tabs {
+        gap: 0;
+    }
+
+    .admin-settings-tab {
+        padding: var(--sp-2) var(--sp-3);
+        font-size: var(--text-xs);
     }
 }

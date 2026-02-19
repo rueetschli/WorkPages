@@ -6,11 +6,37 @@
  *   $pageTitle   - string, used in <title> and header
  *   $contentView - string, path to the view file rendered inside the main area
  */
-$appName      = $GLOBALS['config']['APP_NAME'] ?? 'WorkPages';
 $baseUrl      = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 $currentRoute = $_GET['r'] ?? 'home';
 $userName     = Security::esc($_SESSION['user_name'] ?? '');
 $userRole     = Security::esc($_SESSION['user_role'] ?? '');
+
+// AP20: System settings for branding
+$__sysCompanyName = '';
+$__sysLogoUrl     = '';
+$__sysMaintenance = false;
+$__sysMaintMsg    = '';
+$__sysMaintLevel  = 'info';
+$__themeCssVars   = '';
+try {
+    $__sysCompanyName = SystemSettingsService::companyName();
+    $__sysLogoUrl     = SystemSettingsService::logoUrl();
+    $__sysMaintenance = SystemSettingsService::isMaintenanceActive();
+    $__sysMaintMsg    = SystemSettingsService::value('maintenance_message', '');
+    $__sysMaintLevel  = SystemSettingsService::value('maintenance_level', 'info');
+    $__themeCssVars   = ThemeService::renderCssVariables();
+} catch (Throwable $e) {
+    // Table may not exist yet
+    $__sysCompanyName = $GLOBALS['config']['APP_NAME'] ?? 'WorkPages';
+}
+$appName = $__sysCompanyName;
+
+// AP20: Version info
+$__versionInfo = ['version' => '', 'repo' => 'https://github.com/rueetschli/WorkPages', 'license' => 'MIT'];
+$__versionFile = CONFIG_DIR . '/version.php';
+if (file_exists($__versionFile)) {
+    $__versionInfo = require $__versionFile;
+}
 
 // AP16: Load teams for switcher
 $__activeTeamId = TeamService::getActiveTeamId();
@@ -40,6 +66,7 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
     <title><?= Security::esc($pageTitle) ?> - <?= Security::esc($appName) ?></title>
     <meta name="base-url" content="<?= Security::esc($baseUrl) ?>">
     <link rel="stylesheet" href="<?= Security::esc($baseUrl) ?>/assets/app.css">
+    <?= $__themeCssVars ?>
     <script>
     /* Apply saved theme immediately to prevent flash */
     (function() {
@@ -59,7 +86,7 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
         <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Menu">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
-        <a href="<?= Security::esc($baseUrl) ?>/?r=home" class="app-logo"><?= Security::esc($appName) ?></a>
+        <a href="<?= Security::esc($baseUrl) ?>/?r=home" class="app-logo"><?php if ($__sysLogoUrl !== ''): ?><img src="<?= Security::esc($__sysLogoUrl) ?>" alt="<?= Security::esc($appName) ?>" class="app-logo-img"><?php else: ?><?= Security::esc($appName) ?><?php endif; ?></a>
     </div>
     <div class="header-center">
         <form class="search-form" action="<?= Security::esc($baseUrl) ?>/" method="get">
@@ -141,6 +168,12 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
         <a href="<?= Security::esc($baseUrl) ?>/?r=logout" class="logout-link">Abmelden</a>
     </div>
 </header>
+
+<?php if ($__sysMaintenance && $__sysMaintMsg !== ''): ?>
+<div class="maintenance-banner maintenance-<?= Security::esc($__sysMaintLevel) ?>">
+    <?= Security::esc($__sysMaintMsg) ?>
+</div>
+<?php endif; ?>
 
 <!-- Body: sidebar + main -->
 <div class="app-body">
@@ -260,6 +293,13 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
                     Webhook Queue
                 </a>
             </li>
+            <li>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=admin_settings"
+                   class="nav-link <?= $currentRoute === 'admin_settings' ? 'active' : '' ?>">
+                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
+                    Branding
+                </a>
+            </li>
             <?php endif; ?>
             <?php if (Authz::can(Authz::TEAM_MANAGE)): ?>
             <li>
@@ -327,7 +367,7 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
 
         <div class="sidebar-footer">
             <span class="sidebar-label">Workspace</span>
-            <span class="workspace-name"><?= Security::esc($GLOBALS['config']['APP_NAME'] ?? 'WorkPages') ?></span>
+            <span class="workspace-name"><?= Security::esc($appName) ?></span>
         </div>
     </nav>
 
@@ -351,6 +391,17 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
     </main>
 
 </div>
+
+<!-- AP20: Footer -->
+<footer class="app-footer">
+    <span>Powered by <a href="<?= Security::esc($__versionInfo['repo'] ?? 'https://github.com/rueetschli/WorkPages') ?>" target="_blank" rel="noopener">WorkPages</a></span>
+    <span class="app-footer-sep">&middot;</span>
+    <span><?= Security::esc($__versionInfo['license'] ?? 'MIT') ?> License</span>
+    <?php if (!empty($__versionInfo['version'])): ?>
+    <span class="app-footer-sep">&middot;</span>
+    <span>v<?= Security::esc($__versionInfo['version']) ?></span>
+    <?php endif; ?>
+</footer>
 
 <script>
 (function() {
