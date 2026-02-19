@@ -6,9 +6,19 @@
  *   $error     - string|null, error message to display
  *   $pageTitle - string, page title
  */
-$appName = $GLOBALS['config']['APP_NAME'] ?? 'WorkPages';
 $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 $emailValue = Security::esc(trim($_POST['email'] ?? ''));
+
+// AP20: Use system settings for branding
+$__loginLogoUrl = '';
+$__loginThemeCss = '';
+try {
+    $appName = SystemSettingsService::companyName();
+    $__loginLogoUrl = SystemSettingsService::logoUrl();
+    $__loginThemeCss = ThemeService::renderCssVariables();
+} catch (Throwable $e) {
+    $appName = $GLOBALS['config']['APP_NAME'] ?? 'WorkPages';
+}
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -17,6 +27,7 @@ $emailValue = Security::esc(trim($_POST['email'] ?? ''));
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - <?= Security::esc($appName) ?></title>
     <link rel="stylesheet" href="<?= Security::esc($baseUrl) ?>/assets/app.css">
+    <?= $__loginThemeCss ?>
     <script>
     (function() {
         var t = localStorage.getItem('wp-theme');
@@ -28,7 +39,11 @@ $emailValue = Security::esc(trim($_POST['email'] ?? ''));
 
 <div class="login-container">
     <div class="login-card">
-        <h1 class="login-title"><?= Security::esc($appName) ?></h1>
+        <?php if ($__loginLogoUrl !== ''): ?>
+            <img src="<?= Security::esc($__loginLogoUrl) ?>" alt="<?= Security::esc($appName) ?>" class="login-logo">
+        <?php else: ?>
+            <h1 class="login-title"><?= Security::esc($appName) ?></h1>
+        <?php endif; ?>
         <p class="login-subtitle">Melden Sie sich an, um fortzufahren</p>
 
         <?php if (!empty($error)): ?>

@@ -152,6 +152,10 @@ require_once APP_DIR . '/services/TaskFlowService.php';
 require_once APP_DIR . '/services/ReportingService.php';
 require_once APP_DIR . '/services/ReportCacheService.php';
 
+// AP20: System Settings, Branding, Theme
+require_once APP_DIR . '/services/SystemSettingsService.php';
+require_once APP_DIR . '/services/ThemeService.php';
+
 // AP19: API and Integrations
 require_once APP_DIR . '/services/ApiResponse.php';
 require_once APP_DIR . '/services/ApiAuthService.php';
@@ -312,6 +316,9 @@ $routes = [
     'admin_webhook_queue'      => ['controller' => 'WebhookQueueAdminController', 'action' => 'index'],
     'admin_webhook_queue_send' => ['controller' => 'WebhookQueueAdminController', 'action' => 'send'],
     'admin_webhook_queue_retry'=> ['controller' => 'WebhookQueueAdminController', 'action' => 'retry'],
+
+    // AP20: System Settings and Branding
+    'admin_settings'           => ['controller' => 'AdminSettingsController', 'action' => 'index'],
 ];
 
 if (!isset($routes[$route])) {
