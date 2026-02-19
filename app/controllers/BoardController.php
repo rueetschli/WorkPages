@@ -397,6 +397,9 @@ class BoardController
 
         BoardColumn::delete($id, $targetColumnId);
 
+        // Fix positions in target column
+        Task::renumberColumn($targetColumnId);
+
         ActivityService::log('board_column', $id, 'column_deleted', $userId, [
             'column_name'      => $column['name'],
             'target_column_id' => $targetColumnId,

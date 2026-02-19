@@ -13,6 +13,10 @@ class TeamUser
      */
     public static function add(int $teamId, int $userId, string $role = 'team_member'): bool
     {
+        if (!in_array($role, self::ROLES, true)) {
+            return false;
+        }
+
         $existing = DB::fetch(
             'SELECT id FROM team_users WHERE team_id = ? AND user_id = ?',
             [$teamId, $userId]
@@ -48,6 +52,10 @@ class TeamUser
      */
     public static function updateRole(int $teamId, int $userId, string $role): void
     {
+        if (!in_array($role, self::ROLES, true)) {
+            return;
+        }
+
         DB::query(
             'UPDATE team_users SET role = ? WHERE team_id = ? AND user_id = ?',
             [$role, $teamId, $userId]

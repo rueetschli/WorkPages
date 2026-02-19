@@ -532,6 +532,14 @@ class Task
                     }
                     return (int) floor(((int) $prev['position'] + $beforePos) / 2);
                 }
+
+                // No prev task, so we are at the very beginning.
+                // If beforePos is small (e.g. 1), we risk collision or position 0.
+                if ($beforePos < 2) {
+                    self::renumberColumn($columnId);
+                    $beforePos = self::getPosition($beforeId);
+                }
+
                 return max(1, (int) floor($beforePos / 2));
             }
         }
