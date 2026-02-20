@@ -160,6 +160,9 @@ require_once APP_DIR . '/services/ThemeService.php';
 require_once APP_DIR . '/models/Board.php';
 require_once APP_DIR . '/services/BoardService.php';
 
+// AP22: Home Dashboard
+require_once APP_DIR . '/services/HomeDashboardService.php';
+
 // AP19: API and Integrations
 require_once APP_DIR . '/services/ApiResponse.php';
 require_once APP_DIR . '/services/ApiAuthService.php';
@@ -232,6 +235,7 @@ $routes = [
     'board_move'               => ['controller' => 'BoardController', 'action' => 'move'],
     'board_reorder'            => ['controller' => 'BoardController', 'action' => 'reorder'],
     'board_quick_add'          => ['controller' => 'BoardController', 'action' => 'quickAdd'],
+    'board_move_task_board'    => ['controller' => 'BoardController', 'action' => 'moveToBoard'],
 
     // AP21: Multi-Board management
     'boards'                   => ['controller' => 'BoardsController', 'action' => 'index'],

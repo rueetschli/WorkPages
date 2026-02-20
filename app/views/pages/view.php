@@ -1,6 +1,6 @@
 <?php
 /**
- * Page detail view.
+ * Page detail view (AP22: Information hierarchy refactor).
  * Variables: $page (array), $breadcrumb (array), $renderedContent (string),
  *            $pageTasks (array), $pageTaskTags (array), $users (array),
  *            $comments (array), $activities (array), $flashError (string|null)
@@ -45,6 +45,9 @@ if ($canShare) {
                 $watchEntityId = (int) $page['id'];
                 require APP_DIR . '/views/partials/watch_button.php';
             ?>
+            <?php if ($canShare): ?>
+            <button type="button" class="btn btn-secondary btn-sm-pad" onclick="document.getElementById('share-panel').style.display = document.getElementById('share-panel').style.display === 'none' ? 'block' : 'none'">Teilen</button>
+            <?php endif; ?>
             <?php if ($canEdit): ?>
             <a href="<?= Security::esc($baseUrl) ?>/?r=page_edit&slug=<?= Security::esc($page['slug']) ?>" class="btn btn-primary">Bearbeiten</a>
             <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=page_delete&slug=<?= Security::esc($page['slug']) ?>"
@@ -58,8 +61,7 @@ if ($canShare) {
 </div>
 
 <?php if ($canShare): ?>
-<div class="section-block share-section">
-    <h3>Teilen</h3>
+<div id="share-panel" class="share-panel-collapsible" style="display:none;">
     <?php if ($activeShare): ?>
         <?php
             $shareUrl = $baseUrl . '/?r=share&page_token=' . urlencode($activeShare['token']);
@@ -95,7 +97,8 @@ if ($canShare) {
 </div>
 <?php endif; ?>
 
-<div class="page-content md-content">
+<!-- AP22: Page content is dominant - no box wrapper, full-width typography -->
+<div class="page-content-primary md-content">
     <?= $renderedContent ?>
 </div>
 
@@ -229,8 +232,11 @@ if ($canShare) {
     require APP_DIR . '/views/partials/comments.php';
 ?>
 
-<!-- AP8: Activity Log -->
-<?php require APP_DIR . '/views/partials/activity.php'; ?>
+<!-- AP22: Activity - collapsible, visually subdued -->
+<details class="activity-collapsible">
+    <summary class="activity-collapsible-summary">Aktivitaet (<?= count($activities) ?>)</summary>
+    <?php require APP_DIR . '/views/partials/activity.php'; ?>
+</details>
 
 <div class="page-meta">
     <span class="text-muted">
