@@ -114,6 +114,7 @@ class TaskController
             'due_date'       => '',
             'tags'           => '',
             'team_id'        => $activeTeamId !== null ? (string) $activeTeamId : '',
+            'board_id'       => $_GET['board_id'] ?? '',
         ];
         $users = User::allForDropdown();
 
@@ -121,6 +122,9 @@ class TaskController
         $userId     = (int) $_SESSION['user_id'];
         $globalRole = $_SESSION['user_role'] ?? 'viewer';
         $availableTeams = TeamService::getTeamsForSwitcher($userId, $globalRole);
+
+        // AP21: Load boards for dropdown
+        $availableBoards = Board::allVisibleTo($userId, $globalRole);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Security::csrfGuard();
@@ -132,6 +136,7 @@ class TaskController
             $formData['due_date']       = trim($_POST['due_date'] ?? '');
             $formData['tags']           = trim($_POST['tags'] ?? '');
             $formData['team_id']        = $_POST['team_id'] ?? '';
+            $formData['board_id']       = $_POST['board_id'] ?? '';
 
             $error = $this->validate($formData);
 
@@ -154,6 +159,7 @@ class TaskController
                         'due_date'       => $formData['due_date'] !== '' ? $formData['due_date'] : null,
                         'created_by'     => $userId,
                         'team_id'        => $formData['team_id'] !== '' ? (int) $formData['team_id'] : null,
+                        'board_id'       => !empty($formData['board_id']) ? (int) $formData['board_id'] : null,
                     ]);
 
                     // AP18: Set initial flow dates based on column category
@@ -258,12 +264,16 @@ class TaskController
             'due_date'       => $task['due_date'] ?? '',
             'tags'           => $tagStr,
             'team_id'        => $task['team_id'] ?? '',
+            'board_id'       => $task['board_id'] ?? '',
         ];
         $users = User::allForDropdown();
 
         // AP16: Load teams for dropdown
         $globalRole = $_SESSION['user_role'] ?? 'viewer';
         $availableTeams = TeamService::getTeamsForSwitcher($userId, $globalRole);
+
+        // AP21: Load boards for dropdown
+        $availableBoards = Board::allVisibleTo($userId, $globalRole);
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Security::csrfGuard();
@@ -275,6 +285,7 @@ class TaskController
             $formData['due_date']       = trim($_POST['due_date'] ?? '');
             $formData['tags']           = trim($_POST['tags'] ?? '');
             $formData['team_id']        = $_POST['team_id'] ?? '';
+            $formData['board_id']       = $_POST['board_id'] ?? '';
 
             $error = $this->validate($formData);
 
@@ -298,6 +309,7 @@ class TaskController
                         'due_date'       => $formData['due_date'] !== '' ? $formData['due_date'] : null,
                         'updated_by'     => $userId,
                         'team_id'        => $formData['team_id'] !== '' ? (int) $formData['team_id'] : null,
+                        'board_id'       => !empty($formData['board_id']) ? (int) $formData['board_id'] : null,
                     ]);
 
                     $tagNames = Task::parseTagString($formData['tags']);

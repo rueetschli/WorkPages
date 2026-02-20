@@ -156,6 +156,10 @@ require_once APP_DIR . '/services/ReportCacheService.php';
 require_once APP_DIR . '/services/SystemSettingsService.php';
 require_once APP_DIR . '/services/ThemeService.php';
 
+// AP21: Multi-Board Support
+require_once APP_DIR . '/models/Board.php';
+require_once APP_DIR . '/services/BoardService.php';
+
 // AP19: API and Integrations
 require_once APP_DIR . '/services/ApiResponse.php';
 require_once APP_DIR . '/services/ApiAuthService.php';
@@ -224,8 +228,16 @@ $routes = [
     'page_tasks_remove'  => ['controller' => 'PageController', 'action' => 'tasksRemove'],
     'page_tasks_reorder' => ['controller' => 'PageController', 'action' => 'tasksReorder'],
     'board'                    => ['controller' => 'BoardController', 'action' => 'index'],
+    'board_view'               => ['controller' => 'BoardController', 'action' => 'index'],
     'board_move'               => ['controller' => 'BoardController', 'action' => 'move'],
     'board_reorder'            => ['controller' => 'BoardController', 'action' => 'reorder'],
+    'board_quick_add'          => ['controller' => 'BoardController', 'action' => 'quickAdd'],
+
+    // AP21: Multi-Board management
+    'boards'                   => ['controller' => 'BoardsController', 'action' => 'index'],
+    'board_create'             => ['controller' => 'BoardsController', 'action' => 'create'],
+    'board_edit'               => ['controller' => 'BoardsController', 'action' => 'edit'],
+    'board_delete'             => ['controller' => 'BoardsController', 'action' => 'delete'],
 
     // AP13: Board column management
     'board_columns'            => ['controller' => 'BoardController', 'action' => 'columns'],

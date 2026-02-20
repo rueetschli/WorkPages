@@ -203,10 +203,10 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
                 </a>
             </li>
             <li>
-                <a href="<?= Security::esc($baseUrl) ?>/?r=board"
-                   class="nav-link <?= $currentRoute === 'board' ? 'active' : '' ?>">
+                <a href="<?= Security::esc($baseUrl) ?>/?r=boards"
+                   class="nav-link <?= in_array($currentRoute, ['boards', 'board', 'board_view'], true) ? 'active' : '' ?>">
                     <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></span>
-                    Board
+                    Boards
                 </a>
             </li>
             <?php if (Authz::can(Authz::REPORT_VIEW)): ?>

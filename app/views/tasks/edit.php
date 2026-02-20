@@ -83,6 +83,21 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
         </div>
         <?php endif; ?>
 
+        <?php if (!empty($availableBoards)): ?>
+        <div class="form-group">
+            <label for="board_id">Board (optional)</label>
+            <select id="board_id" name="board_id" class="form-input">
+                <option value="">-- Kein Board --</option>
+                <?php foreach ($availableBoards as $__b): ?>
+                    <option value="<?= (int) $__b['id'] ?>"
+                        <?= (string) ($formData['board_id'] ?? '') === (string) $__b['id'] ? 'selected' : '' ?>>
+                        <?= Security::esc($__b['name']) ?><?= !empty($__b['team_name']) ? ' (' . Security::esc($__b['team_name']) . ')' : '' ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <?php endif; ?>
+
         <div class="form-group">
             <label for="description_md">Beschreibung (Markdown)</label>
             <textarea id="description_md" name="description_md" class="form-input form-textarea"
