@@ -387,6 +387,126 @@ class BoardController
         $this->redirectWithFilters($boardId);
     }
 
+    // ── AP22: Move Task to another Board ────────────────────────────
+
+    /**
+     * Move a task from one board to another (AP22).
+     * POST only, CSRF protected, requires member/admin role.
+     */
+    public function moveToBoard(): void
+    {
+        Authz::require(Authz::BOARD_MOVE);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('boards');
+            return;
+        }
+
+        Security::csrfGuard();
+
+        $taskId        = (int) ($_POST['task_id'] ?? 0);
+        $targetBoardId = (int) ($_POST['target_board_id'] ?? 0);
+        $userId        = (int) $_SESSION['user_id'];
+        $globalRole    = $_SESSION['user_role'] ?? 'viewer';
+
+        // Validate task
+        $task = Task::findById($taskId);
+        if (!$task) {
+            http_response_code(404);
+            require APP_DIR . '/views/404.php';
+            return;
+        }
+
+        // Team edit check
+        if (!TeamService::canEditTask($userId, $task)) {
+            Authz::deny();
+        }
+
+        // Validate target board
+        $targetBoard = Board::findById($targetBoardId);
+        if (!$targetBoard) {
+            $_SESSION['_flash_error'] = 'Ziel-Board nicht gefunden.';
+            $this->redirect('task_view&id=' . $taskId);
+            return;
+        }
+
+        // Check user can view target board
+        if (!BoardService::canView($userId, $targetBoard)) {
+            $_SESSION['_flash_error'] = 'Kein Zugriff auf das Ziel-Board.';
+            $this->redirect('task_view&id=' . $taskId);
+            return;
+        }
+
+        // Check team compatibility
+        $targetTeamId = $targetBoard['team_id'] ?? null;
+        $taskTeamId   = $task['team_id'] ?? null;
+
+        // Find default backlog column in target board
+        $defaultCol = DB::fetch(
+            "SELECT id FROM board_columns WHERE category = 'backlog' ORDER BY position ASC LIMIT 1"
+        );
+        if (!$defaultCol) {
+            $defaultCol = DB::fetch(
+                'SELECT id FROM board_columns ORDER BY position ASC LIMIT 1'
+            );
+        }
+        $targetColumnId = $defaultCol ? (int) $defaultCol['id'] : BoardColumn::getDefaultId();
+
+        $oldBoardId  = (int) ($task['board_id'] ?? 0);
+        $oldColumnId = (int) $task['column_id'];
+
+        try {
+            // Update task board + column + team
+            $updateData = [
+                'board_id'   => $targetBoardId,
+                'column_id'  => $targetColumnId,
+                'updated_by' => $userId,
+            ];
+            // Update team_id to match target board's team
+            if ($targetTeamId !== null) {
+                $updateData['team_id'] = (int) $targetTeamId;
+            } else {
+                $updateData['team_id'] = null;
+            }
+
+            Task::update($taskId, $updateData);
+
+            // Update flow timestamps
+            if ($oldColumnId !== $targetColumnId) {
+                TaskFlowService::onColumnChange($taskId, $oldColumnId, $targetColumnId);
+            }
+
+            // Activity log
+            $oldBoard = $oldBoardId ? Board::findById($oldBoardId) : null;
+            ActivityService::log('task', $taskId, 'task_board_changed', $userId, [
+                'old_board_id'   => $oldBoardId,
+                'old_board_name' => $oldBoard['name'] ?? 'Kein Board',
+                'new_board_id'   => $targetBoardId,
+                'new_board_name' => $targetBoard['name'],
+            ]);
+
+            // Notification to watchers
+            EventService::emit('task.moved', 'task', $taskId, $userId, [
+                'old_board_name' => $oldBoard['name'] ?? 'Kein Board',
+                'new_board_name' => $targetBoard['name'],
+                'new_column_name' => BoardColumn::findById($targetColumnId)['name'] ?? '',
+            ]);
+
+            Logger::info('Task moved to board', [
+                'task_id'   => $taskId,
+                'old_board' => $oldBoardId,
+                'new_board' => $targetBoardId,
+            ]);
+
+            $_SESSION['_flash_success'] = 'Task wurde nach "' . $targetBoard['name'] . '" verschoben.';
+        } catch (Throwable $e) {
+            Logger::error('Move to board failed', ['error' => $e->getMessage(), 'task_id' => $taskId]);
+            $_SESSION['_flash_error'] = 'Task konnte nicht verschoben werden.';
+        }
+
+        $this->redirect('task_view&id=' . $taskId);
+    }
+
     // ── Column Management (AP13) ────────────────────────────────────
 
     /**

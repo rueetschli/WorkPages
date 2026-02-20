@@ -61,10 +61,13 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
             </div>
 
             <div class="form-group form-group-half">
-                <label for="tags">Tags (kommagetrennt)</label>
-                <input type="text" id="tags" name="tags" class="form-input"
-                       value="<?= Security::esc($formData['tags']) ?>"
-                       placeholder="z.B. dringend, marketing, kundenprojekt">
+                <label for="tags">Tags</label>
+                <?php
+                    $tagInputId    = 'tags';
+                    $tagInputName  = 'tags';
+                    $tagInputValue = $formData['tags'];
+                    require APP_DIR . '/views/partials/tag_input.php';
+                ?>
             </div>
         </div>
 

@@ -12,10 +12,16 @@ $emailValue = Security::esc(trim($_POST['email'] ?? ''));
 // AP20: Use system settings for branding
 $__loginLogoUrl = '';
 $__loginThemeCss = '';
+$__loginMaintenance = false;
+$__loginMaintMsg = '';
+$__loginMaintLevel = 'info';
 try {
     $appName = SystemSettingsService::companyName();
     $__loginLogoUrl = SystemSettingsService::logoUrl();
     $__loginThemeCss = ThemeService::renderCssVariables();
+    $__loginMaintenance = SystemSettingsService::isMaintenanceActive();
+    $__loginMaintMsg = SystemSettingsService::value('maintenance_message', '');
+    $__loginMaintLevel = SystemSettingsService::value('maintenance_level', 'info');
 } catch (Throwable $e) {
     $appName = $GLOBALS['config']['APP_NAME'] ?? 'WorkPages';
 }
@@ -36,6 +42,12 @@ try {
     </script>
 </head>
 <body class="login-body">
+
+<?php if ($__loginMaintenance && $__loginMaintMsg !== ''): ?>
+<div class="maintenance-banner maintenance-<?= Security::esc($__loginMaintLevel) ?>">
+    <?= Security::esc($__loginMaintMsg) ?>
+</div>
+<?php endif; ?>
 
 <div class="login-container">
     <div class="login-card">

@@ -1,119 +1,99 @@
 <?php
 /**
- * Home view - Dashboard / landing page.
+ * Home view - Personal dashboard "Meine Arbeit" (AP22).
+ *
+ * Variables: $overdue, $dueToday, $dueWeek, $assignedToMe, $watching,
+ *            $doneColumnId, $canEdit, $users
  */
 $baseUrl  = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 $userName = Security::esc($_SESSION['user_name'] ?? '');
 ?>
 
 <div class="page-header">
-    <h1>Willkommen, <?= $userName ?></h1>
-    <p class="subtitle">Ihr Arbeitsbereich fuer Seiten, Aufgaben und Entscheidungen.</p>
+    <h1>Meine Arbeit</h1>
+    <p class="subtitle">Hallo, <?= $userName ?>.</p>
 </div>
 
-<!-- Quick-access cards -->
-<div class="card-grid">
+<?php if (!empty($overdue)): ?>
+<section class="home-section home-section-overdue">
+    <h2 class="home-section-title home-section-title-overdue">
+        <span class="home-section-icon-overdue">!</span>
+        Ueberfaellig
+        <span class="home-section-count"><?= count($overdue) ?></span>
+    </h2>
+    <div class="home-task-list">
+        <?php foreach ($overdue as $t): ?>
+            <?php $this_task = $t; require APP_DIR . '/views/partials/home_task_row.php'; ?>
+        <?php endforeach; ?>
+    </div>
+</section>
+<?php endif; ?>
 
-    <a href="<?= Security::esc($baseUrl) ?>/?r=pages" class="card">
-        <div class="card-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        </div>
-        <h3 class="card-title">Pages</h3>
-        <p class="card-desc">Wissensseiten erstellen, organisieren und durchsuchen.</p>
-    </a>
+<?php if (!empty($dueToday)): ?>
+<section class="home-section home-section-today">
+    <h2 class="home-section-title home-section-title-today">
+        Heute faellig
+        <span class="home-section-count"><?= count($dueToday) ?></span>
+    </h2>
+    <div class="home-task-list">
+        <?php foreach ($dueToday as $t): ?>
+            <?php $this_task = $t; require APP_DIR . '/views/partials/home_task_row.php'; ?>
+        <?php endforeach; ?>
+    </div>
+</section>
+<?php endif; ?>
 
-    <a href="<?= Security::esc($baseUrl) ?>/?r=tasks" class="card">
-        <div class="card-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-        </div>
-        <h3 class="card-title">Tasks</h3>
-        <p class="card-desc">Aufgaben erstellen, verwalten und nachverfolgen.</p>
-    </a>
+<?php if (!empty($dueWeek)): ?>
+<section class="home-section">
+    <h2 class="home-section-title">
+        Diese Woche
+        <span class="home-section-count"><?= count($dueWeek) ?></span>
+    </h2>
+    <div class="home-task-list">
+        <?php foreach ($dueWeek as $t): ?>
+            <?php $this_task = $t; require APP_DIR . '/views/partials/home_task_row.php'; ?>
+        <?php endforeach; ?>
+    </div>
+</section>
+<?php endif; ?>
 
-    <a href="<?= Security::esc($baseUrl) ?>/?r=boards" class="card">
-        <div class="card-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
-        </div>
-        <h3 class="card-title">Boards</h3>
-        <p class="card-desc">Kanban-Boards fuer visuelle Aufgabenverwaltung.</p>
-    </a>
-
-    <a href="<?= Security::esc($baseUrl) ?>/?r=search" class="card">
-        <div class="card-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        </div>
-        <h3 class="card-title">Suche</h3>
-        <p class="card-desc">Seiten und Aufgaben schnell finden.</p>
-    </a>
-
-</div>
-
-<!-- Recent tasks (AP21: exclude done tasks from operative view) -->
-<?php
-    $recentTasks = array_filter(Task::all(), function($t) {
-        return empty($t['done_at']);
-    });
-    $recentTasks = array_slice(array_values($recentTasks), 0, 5);
-?>
-<section class="section-block">
-    <h2>Aktuelle Aufgaben</h2>
-    <?php if (empty($recentTasks)): ?>
-        <p class="placeholder-text">Noch keine Aufgaben vorhanden.</p>
+<section class="home-section">
+    <h2 class="home-section-title">
+        Mir zugewiesen
+        <span class="home-section-count"><?= count($assignedToMe) ?></span>
+    </h2>
+    <?php if (empty($assignedToMe)): ?>
+        <p class="placeholder-text">Keine offenen Aufgaben zugewiesen.</p>
     <?php else: ?>
-        <div class="pages-table-wrap" style="border: none; box-shadow: none;">
-            <table class="pages-table">
-                <tbody>
-                <?php foreach ($recentTasks as $rt): ?>
-                    <tr>
-                        <td>
-                            <a href="<?= Security::esc($baseUrl) ?>/?r=task_view&amp;id=<?= (int) $rt['id'] ?>" class="page-link">
-                                <?= Security::esc($rt['title']) ?>
-                            </a>
-                        </td>
-                        <td>
-                            <span class="status-badge">
-                                <?= Security::esc($rt['column_name'] ?? '') ?>
-                            </span>
-                        </td>
-                        <td class="text-muted"><?= Security::esc($rt['owner_name'] ?? '') ?></td>
-                    </tr>
-                <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-        <p style="margin-top: var(--sp-3);">
-            <a href="<?= Security::esc($baseUrl) ?>/?r=tasks">Alle Aufgaben anzeigen &rarr;</a>
-        </p>
+    <div class="home-task-list">
+        <?php foreach ($assignedToMe as $t): ?>
+            <?php $this_task = $t; require APP_DIR . '/views/partials/home_task_row.php'; ?>
+        <?php endforeach; ?>
+    </div>
     <?php endif; ?>
 </section>
 
-<!-- Recent Activity -->
-<?php
-    $recentActivity = [];
-    try {
-        $recentActivity = DB::fetchAll(
-            'SELECT a.*, u.name AS user_name
-             FROM activity a
-             LEFT JOIN users u ON u.id = a.created_by
-             ORDER BY a.created_at DESC
-             LIMIT 10'
-        );
-    } catch (Throwable $e) {
-        // Activity table may not exist in early installations
-    }
-?>
-<section class="section-block">
-    <h2>Letzte Aktivitaet</h2>
-    <?php if (empty($recentActivity)): ?>
-        <p class="placeholder-text">Keine Aktivitaet vorhanden.</p>
-    <?php else: ?>
-        <ul class="activity-list">
-            <?php foreach ($recentActivity as $entry): ?>
-            <li class="activity-item">
-                <span class="activity-time"><?= Security::esc(date('d.m.Y H:i', strtotime($entry['created_at']))) ?></span>
-                <span class="activity-text"><?= ActivityService::formatActivity($entry) ?></span>
-            </li>
-            <?php endforeach; ?>
-        </ul>
-    <?php endif; ?>
+<?php if (!empty($watching)): ?>
+<section class="home-section">
+    <h2 class="home-section-title">
+        Ich beobachte
+        <span class="home-section-count"><?= count($watching) ?></span>
+    </h2>
+    <div class="home-task-list">
+        <?php foreach ($watching as $t): ?>
+            <?php $this_task = $t; $isWatchSection = true; require APP_DIR . '/views/partials/home_task_row.php'; ?>
+        <?php endforeach; ?>
+    </div>
 </section>
+<?php endif; ?>
+
+<?php if (empty($overdue) && empty($dueToday) && empty($dueWeek) && empty($assignedToMe) && empty($watching)): ?>
+<div class="home-empty-state">
+    <p>Alles erledigt. Keine offenen Aufgaben.</p>
+    <div class="home-empty-links">
+        <a href="<?= Security::esc($baseUrl) ?>/?r=tasks" class="btn btn-secondary">Alle Tasks</a>
+        <a href="<?= Security::esc($baseUrl) ?>/?r=boards" class="btn btn-secondary">Boards</a>
+        <a href="<?= Security::esc($baseUrl) ?>/?r=pages" class="btn btn-secondary">Pages</a>
+    </div>
+</div>
+<?php endif; ?>

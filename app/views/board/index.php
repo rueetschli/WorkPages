@@ -1,6 +1,6 @@
 <?php
 /**
- * Board view - Kanban board with drag & drop (AP6 / AP13 / AP21).
+ * Board view - Kanban board with drag & drop (AP6 / AP13 / AP21 / AP22).
  *
  * Variables:
  *   $board          - array: current board row
@@ -22,6 +22,14 @@ $fOwner = $_GET['owner_id'] ?? '';
 $fTag   = $_GET['tag'] ?? '';
 $fDue   = $_GET['due'] ?? '';
 $fQ     = $_GET['q'] ?? '';
+
+// AP22: Available boards for move-to-board
+$__availableBoards = [];
+if ($canEdit) {
+    $__userId     = (int) $_SESSION['user_id'];
+    $__globalRole = $_SESSION['user_role'] ?? 'viewer';
+    $__availableBoards = Board::allVisibleTo($__userId, $__globalRole);
+}
 ?>
 
 <!-- Board header -->
@@ -47,7 +55,7 @@ $fQ     = $_GET['q'] ?? '';
 
     <?php if ($canManage): ?>
     <!-- Board edit/delete panel -->
-    <div id="board-edit-panel" style="display:none; margin-top:var(--sp-3); padding:var(--sp-3); background:var(--surface-bg); border:1px solid var(--border-color); border-radius:var(--radius);">
+    <div id="board-edit-panel" style="display:none; margin-top:var(--sp-3); padding:var(--sp-3); background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-md);">
         <form method="post" action="<?= $esc($baseUrl) ?>/?r=board_edit" style="margin-bottom:var(--sp-3);">
             <?= Security::csrfField() ?>
             <input type="hidden" name="id" value="<?= $boardId ?>">
@@ -128,9 +136,11 @@ $fQ     = $_GET['q'] ?? '';
     <?php foreach ($boardColumns as $idx => $col):
         $colId = (int) $col['id'];
         $count = count($tasksByColumn[$colId] ?? []);
+        $colColor = $col['color'] ?? '';
     ?>
         <button type="button" class="kanban-tab<?= $idx === 0 ? ' active' : '' ?>"
-                data-column-id="<?= $colId ?>">
+                data-column-id="<?= $colId ?>"
+                <?php if ($colColor): ?>style="border-bottom-color: <?= $esc($colColor) ?>;"<?php endif; ?>>
             <?= $esc($col['name']) ?>
             <span class="kanban-tab-count"><?= $count ?></span>
         </button>
@@ -152,10 +162,15 @@ $fQ     = $_GET['q'] ?? '';
         $isDoneColumn = ($colCategory === 'done');
     ?>
         <div class="kanban-column<?= $idx === 0 ? ' active' : '' ?> <?= $wipExceeded ? 'kanban-column-wip-exceeded' : '' ?>"
-             data-column-id="<?= $colId ?>">
+             data-column-id="<?= $colId ?>"
+             data-column-category="<?= $esc($colCategory) ?>">
+            <!-- AP22: Enhanced column header with color background -->
             <div class="kanban-column-header"
-                 <?php if ($colColor): ?>style="border-top: 3px solid <?= $esc($colColor) ?>;"<?php endif; ?>>
+                 <?php if ($colColor): ?>style="background: <?= $esc($colColor) ?>14; border-top: 3px solid <?= $esc($colColor) ?>;"<?php endif; ?>>
                 <span class="kanban-column-title">
+                    <?php if ($colColor): ?>
+                        <span class="kanban-column-dot" style="background: <?= $esc($colColor) ?>;"></span>
+                    <?php endif; ?>
                     <strong><?= $esc($colName) ?></strong>
                     <?php if ($isDoneColumn): ?>
                         <span class="text-muted" style="font-size:0.75rem; font-weight:normal;"> (erledigt)</span>
@@ -188,6 +203,10 @@ $fQ     = $_GET['q'] ?? '';
                     <div class="kanban-card<?= $isDoneColumn ? ' kanban-card-done' : '' ?>" draggable="<?= $canEdit ? 'true' : 'false' ?>"
                          data-task-id="<?= $taskId ?>"
                          data-column-id="<?= $colId ?>">
+                        <!-- AP22: Column color left border -->
+                        <?php if ($colColor): ?>
+                        <span class="kanban-card-color-bar" style="background: <?= $esc($colColor) ?>;"></span>
+                        <?php endif; ?>
                         <a href="<?= $esc($baseUrl) ?>/?r=task_view&amp;id=<?= $taskId ?>" class="kanban-card-title">
                             <?= $esc($task['title']) ?>
                         </a>
@@ -221,7 +240,7 @@ $fQ     = $_GET['q'] ?? '';
                                     <input type="hidden" name="_filter_tag" value="<?= $esc($fTag) ?>">
                                     <input type="hidden" name="_filter_due" value="<?= $esc($fDue) ?>">
                                     <input type="hidden" name="_filter_q" value="<?= $esc($fQ) ?>">
-                                    <select name="new_column_id" class="status-select"
+                                    <select name="new_column_id" class="kanban-card-select"
                                             onchange="this.form.submit()">
                                         <?php foreach ($boardColumns as $optCol): ?>
                                             <option value="<?= (int) $optCol['id'] ?>"
@@ -231,6 +250,21 @@ $fQ     = $_GET['q'] ?? '';
                                         <?php endforeach; ?>
                                     </select>
                                 </form>
+                                <?php if (count($__availableBoards) > 1): ?>
+                                <form method="post" action="<?= $esc($baseUrl) ?>/?r=board_move_task_board" class="inline-form kanban-move-board-form">
+                                    <?= Security::csrfField() ?>
+                                    <input type="hidden" name="task_id" value="<?= $taskId ?>">
+                                    <select name="target_board_id" class="kanban-card-select kanban-card-select-board"
+                                            onchange="if(this.value)this.form.submit()">
+                                        <option value="">Board...</option>
+                                        <?php foreach ($__availableBoards as $ab): ?>
+                                            <?php if ((int) $ab['id'] !== $boardId): ?>
+                                            <option value="<?= (int) $ab['id'] ?>"><?= $esc($ab['name']) ?></option>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </form>
+                                <?php endif; ?>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -326,6 +360,7 @@ $fQ     = $_GET['q'] ?? '';
 
         var newColumnId = columnBody.dataset.columnId;
         var taskId      = dragCard.dataset.taskId;
+        var oldColumnId = dragCard.dataset.columnId;
 
         var prev = placeholder.previousElementSibling;
         var next = placeholder.nextElementSibling;
@@ -352,6 +387,14 @@ $fQ     = $_GET['q'] ?? '';
 
         updateColumnCounts();
 
+        // AP22: Confetti when task moves to done column
+        if (oldColumnId !== newColumnId) {
+            var targetCol = columnBody.closest('.kanban-column');
+            if (targetCol && targetCol.dataset.columnCategory === 'done') {
+                triggerConfetti(dragCard);
+            }
+        }
+
         var formData = new FormData();
         formData.append('_csrf_token', csrfToken);
         formData.append('task_id', taskId);
@@ -377,6 +420,22 @@ $fQ     = $_GET['q'] ?? '';
         placeholder = null;
     });
 
+    // AP22: Detect column dropdown change to done
+    board.addEventListener('change', function(e) {
+        if (e.target.name !== 'new_column_id') return;
+        var newColId = e.target.value;
+        var card = e.target.closest('.kanban-card');
+        var cols = board.querySelectorAll('.kanban-column');
+        for (var i = 0; i < cols.length; i++) {
+            if (cols[i].dataset.columnId === newColId && cols[i].dataset.columnCategory === 'done') {
+                if (card && card.dataset.columnId !== newColId) {
+                    triggerConfetti(card);
+                }
+                break;
+            }
+        }
+    });
+
     function updateColumnCounts() {
         var cols = board.querySelectorAll('.kanban-column');
         for (var i = 0; i < cols.length; i++) {
@@ -399,6 +458,52 @@ $fQ     = $_GET['q'] ?? '';
                 tabCount.textContent = tabCards.length;
             }
         }
+    }
+
+    // AP22: Confetti celebration (respects prefers-reduced-motion)
+    function triggerConfetti(anchorEl) {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var rect = anchorEl.getBoundingClientRect();
+        var cx = rect.left + rect.width / 2;
+        var cy = rect.top + rect.height / 2;
+        var colors = ['#22c55e', '#3b82f6', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899'];
+        var container = document.createElement('div');
+        container.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden;';
+        document.body.appendChild(container);
+        for (var i = 0; i < 30; i++) {
+            var dot = document.createElement('div');
+            var size = 4 + Math.random() * 6;
+            var angle = Math.random() * Math.PI * 2;
+            var velocity = 60 + Math.random() * 120;
+            var dx = Math.cos(angle) * velocity;
+            var dy = Math.sin(angle) * velocity - 40;
+            dot.style.cssText = 'position:absolute;border-radius:50%;width:' + size + 'px;height:' + size + 'px;left:' + cx + 'px;top:' + cy + 'px;background:' + colors[i % colors.length] + ';opacity:1;';
+            dot.dataset.dx = dx;
+            dot.dataset.dy = dy;
+            dot.dataset.ox = cx;
+            dot.dataset.oy = cy;
+            container.appendChild(dot);
+        }
+        var start = performance.now();
+        var duration = 800;
+        function anim(now) {
+            var t = (now - start) / duration;
+            if (t > 1) {
+                container.remove();
+                return;
+            }
+            var dots = container.children;
+            for (var j = 0; j < dots.length; j++) {
+                var d = dots[j];
+                var x = parseFloat(d.dataset.ox) + parseFloat(d.dataset.dx) * t;
+                var y = parseFloat(d.dataset.oy) + parseFloat(d.dataset.dy) * t + 200 * t * t;
+                d.style.left = x + 'px';
+                d.style.top = y + 'px';
+                d.style.opacity = 1 - t;
+            }
+            requestAnimationFrame(anim);
+        }
+        requestAnimationFrame(anim);
     }
 })();
 </script>

@@ -141,6 +141,12 @@ class ActivityService
                 $target  = isset($meta['target_column']) ? ' (Tasks verschoben nach "' . Security::esc($meta['target_column']) . '")' : '';
                 return $user . ' hat die Board-Spalte' . $colName . ' geloescht' . $target;
 
+            // AP22: Board changed
+            case 'task_board_changed':
+                $oldBoard = isset($meta['old_board_name']) ? Security::esc($meta['old_board_name']) : '?';
+                $newBoard = isset($meta['new_board_name']) ? Security::esc($meta['new_board_name']) : '?';
+                return $user . ' hat die Aufgabe von "' . $oldBoard . '" nach "' . $newBoard . '" verschoben';
+
             case 'task_owner_changed':
                 $newOwner = isset($meta['new_owner']) ? Security::esc($meta['new_owner']) : 'Nicht zugewiesen';
                 return $user . ' hat den Owner auf ' . $newOwner . ' geaendert';
