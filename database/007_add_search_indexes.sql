@@ -18,5 +18,5 @@
 -- Title indexes for faster LIKE searches on title columns
 -- (These are safe to run on any MySQL/MariaDB setup)
 
-CREATE INDEX IF NOT EXISTS idx_pages_title ON pages (title(191));
-CREATE INDEX IF NOT EXISTS idx_tasks_title ON tasks (title(191));
+CREATE INDEX IF NOT EXISTS idx_pages_title ON pages (title(190));
+CREATE INDEX IF NOT EXISTS idx_tasks_title ON tasks (title(190));

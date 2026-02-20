@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `pages` (
     `deleted_at`  DATETIME NULL DEFAULT NULL,
     UNIQUE INDEX `idx_pages_slug` (`slug`),
     INDEX `idx_pages_parent_id` (`parent_id`),
-    INDEX `idx_pages_title` (`title`(191)),
+    INDEX `idx_pages_title` (`title`(190)),
     CONSTRAINT `fk_pages_parent` FOREIGN KEY (`parent_id`) REFERENCES `pages` (`id`) ON DELETE SET NULL,
     CONSTRAINT `fk_pages_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
     CONSTRAINT `fk_pages_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`)
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS `tasks` (
     INDEX `idx_tasks_owner_id` (`owner_id`),
     INDEX `idx_tasks_due_date` (`due_date`),
     INDEX `idx_tasks_column_position` (`column_id`, `position`),
-    INDEX `idx_tasks_title` (`title`(191)),
+    INDEX `idx_tasks_title` (`title`(190)),
     CONSTRAINT `fk_tasks_column` FOREIGN KEY (`column_id`) REFERENCES `board_columns` (`id`),
     CONSTRAINT `fk_tasks_owner` FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
     CONSTRAINT `fk_tasks_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
