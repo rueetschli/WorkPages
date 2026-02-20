@@ -26,8 +26,6 @@ class Task
      * Fetch all tasks with optional filters.
      *
      * Supported filters: column_id, owner_id, due_date, tag
-     */
-    /**
      * AP21: Fixed tag filter parameter ordering bug.
      */
     public static function all(array $filters = []): array
@@ -376,11 +374,9 @@ class Task
      * Uses GROUP_CONCAT to load tags in a single query for performance.
      *
      * Supported filters: owner_id, tag, due, q (title search)
+     * AP21: Fixed tag filter parameter ordering bug.
      *
      * @return array Tasks ordered by (column position, task position ASC, updated_at DESC)
-     */
-    /**
-     * AP21: Fixed tag filter parameter ordering bug.
      */
     public static function allForBoard(array $filters = []): array
     {
