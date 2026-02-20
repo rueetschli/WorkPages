@@ -42,6 +42,12 @@ class Authz
     // Board Columns (AP13)
     const BOARD_COLUMNS_MANAGE = 'board.columns.manage';
 
+    // AP21: Multi-Board management
+    const BOARDS_VIEW   = 'boards.view';
+    const BOARDS_CREATE = 'boards.create';
+    const BOARDS_DELETE = 'boards.delete';
+    const BOARD_QUICK_ADD = 'board.quick_add';
+
     // Search
     const SEARCH_VIEW = 'search.view';
 
@@ -110,6 +116,12 @@ class Authz
 
         // Board Columns (AP13)
         self::BOARD_COLUMNS_MANAGE => ['admin', 'member'],
+
+        // AP21: Multi-Board management
+        self::BOARDS_VIEW    => ['admin', 'member', 'viewer'],
+        self::BOARDS_CREATE  => ['admin', 'member'],
+        self::BOARDS_DELETE  => ['admin', 'member'],
+        self::BOARD_QUICK_ADD => ['admin', 'member'],
 
         // Search
         self::SEARCH_VIEW => ['admin', 'member', 'viewer'],

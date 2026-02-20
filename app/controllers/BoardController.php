@@ -1,15 +1,54 @@
 <?php
 /**
- * BoardController - Kanban board for visual task management (AP6 / AP13).
+ * BoardController - Kanban board for visual task management (AP6 / AP13 / AP21).
  * AP13: Dynamic columns from board_columns table.
+ * AP21: Multi-board support, quick-add, done semantics.
  */
 class BoardController
 {
     /**
      * Display the Kanban board with tasks grouped by dynamic columns.
+     * AP21: Now requires a board ID parameter (?r=board_view&id=...).
+     * Legacy route ?r=board redirects to last board or boards index.
      */
     public function index(): void
     {
+        // AP21: Legacy route - redirect to boards index or last board
+        $boardId = !empty($_GET['id']) ? (int) $_GET['id'] : null;
+
+        if ($boardId === null) {
+            // Check if there is a last-visited board in session
+            $lastBoardId = BoardService::getLastBoardId();
+            if ($lastBoardId !== null) {
+                $lastBoard = Board::findById($lastBoardId);
+                if ($lastBoard) {
+                    $this->redirect('board_view&id=' . $lastBoardId);
+                    return;
+                }
+            }
+            // No last board - redirect to boards index
+            $this->redirect('boards');
+            return;
+        }
+
+        // Load board and validate access
+        $board = Board::findById($boardId);
+        if (!$board) {
+            http_response_code(404);
+            require APP_DIR . '/views/404.php';
+            return;
+        }
+
+        $userId     = (int) $_SESSION['user_id'];
+        $globalRole = $_SESSION['user_role'] ?? 'viewer';
+
+        if (!BoardService::canView($userId, $board)) {
+            Authz::deny();
+        }
+
+        // Remember last viewed board
+        BoardService::setLastBoardId($boardId);
+
         // Initialize positions on first board load (migration compat)
         Task::initBoardPositions();
 
@@ -31,12 +70,9 @@ class BoardController
         // Load board columns
         $boardColumns = BoardColumn::allOrdered();
 
-        // AP16: Load tasks filtered by team visibility
-        $userId       = (int) $_SESSION['user_id'];
-        $globalRole   = $_SESSION['user_role'] ?? 'viewer';
+        // AP21: Load tasks filtered by board_id and team visibility
         $activeTeamId = TeamService::getActiveTeamId();
-
-        $allTasks = Task::allForBoardVisible($filters, $userId, $globalRole, $activeTeamId);
+        $allTasks = Task::allForBoardVisible($filters, $userId, $globalRole, $activeTeamId, $boardId);
 
         // Group tasks by column_id
         $tasksByColumn = [];
@@ -54,9 +90,143 @@ class BoardController
         $users   = User::allForDropdown();
         $allTags = Task::allTags();
 
-        $pageTitle   = 'Board';
+        // AP21: Permission flags for view
+        $canEdit     = BoardService::canMoveTask($userId, $board);
+        $canQuickAdd = BoardService::canCreateTask($userId, $board);
+        $canManage   = BoardService::canManage($userId, $board);
+
+        $pageTitle   = $board['name'];
         $contentView = APP_DIR . '/views/board/index.php';
         require APP_DIR . '/views/layout.php';
+    }
+
+    /**
+     * AP21: Quick-add a task directly from the board.
+     * POST only, CSRF protected.
+     */
+    public function quickAdd(): void
+    {
+        Authz::require(Authz::BOARD_QUICK_ADD);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('boards');
+            return;
+        }
+
+        Security::csrfGuard();
+
+        $boardId  = (int) ($_POST['board_id'] ?? 0);
+        $columnId = (int) ($_POST['column_id'] ?? 0);
+        $title    = trim($_POST['title'] ?? '');
+        $userId   = (int) $_SESSION['user_id'];
+
+        // Validate board
+        $board = Board::findById($boardId);
+        if (!$board) {
+            http_response_code(404);
+            if ($this->isAjax()) {
+                header('Content-Type: application/json');
+                echo json_encode(['ok' => false, 'error' => 'Board nicht gefunden.']);
+                return;
+            }
+            require APP_DIR . '/views/404.php';
+            return;
+        }
+
+        // Permission check
+        if (!BoardService::canCreateTask($userId, $board)) {
+            if ($this->isAjax()) {
+                http_response_code(403);
+                header('Content-Type: application/json');
+                echo json_encode(['ok' => false, 'error' => 'Keine Berechtigung.']);
+                return;
+            }
+            Authz::deny();
+        }
+
+        // Validate column
+        $column = BoardColumn::findById($columnId);
+        if (!$column) {
+            if ($this->isAjax()) {
+                http_response_code(400);
+                header('Content-Type: application/json');
+                echo json_encode(['ok' => false, 'error' => 'Ungueltige Spalte.']);
+                return;
+            }
+            $_SESSION['_flash_error'] = 'Ungueltige Spalte.';
+            $this->redirect('board_view&id=' . $boardId);
+            return;
+        }
+
+        // Validate title
+        if ($title === '') {
+            if ($this->isAjax()) {
+                http_response_code(400);
+                header('Content-Type: application/json');
+                echo json_encode(['ok' => false, 'error' => 'Titel ist erforderlich.']);
+                return;
+            }
+            $_SESSION['_flash_error'] = 'Titel ist erforderlich.';
+            $this->redirect('board_view&id=' . $boardId);
+            return;
+        }
+
+        try {
+            $taskId = Task::create([
+                'title'      => $title,
+                'column_id'  => $columnId,
+                'board_id'   => $boardId,
+                'team_id'    => $board['team_id'] ?? null,
+                'owner_id'   => $userId,
+                'created_by' => $userId,
+            ]);
+
+            // AP18: Set initial flow dates based on column category
+            TaskFlowService::onTaskCreated($taskId, $columnId);
+
+            ActivityService::log('task', $taskId, 'task_created', $userId, [
+                'title'       => $title,
+                'column_id'   => $columnId,
+                'column_name' => $column['name'] ?? '',
+                'board_id'    => $boardId,
+                'board_name'  => $board['name'],
+                'quick_add'   => true,
+            ]);
+            Logger::info('Task quick-added', ['task_id' => $taskId, 'board_id' => $boardId]);
+
+            // AP15: Auto-watch + event
+            WatcherService::autoWatchOnCreate('task', $taskId, $userId);
+            EventService::emit('task.created', 'task', $taskId, $userId, [
+                'title' => $title,
+            ]);
+
+            if ($this->isAjax()) {
+                $task = Task::findById($taskId);
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'ok'      => true,
+                    'task_id' => $taskId,
+                    'title'   => $title,
+                    'owner_name' => $task['owner_name'] ?? '',
+                ]);
+                return;
+            }
+
+            $_SESSION['_flash_success'] = 'Task "' . $title . '" wurde erstellt.';
+        } catch (Throwable $e) {
+            Logger::error('Quick-add failed', ['error' => $e->getMessage(), 'board_id' => $boardId]);
+
+            if ($this->isAjax()) {
+                http_response_code(500);
+                header('Content-Type: application/json');
+                echo json_encode(['ok' => false, 'error' => 'Task konnte nicht erstellt werden.']);
+                return;
+            }
+
+            $_SESSION['_flash_error'] = 'Task konnte nicht erstellt werden.';
+        }
+
+        $this->redirect('board_view&id=' . $boardId);
     }
 
     /**
@@ -68,7 +238,7 @@ class BoardController
         Authz::require(Authz::BOARD_MOVE);
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect('board');
+            $this->redirect('boards');
             return;
         }
 
@@ -78,6 +248,7 @@ class BoardController
         $newColumnId = (int) ($_POST['new_column_id'] ?? 0);
         $afterId     = !empty($_POST['after_id'])  ? (int) $_POST['after_id']  : null;
         $beforeId    = !empty($_POST['before_id']) ? (int) $_POST['before_id'] : null;
+        $boardId     = !empty($_POST['board_id']) ? (int) $_POST['board_id'] : null;
 
         // Validate task exists
         $task = Task::findById($taskId);
@@ -108,7 +279,7 @@ class BoardController
         try {
             Task::moveToColumn($taskId, $newColumnId, $afterId, $beforeId, $userId);
 
-            // AP18: Update flow timestamps
+            // AP18/AP21: Update flow timestamps (done semantics)
             if ($oldColumnId !== $newColumnId) {
                 TaskFlowService::onColumnChange($taskId, $oldColumnId, $newColumnId);
             }
@@ -155,7 +326,7 @@ class BoardController
         }
 
         // Redirect back to board preserving filters
-        $this->redirectWithFilters();
+        $this->redirectWithFilters($boardId);
     }
 
     /**
@@ -167,7 +338,7 @@ class BoardController
         Authz::require(Authz::BOARD_REORDER);
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect('board');
+            $this->redirect('boards');
             return;
         }
 
@@ -175,6 +346,7 @@ class BoardController
 
         $columnId = (int) ($_POST['column_id'] ?? 0);
         $taskIds  = $_POST['task_ids'] ?? [];
+        $boardId  = !empty($_POST['board_id']) ? (int) $_POST['board_id'] : null;
 
         // Validate column
         $column = BoardColumn::findById($columnId);
@@ -212,7 +384,7 @@ class BoardController
             }
         }
 
-        $this->redirectWithFilters();
+        $this->redirectWithFilters($boardId);
     }
 
     // ── Column Management (AP13) ────────────────────────────────────
@@ -506,11 +678,20 @@ class BoardController
 
     /**
      * Redirect back to board preserving current filter parameters.
+     * AP21: Now includes board_id.
      */
-    private function redirectWithFilters(): void
+    private function redirectWithFilters(?int $boardId = null): void
     {
         $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
-        $params  = ['r' => 'board'];
+        $params  = ['r' => 'board_view'];
+
+        // Board ID from POST or filter
+        if ($boardId === null && !empty($_POST['board_id'])) {
+            $boardId = (int) $_POST['board_id'];
+        }
+        if ($boardId !== null) {
+            $params['id'] = $boardId;
+        }
 
         foreach (['owner_id', 'tag', 'due', 'q'] as $key) {
             if (!empty($_POST['_filter_' . $key])) {

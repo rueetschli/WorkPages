@@ -1,18 +1,21 @@
 <?php
 /**
- * Board view - Kanban board with drag & drop (AP6 / AP13).
+ * Board view - Kanban board with drag & drop (AP6 / AP13 / AP21).
  *
  * Variables:
+ *   $board          - array: current board row
  *   $boardColumns   - array of board_columns rows, ordered by position
  *   $tasksByColumn  - array keyed by column_id, each containing task rows
  *   $users          - array for owner filter dropdown
  *   $allTags        - array of tag rows for filter dropdown
  *   $filters        - currently active filters from GET
+ *   $canEdit        - bool: can move tasks
+ *   $canQuickAdd    - bool: can create tasks directly
+ *   $canManage      - bool: can manage (edit/delete) this board
  */
 $esc     = [Security::class, 'esc'];
 $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
-$canEdit = Authz::can(Authz::BOARD_MOVE);
-$canManage = Authz::can(Authz::BOARD_COLUMNS_MANAGE);
+$boardId = (int) $board['id'];
 
 // Current filter values for preserving state
 $fOwner = $_GET['owner_id'] ?? '';
@@ -24,15 +27,52 @@ $fQ     = $_GET['q'] ?? '';
 <!-- Board header -->
 <div class="board-header">
     <div class="board-header-row">
-        <h1>Board</h1>
-        <?php if ($canManage): ?>
-            <a href="<?= $esc($baseUrl) ?>/?r=board_columns" class="btn btn-secondary">Spalten verwalten</a>
-        <?php endif; ?>
+        <div style="display:flex; align-items:center; gap:var(--sp-3);">
+            <a href="<?= $esc($baseUrl) ?>/?r=boards" class="btn btn-secondary btn-sm-pad" title="Alle Boards">&larr;</a>
+            <h1><?= $esc($board['name']) ?></h1>
+            <?php if ($board['team_name'] ?? ''): ?>
+                <span class="status-badge"><?= $esc($board['team_name']) ?></span>
+            <?php endif; ?>
+        </div>
+        <div style="display:flex; gap:var(--sp-2);">
+            <?php if ($canManage): ?>
+                <button type="button" class="btn btn-secondary btn-sm-pad" onclick="document.getElementById('board-edit-panel').style.display = document.getElementById('board-edit-panel').style.display === 'none' ? 'block' : 'none'">Bearbeiten</button>
+                <a href="<?= $esc($baseUrl) ?>/?r=board_columns" class="btn btn-secondary btn-sm-pad">Spalten</a>
+            <?php endif; ?>
+        </div>
     </div>
+    <?php if ($board['description'] ?? ''): ?>
+        <p class="text-muted" style="margin-top:var(--sp-1);"><?= $esc($board['description']) ?></p>
+    <?php endif; ?>
+
+    <?php if ($canManage): ?>
+    <!-- Board edit/delete panel -->
+    <div id="board-edit-panel" style="display:none; margin-top:var(--sp-3); padding:var(--sp-3); background:var(--surface-bg); border:1px solid var(--border-color); border-radius:var(--radius);">
+        <form method="post" action="<?= $esc($baseUrl) ?>/?r=board_edit" style="margin-bottom:var(--sp-3);">
+            <?= Security::csrfField() ?>
+            <input type="hidden" name="id" value="<?= $boardId ?>">
+            <div class="form-group">
+                <label class="form-label">Name</label>
+                <input type="text" name="name" class="form-input" value="<?= $esc($board['name']) ?>" required maxlength="150">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Beschreibung</label>
+                <input type="text" name="description" class="form-input" value="<?= $esc($board['description'] ?? '') ?>" maxlength="255">
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm-pad">Speichern</button>
+        </form>
+        <form method="post" action="<?= $esc($baseUrl) ?>/?r=board_delete" onsubmit="return confirm('Board wirklich loeschen? Tasks werden vom Board entfernt, aber nicht geloescht.');">
+            <?= Security::csrfField() ?>
+            <input type="hidden" name="id" value="<?= $boardId ?>">
+            <button type="submit" class="btn btn-danger btn-sm-pad">Board loeschen</button>
+        </form>
+    </div>
+    <?php endif; ?>
 
     <!-- Filter bar -->
     <form class="board-filter-form" method="get" action="<?= $esc($baseUrl) ?>/">
-        <input type="hidden" name="r" value="board">
+        <input type="hidden" name="r" value="board_view">
+        <input type="hidden" name="id" value="<?= $boardId ?>">
         <div class="filter-row">
             <div class="filter-group">
                 <label for="bf-owner">Owner</label>
@@ -76,7 +116,7 @@ $fQ     = $_GET['q'] ?? '';
             <div class="filter-group filter-actions">
                 <button type="submit" class="btn btn-primary btn-sm-pad">Filtern</button>
                 <?php if ($fOwner !== '' || $fTag !== '' || $fDue !== '' || $fQ !== ''): ?>
-                    <a href="<?= $esc($baseUrl) ?>/?r=board" class="btn btn-secondary btn-sm-pad">Zuruecksetzen</a>
+                    <a href="<?= $esc($baseUrl) ?>/?r=board_view&amp;id=<?= $boardId ?>" class="btn btn-secondary btn-sm-pad">Zuruecksetzen</a>
                 <?php endif; ?>
             </div>
         </div>
@@ -104,10 +144,12 @@ $fQ     = $_GET['q'] ?? '';
         $colName    = $col['name'];
         $colSlug    = $col['slug'];
         $colColor   = $col['color'] ?? '';
+        $colCategory = $col['category'] ?? 'active';
         $wipLimit   = $col['wip_limit'];
         $tasks      = $tasksByColumn[$colId] ?? [];
         $count      = count($tasks);
         $wipExceeded = ($wipLimit !== null && $count > (int) $wipLimit);
+        $isDoneColumn = ($colCategory === 'done');
     ?>
         <div class="kanban-column<?= $idx === 0 ? ' active' : '' ?> <?= $wipExceeded ? 'kanban-column-wip-exceeded' : '' ?>"
              data-column-id="<?= $colId ?>">
@@ -115,20 +157,35 @@ $fQ     = $_GET['q'] ?? '';
                  <?php if ($colColor): ?>style="border-top: 3px solid <?= $esc($colColor) ?>;"<?php endif; ?>>
                 <span class="kanban-column-title">
                     <strong><?= $esc($colName) ?></strong>
+                    <?php if ($isDoneColumn): ?>
+                        <span class="text-muted" style="font-size:0.75rem; font-weight:normal;"> (erledigt)</span>
+                    <?php endif; ?>
                 </span>
                 <span class="kanban-column-count <?= $wipExceeded ? 'kanban-wip-warning' : '' ?>">
                     <?= $count ?><?php if ($wipLimit !== null): ?>/<?= (int) $wipLimit ?><?php endif; ?>
                 </span>
             </div>
+
+            <?php if ($canQuickAdd): ?>
+            <!-- AP21: Quick Add -->
+            <div class="kanban-quick-add">
+                <form method="post" action="<?= $esc($baseUrl) ?>/?r=board_quick_add" class="kanban-quick-add-form" data-board-id="<?= $boardId ?>" data-column-id="<?= $colId ?>">
+                    <?= Security::csrfField() ?>
+                    <input type="hidden" name="board_id" value="<?= $boardId ?>">
+                    <input type="hidden" name="column_id" value="<?= $colId ?>">
+                    <input type="text" name="title" class="kanban-quick-add-input" placeholder="+ Task hinzufuegen..." maxlength="190" autocomplete="off">
+                </form>
+            </div>
+            <?php endif; ?>
+
             <div class="kanban-column-body" data-column-id="<?= $colId ?>">
                 <?php foreach ($tasks as $task):
                     $taskId   = (int) $task['id'];
                     $tags     = $task['tag_list'] ? explode(',', $task['tag_list']) : [];
                     $dueDate  = $task['due_date'] ?? null;
-                    $isDoneCol = ($colSlug === 'done');
-                    $isOverdue = ($dueDate && $dueDate < date('Y-m-d') && !$isDoneCol);
+                    $isOverdue = ($dueDate && $dueDate < date('Y-m-d') && !$isDoneColumn);
                 ?>
-                    <div class="kanban-card" draggable="<?= $canEdit ? 'true' : 'false' ?>"
+                    <div class="kanban-card<?= $isDoneColumn ? ' kanban-card-done' : '' ?>" draggable="<?= $canEdit ? 'true' : 'false' ?>"
                          data-task-id="<?= $taskId ?>"
                          data-column-id="<?= $colId ?>">
                         <a href="<?= $esc($baseUrl) ?>/?r=task_view&amp;id=<?= $taskId ?>" class="kanban-card-title">
@@ -159,6 +216,7 @@ $fQ     = $_GET['q'] ?? '';
                                 <form method="post" action="<?= $esc($baseUrl) ?>/?r=board_move" class="status-change-form kanban-move-form">
                                     <?= Security::csrfField() ?>
                                     <input type="hidden" name="task_id" value="<?= $taskId ?>">
+                                    <input type="hidden" name="board_id" value="<?= $boardId ?>">
                                     <input type="hidden" name="_filter_owner_id" value="<?= $esc($fOwner) ?>">
                                     <input type="hidden" name="_filter_tag" value="<?= $esc($fTag) ?>">
                                     <input type="hidden" name="_filter_due" value="<?= $esc($fDue) ?>">
@@ -191,6 +249,7 @@ $fQ     = $_GET['q'] ?? '';
     var board      = document.getElementById('kanban-board');
     var csrfToken  = <?= json_encode(Security::csrfToken()) ?>;
     var baseUrl    = <?= json_encode($baseUrl) ?>;
+    var boardId    = <?= json_encode($boardId) ?>;
     var dragCard   = null;
     var placeholder = null;
 
@@ -297,6 +356,7 @@ $fQ     = $_GET['q'] ?? '';
         formData.append('_csrf_token', csrfToken);
         formData.append('task_id', taskId);
         formData.append('new_column_id', newColumnId);
+        formData.append('board_id', boardId);
         if (afterId)  formData.append('after_id', afterId);
         if (beforeId) formData.append('before_id', beforeId);
 
@@ -339,6 +399,87 @@ $fQ     = $_GET['q'] ?? '';
                 tabCount.textContent = tabCards.length;
             }
         }
+    }
+})();
+</script>
+<?php endif; ?>
+
+<?php if ($canQuickAdd): ?>
+<!-- AP21: Quick Add JavaScript -->
+<script>
+(function() {
+    'use strict';
+
+    var csrfToken = <?= json_encode(Security::csrfToken()) ?>;
+    var baseUrl   = <?= json_encode($baseUrl) ?>;
+
+    var forms = document.querySelectorAll('.kanban-quick-add-form');
+    for (var i = 0; i < forms.length; i++) {
+        forms[i].addEventListener('submit', function(e) {
+            e.preventDefault();
+            var form    = e.target;
+            var input   = form.querySelector('.kanban-quick-add-input');
+            var title   = input.value.trim();
+            if (!title) return;
+
+            var boardIdVal = form.dataset.boardId;
+            var columnId   = form.dataset.columnId;
+
+            var formData = new FormData();
+            formData.append('_csrf_token', csrfToken);
+            formData.append('board_id', boardIdVal);
+            formData.append('column_id', columnId);
+            formData.append('title', title);
+
+            input.disabled = true;
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', baseUrl + '/?r=board_quick_add', true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.onload = function() {
+                input.disabled = false;
+                if (xhr.status === 200) {
+                    try {
+                        var resp = JSON.parse(xhr.responseText);
+                        if (resp.ok) {
+                            var columnBody = form.closest('.kanban-column').querySelector('.kanban-column-body');
+                            var card = document.createElement('div');
+                            card.className = 'kanban-card';
+                            card.dataset.taskId = resp.task_id;
+                            card.dataset.columnId = columnId;
+                            card.innerHTML = '<a href="' + baseUrl + '/?r=task_view&id=' + resp.task_id + '" class="kanban-card-title">' + escHtml(resp.title) + '</a>';
+                            if (resp.owner_name) {
+                                card.innerHTML += '<div class="kanban-card-meta"><span class="kanban-card-owner" title="' + escHtml(resp.owner_name) + '">' + escHtml(resp.owner_name.substring(0,2)) + '</span></div>';
+                            }
+                            columnBody.appendChild(card);
+                            input.value = '';
+
+                            var countEl = form.closest('.kanban-column').querySelector('.kanban-column-count');
+                            if (countEl) {
+                                var wipMatch = countEl.textContent.match(/\/(\d+)/);
+                                var num = columnBody.querySelectorAll('.kanban-card').length;
+                                countEl.textContent = wipMatch ? num + '/' + wipMatch[1] : num;
+                            }
+                        }
+                    } catch(ex) {
+                        window.location.reload();
+                    }
+                } else {
+                    window.location.reload();
+                }
+            };
+            xhr.onerror = function() {
+                input.disabled = false;
+                window.location.reload();
+            };
+            xhr.send(formData);
+        });
+    }
+
+    function escHtml(str) {
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
     }
 })();
 </script>

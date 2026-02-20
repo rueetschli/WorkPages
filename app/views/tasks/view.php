@@ -88,6 +88,22 @@ $canEdit = Authz::can(Authz::TASK_EDIT);
                     <span class="text-muted">Keine Tags</span>
                 <?php endif; ?>
             </dd>
+
+            <?php
+                // AP21: Show board link if task belongs to a board
+                $__taskBoard = null;
+                if (!empty($task['board_id'])) {
+                    try { $__taskBoard = Board::findById((int) $task['board_id']); } catch (Throwable $e) {}
+                }
+            ?>
+            <?php if ($__taskBoard): ?>
+            <dt>Board</dt>
+            <dd>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=board_view&amp;id=<?= (int) $__taskBoard['id'] ?>">
+                    <?= Security::esc($__taskBoard['name']) ?>
+                </a>
+            </dd>
+            <?php endif; ?>
         </dl>
     </div>
 

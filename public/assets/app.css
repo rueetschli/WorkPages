@@ -1727,6 +1727,42 @@ select.form-input {
     padding: 0;
 }
 
+/* AP21: Quick Add in Board Columns */
+.kanban-quick-add {
+    padding: var(--sp-2) var(--sp-2) 0;
+}
+.kanban-quick-add-form {
+    display: flex;
+}
+.kanban-quick-add-input {
+    width: 100%;
+    padding: var(--sp-2);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    background: transparent;
+    font-size: var(--text-sm);
+    color: var(--color-text);
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+.kanban-quick-add-input::placeholder {
+    color: var(--color-text-muted);
+}
+.kanban-quick-add-input:focus {
+    border-color: var(--color-primary);
+    border-style: solid;
+    background: var(--color-surface);
+}
+
+/* AP21: Done card styling */
+.kanban-card-done {
+    opacity: 0.7;
+}
+.kanban-card-done .kanban-card-title {
+    text-decoration: line-through;
+    color: var(--color-text-muted);
+}
+
 .kanban-card-title {
     display: block;
     font-size: var(--text-sm);

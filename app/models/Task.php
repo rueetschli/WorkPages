@@ -27,37 +27,44 @@ class Task
      *
      * Supported filters: column_id, owner_id, due_date, tag
      */
+    /**
+     * AP21: Fixed tag filter parameter ordering bug.
+     */
     public static function all(array $filters = []): array
     {
-        $where  = [];
-        $params = [];
-        $join   = '';
+        $where      = [];
+        $whereParams = [];
+        $join       = '';
+        $joinParams = [];
 
         if (!empty($filters['column_id'])) {
-            $where[]  = 't.column_id = ?';
-            $params[] = (int) $filters['column_id'];
+            $where[]      = 't.column_id = ?';
+            $whereParams[] = (int) $filters['column_id'];
         }
 
         if (!empty($filters['owner_id'])) {
-            $where[]  = 't.owner_id = ?';
-            $params[] = (int) $filters['owner_id'];
+            $where[]      = 't.owner_id = ?';
+            $whereParams[] = (int) $filters['owner_id'];
         }
 
         if (!empty($filters['due_date'])) {
-            $where[]  = 't.due_date = ?';
-            $params[] = $filters['due_date'];
+            $where[]      = 't.due_date = ?';
+            $whereParams[] = $filters['due_date'];
         }
 
         if (!empty($filters['tag'])) {
-            $join     = ' INNER JOIN task_tags tt_filter ON tt_filter.task_id = t.id
-                          INNER JOIN tags tg_filter ON tg_filter.id = tt_filter.tag_id AND tg_filter.name = ?';
-            $params[] = mb_strtolower(trim($filters['tag']), 'UTF-8');
+            $join       = ' INNER JOIN task_tags tt_filter ON tt_filter.task_id = t.id
+                              INNER JOIN tags tg_filter ON tg_filter.id = tt_filter.tag_id AND tg_filter.name = ?';
+            $joinParams[] = mb_strtolower(trim($filters['tag']), 'UTF-8');
         }
 
         $whereSql = '';
         if (!empty($where)) {
             $whereSql = 'WHERE ' . implode(' AND ', $where);
         }
+
+        // JOIN params must come before WHERE params
+        $params = array_merge($joinParams, $whereParams);
 
         $sql = "SELECT t.*, u.name AS owner_name, c.name AS creator_name,
                        bc.name AS column_name, bc.slug AS column_slug
@@ -82,11 +89,12 @@ class Task
             ? (int) $data['column_id']
             : BoardColumn::getDefaultId();
 
-        $teamId = !empty($data['team_id']) ? (int) $data['team_id'] : null;
+        $teamId  = !empty($data['team_id']) ? (int) $data['team_id'] : null;
+        $boardId = !empty($data['board_id']) ? (int) $data['board_id'] : null;
 
         DB::query(
-            'INSERT INTO tasks (title, description_md, column_id, owner_id, due_date, created_by, team_id, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
+            'INSERT INTO tasks (title, description_md, column_id, owner_id, due_date, created_by, team_id, board_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())',
             [
                 $data['title'],
                 $data['description_md'] ?? null,
@@ -95,6 +103,7 @@ class Task
                 !empty($data['due_date']) ? $data['due_date'] : null,
                 (int) $data['created_by'],
                 $teamId,
+                $boardId,
             ]
         );
 
@@ -115,10 +124,14 @@ class Task
             ? (!empty($data['team_id']) ? (int) $data['team_id'] : null)
             : ($task['team_id'] ?? null);
 
+        $boardId = array_key_exists('board_id', $data)
+            ? (!empty($data['board_id']) ? (int) $data['board_id'] : null)
+            : ($task['board_id'] ?? null);
+
         DB::query(
             'UPDATE tasks
              SET title = ?, description_md = ?, column_id = ?, owner_id = ?,
-                 due_date = ?, updated_by = ?, team_id = ?, updated_at = NOW()
+                 due_date = ?, updated_by = ?, team_id = ?, board_id = ?, updated_at = NOW()
              WHERE id = ?',
             [
                 $data['title'] ?? $task['title'],
@@ -132,6 +145,7 @@ class Task
                     : $task['due_date'],
                 (int) $data['updated_by'],
                 $teamId,
+                $boardId,
                 $id,
             ]
         );
@@ -224,40 +238,45 @@ class Task
 
     /**
      * AP16: Fetch all tasks visible to user, with optional filters and team filtering.
+     * AP21: Fixed tag filter parameter ordering bug.
      */
     public static function allVisible(array $filters, int $userId, string $globalRole, ?int $filterTeamId = null): array
     {
-        $where  = [];
-        $params = [];
-        $join   = '';
+        $where      = [];
+        $whereParams = [];
+        $join       = '';
+        $joinParams = [];
 
         // Team visibility
         [$visSql, $visParams] = TeamService::taskVisibilityWhere($userId, $globalRole, 't', $filterTeamId);
         $where = array_merge($where, [$visSql]);
-        $params = array_merge($params, $visParams);
+        $whereParams = array_merge($whereParams, $visParams);
 
         if (!empty($filters['column_id'])) {
-            $where[]  = 't.column_id = ?';
-            $params[] = (int) $filters['column_id'];
+            $where[]      = 't.column_id = ?';
+            $whereParams[] = (int) $filters['column_id'];
         }
 
         if (!empty($filters['owner_id'])) {
-            $where[]  = 't.owner_id = ?';
-            $params[] = (int) $filters['owner_id'];
+            $where[]      = 't.owner_id = ?';
+            $whereParams[] = (int) $filters['owner_id'];
         }
 
         if (!empty($filters['due_date'])) {
-            $where[]  = 't.due_date = ?';
-            $params[] = $filters['due_date'];
+            $where[]      = 't.due_date = ?';
+            $whereParams[] = $filters['due_date'];
         }
 
         if (!empty($filters['tag'])) {
-            $join     = ' INNER JOIN task_tags tt_filter ON tt_filter.task_id = t.id
-                          INNER JOIN tags tg_filter ON tg_filter.id = tt_filter.tag_id AND tg_filter.name = ?';
-            $params[] = mb_strtolower(trim($filters['tag']), 'UTF-8');
+            $join       = ' INNER JOIN task_tags tt_filter ON tt_filter.task_id = t.id
+                              INNER JOIN tags tg_filter ON tg_filter.id = tt_filter.tag_id AND tg_filter.name = ?';
+            $joinParams[] = mb_strtolower(trim($filters['tag']), 'UTF-8');
         }
 
         $whereSql = 'WHERE ' . implode(' AND ', $where);
+
+        // JOIN params must come before WHERE params
+        $params = array_merge($joinParams, $whereParams);
 
         $sql = "SELECT t.*, u.name AS owner_name, c.name AS creator_name,
                        bc.name AS column_name, bc.slug AS column_slug
@@ -273,28 +292,37 @@ class Task
     }
 
     /**
-     * AP16: Fetch board tasks filtered by team visibility.
+     * AP16/AP21: Fetch board tasks filtered by team visibility and optional board_id.
+     * AP21: Fixed tag filter parameter ordering bug.
      */
-    public static function allForBoardVisible(array $filters, int $userId, string $globalRole, ?int $filterTeamId = null): array
+    public static function allForBoardVisible(array $filters, int $userId, string $globalRole, ?int $filterTeamId = null, ?int $boardId = null): array
     {
-        $where  = [];
-        $params = [];
-        $join   = '';
+        $where      = [];
+        $whereParams = [];
+        $join       = '';
+        $joinParams = [];
 
         // Team visibility
         [$visSql, $visParams] = TeamService::taskVisibilityWhere($userId, $globalRole, 't', $filterTeamId);
         $where = array_merge($where, [$visSql]);
-        $params = array_merge($params, $visParams);
+        $whereParams = array_merge($whereParams, $visParams);
 
-        if (!empty($filters['owner_id'])) {
-            $where[]  = 't.owner_id = ?';
-            $params[] = (int) $filters['owner_id'];
+        // AP21: Filter by board
+        if ($boardId !== null) {
+            $where[]      = 't.board_id = ?';
+            $whereParams[] = $boardId;
         }
 
+        if (!empty($filters['owner_id'])) {
+            $where[]      = 't.owner_id = ?';
+            $whereParams[] = (int) $filters['owner_id'];
+        }
+
+        // AP21 fix: Tag filter uses JOIN with ?, so its param must come before WHERE params
         if (!empty($filters['tag'])) {
-            $join    .= ' INNER JOIN task_tags tt_filter ON tt_filter.task_id = t.id
-                          INNER JOIN tags tg_filter ON tg_filter.id = tt_filter.tag_id AND tg_filter.name = ?';
-            $params[] = mb_strtolower(trim($filters['tag']), 'UTF-8');
+            $join       .= ' INNER JOIN task_tags tt_filter ON tt_filter.task_id = t.id
+                              INNER JOIN tags tg_filter ON tg_filter.id = tt_filter.tag_id AND tg_filter.name = ?';
+            $joinParams[] = mb_strtolower(trim($filters['tag']), 'UTF-8');
         }
 
         if (!empty($filters['due'])) {
@@ -315,15 +343,18 @@ class Task
         }
 
         if (!empty($filters['q'])) {
-            $where[]  = 't.title LIKE ?';
-            $params[] = '%' . $filters['q'] . '%';
+            $where[]      = 't.title LIKE ?';
+            $whereParams[] = '%' . $filters['q'] . '%';
         }
 
         $whereSql = 'WHERE ' . implode(' AND ', $where);
 
+        // JOIN params must come before WHERE params in the final array
+        $params = array_merge($joinParams, $whereParams);
+
         $sql = "SELECT t.*, u.name AS owner_name,
                        bc.name AS column_name, bc.slug AS column_slug,
-                       bc.position AS column_position,
+                       bc.position AS column_position, bc.category AS column_category,
                        GROUP_CONCAT(DISTINCT tg.name ORDER BY tg.name SEPARATOR ',') AS tag_list
                 FROM tasks t
                 LEFT JOIN users u ON u.id = t.owner_id
@@ -348,21 +379,25 @@ class Task
      *
      * @return array Tasks ordered by (column position, task position ASC, updated_at DESC)
      */
+    /**
+     * AP21: Fixed tag filter parameter ordering bug.
+     */
     public static function allForBoard(array $filters = []): array
     {
-        $where  = [];
-        $params = [];
-        $join   = '';
+        $where      = [];
+        $whereParams = [];
+        $join       = '';
+        $joinParams = [];
 
         if (!empty($filters['owner_id'])) {
-            $where[]  = 't.owner_id = ?';
-            $params[] = (int) $filters['owner_id'];
+            $where[]      = 't.owner_id = ?';
+            $whereParams[] = (int) $filters['owner_id'];
         }
 
         if (!empty($filters['tag'])) {
-            $join    .= ' INNER JOIN task_tags tt_filter ON tt_filter.task_id = t.id
-                          INNER JOIN tags tg_filter ON tg_filter.id = tt_filter.tag_id AND tg_filter.name = ?';
-            $params[] = mb_strtolower(trim($filters['tag']), 'UTF-8');
+            $join       .= ' INNER JOIN task_tags tt_filter ON tt_filter.task_id = t.id
+                              INNER JOIN tags tg_filter ON tg_filter.id = tt_filter.tag_id AND tg_filter.name = ?';
+            $joinParams[] = mb_strtolower(trim($filters['tag']), 'UTF-8');
         }
 
         if (!empty($filters['due'])) {
@@ -383,14 +418,17 @@ class Task
         }
 
         if (!empty($filters['q'])) {
-            $where[]  = 't.title LIKE ?';
-            $params[] = '%' . $filters['q'] . '%';
+            $where[]      = 't.title LIKE ?';
+            $whereParams[] = '%' . $filters['q'] . '%';
         }
 
         $whereSql = '';
         if (!empty($where)) {
             $whereSql = 'WHERE ' . implode(' AND ', $where);
         }
+
+        // JOIN params must come before WHERE params
+        $params = array_merge($joinParams, $whereParams);
 
         $sql = "SELECT t.*, u.name AS owner_name,
                        bc.name AS column_name, bc.slug AS column_slug,
