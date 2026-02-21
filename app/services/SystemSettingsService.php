@@ -98,6 +98,7 @@ class SystemSettingsService
             'company_name', 'logo_path', 'theme_mode', 'theme_preset',
             'color_primary', 'color_secondary', 'color_accent',
             'maintenance_message', 'maintenance_level', 'maintenance_active',
+            'default_language',
         ];
 
         $sets = [];
@@ -202,6 +203,7 @@ class SystemSettingsService
             'maintenance_message'  => '',
             'maintenance_level'    => 'info',
             'maintenance_active'   => 0,
+            'default_language'     => 'de',
             'updated_at'           => null,
         ];
     }

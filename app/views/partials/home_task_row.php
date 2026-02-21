@@ -48,7 +48,7 @@ $isWatchSection = false; // reset for next iteration
             <?= Security::csrfField() ?>
             <input type="hidden" name="home_action" value="mark_done">
             <input type="hidden" name="task_id" value="<?= $_tid ?>">
-            <button type="submit" class="home-btn-done" title="Als erledigt markieren">&#10003;</button>
+            <button type="submit" class="home-btn-done" title="<?= Security::esc(t('actions.mark_done')) ?>">&#10003;</button>
         </form>
         <?php endif; ?>
     </div>

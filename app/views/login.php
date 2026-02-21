@@ -25,13 +25,17 @@ try {
 } catch (Throwable $e) {
     $appName = $GLOBALS['config']['APP_NAME'] ?? 'WorkPages';
 }
+
+// AP24: Available languages for login switcher
+$__loginLangs = I18nService::listAvailableLanguages();
+$__loginCurrentLang = I18nService::getCurrentLanguage();
 ?>
 <!DOCTYPE html>
-<html lang="de">
+<html lang="<?= Security::esc(I18nService::getCurrentLanguage()) ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - <?= Security::esc($appName) ?></title>
+    <title><?= Security::esc(t('actions.login')) ?> - <?= Security::esc($appName) ?></title>
     <link rel="stylesheet" href="<?= Security::esc($baseUrl) ?>/assets/app.css">
     <?= $__loginThemeCss ?>
     <script>
@@ -56,7 +60,7 @@ try {
         <?php else: ?>
             <h1 class="login-title"><?= Security::esc($appName) ?></h1>
         <?php endif; ?>
-        <p class="login-subtitle">Melden Sie sich an, um fortzufahren</p>
+        <p class="login-subtitle"><?= Security::esc(t('messages.login_subtitle')) ?></p>
 
         <?php if (!empty($error)): ?>
             <div class="alert alert-error"><?= Security::esc($error) ?></div>
@@ -66,20 +70,39 @@ try {
             <?= Security::csrfField() ?>
 
             <div class="form-group">
-                <label for="email">E-Mail</label>
+                <label for="email"><?= Security::esc(t('labels.email')) ?></label>
                 <input type="email" id="email" name="email" required autofocus
                        value="<?= $emailValue ?>"
-                       placeholder="name@firma.ch" class="form-input">
+                       placeholder="<?= Security::esc(t('placeholders.email')) ?>" class="form-input">
             </div>
 
             <div class="form-group">
-                <label for="password">Passwort</label>
+                <label for="password"><?= Security::esc(t('labels.password')) ?></label>
                 <input type="password" id="password" name="password" required
-                       placeholder="Ihr Passwort" class="form-input">
+                       placeholder="<?= Security::esc(t('placeholders.password')) ?>" class="form-input">
             </div>
 
-            <button type="submit" class="btn btn-primary btn-block">Anmelden</button>
+            <button type="submit" class="btn btn-primary btn-block"><?= Security::esc(t('actions.login')) ?></button>
         </form>
+
+        <?php if (count($__loginLangs) > 1): ?>
+        <div class="login-lang-switch">
+            <?php foreach ($__loginLangs as $__ll): ?>
+                <?php if ($__ll['code'] === $__loginCurrentLang): ?>
+                    <span class="login-lang-active"><?= Security::esc(I18nService::languageName($__ll['code'])) ?></span>
+                <?php else: ?>
+                    <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=language_switch" class="inline-form">
+                        <?= Security::csrfField() ?>
+                        <input type="hidden" name="language" value="<?= Security::esc($__ll['code']) ?>">
+                        <button type="submit" class="login-lang-btn"><?= Security::esc(I18nService::languageName($__ll['code'])) ?></button>
+                    </form>
+                <?php endif; ?>
+                <?php if ($__ll !== end($__loginLangs)): ?>
+                    <span class="login-lang-sep">|</span>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
     </div>
 </div>
 

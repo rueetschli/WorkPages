@@ -10,15 +10,15 @@ $userName = Security::esc($_SESSION['user_name'] ?? '');
 ?>
 
 <div class="page-header">
-    <h1>Meine Arbeit</h1>
-    <p class="subtitle">Hallo, <?= $userName ?>.</p>
+    <h1><?= Security::esc(t('home.title')) ?></h1>
+    <p class="subtitle"><?= Security::esc(t('home.greeting', ['name' => $userName])) ?></p>
 </div>
 
 <?php if (!empty($overdue)): ?>
 <section class="home-section home-section-overdue">
     <h2 class="home-section-title home-section-title-overdue">
         <span class="home-section-icon-overdue">!</span>
-        Ueberfaellig
+        <?= Security::esc(t('home.overdue')) ?>
         <span class="home-section-count"><?= count($overdue) ?></span>
     </h2>
     <div class="home-task-list">
@@ -32,7 +32,7 @@ $userName = Security::esc($_SESSION['user_name'] ?? '');
 <?php if (!empty($dueToday)): ?>
 <section class="home-section home-section-today">
     <h2 class="home-section-title home-section-title-today">
-        Heute faellig
+        <?= Security::esc(t('home.due_today')) ?>
         <span class="home-section-count"><?= count($dueToday) ?></span>
     </h2>
     <div class="home-task-list">
@@ -46,7 +46,7 @@ $userName = Security::esc($_SESSION['user_name'] ?? '');
 <?php if (!empty($dueWeek)): ?>
 <section class="home-section">
     <h2 class="home-section-title">
-        Diese Woche
+        <?= Security::esc(t('home.due_this_week')) ?>
         <span class="home-section-count"><?= count($dueWeek) ?></span>
     </h2>
     <div class="home-task-list">
@@ -59,11 +59,11 @@ $userName = Security::esc($_SESSION['user_name'] ?? '');
 
 <section class="home-section">
     <h2 class="home-section-title">
-        Mir zugewiesen
+        <?= Security::esc(t('home.assigned_to_me')) ?>
         <span class="home-section-count"><?= count($assignedToMe) ?></span>
     </h2>
     <?php if (empty($assignedToMe)): ?>
-        <p class="placeholder-text">Keine offenen Aufgaben zugewiesen.</p>
+        <p class="placeholder-text"><?= Security::esc(t('messages.no_tasks_assigned')) ?></p>
     <?php else: ?>
     <div class="home-task-list">
         <?php foreach ($assignedToMe as $t): ?>
@@ -76,7 +76,7 @@ $userName = Security::esc($_SESSION['user_name'] ?? '');
 <?php if (!empty($watching)): ?>
 <section class="home-section">
     <h2 class="home-section-title">
-        Ich beobachte
+        <?= Security::esc(t('home.watching')) ?>
         <span class="home-section-count"><?= count($watching) ?></span>
     </h2>
     <div class="home-task-list">
@@ -89,9 +89,9 @@ $userName = Security::esc($_SESSION['user_name'] ?? '');
 
 <?php if (empty($overdue) && empty($dueToday) && empty($dueWeek) && empty($assignedToMe) && empty($watching)): ?>
 <div class="home-empty-state">
-    <p>Alles erledigt. Keine offenen Aufgaben.</p>
+    <p><?= Security::esc(t('messages.all_done')) ?></p>
     <div class="home-empty-links">
-        <a href="<?= Security::esc($baseUrl) ?>/?r=tasks" class="btn btn-secondary">Alle Tasks</a>
+        <a href="<?= Security::esc($baseUrl) ?>/?r=tasks" class="btn btn-secondary"><?= Security::esc(t('home.all_tasks')) ?></a>
         <a href="<?= Security::esc($baseUrl) ?>/?r=boards" class="btn btn-secondary">Boards</a>
         <a href="<?= Security::esc($baseUrl) ?>/?r=pages" class="btn btn-secondary">Pages</a>
     </div>

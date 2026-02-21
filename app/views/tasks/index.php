@@ -14,12 +14,12 @@ $currentTag      = $filters['tag'] ?? '';
 <div class="page-header">
     <div class="page-header-row">
         <div>
-            <h1>Tasks</h1>
-            <p class="subtitle">Aufgaben und operative Arbeit</p>
+            <h1><?= Security::esc(t('tasks.title')) ?></h1>
+            <p class="subtitle"><?= Security::esc(t('tasks.subtitle')) ?></p>
         </div>
         <?php if ($canEdit): ?>
         <div>
-            <a href="<?= Security::esc($baseUrl) ?>/?r=task_create" class="btn btn-primary">+ Neue Aufgabe</a>
+            <a href="<?= Security::esc($baseUrl) ?>/?r=task_create" class="btn btn-primary"><?= Security::esc(t('tasks.new_task')) ?></a>
         </div>
         <?php endif; ?>
     </div>
@@ -32,9 +32,9 @@ $currentTag      = $filters['tag'] ?? '';
 
         <div class="filter-row">
             <div class="filter-group">
-                <label for="filter-column">Spalte</label>
+                <label for="filter-column"><?= Security::esc(t('labels.column')) ?></label>
                 <select id="filter-column" name="column_id" class="form-input form-input-sm">
-                    <option value="">Alle</option>
+                    <option value=""><?= Security::esc(t('labels.all')) ?></option>
                     <?php foreach ($boardColumns as $col): ?>
                         <option value="<?= (int) $col['id'] ?>"
                             <?= (string) $currentColumnId === (string) $col['id'] ? 'selected' : '' ?>>
@@ -45,9 +45,9 @@ $currentTag      = $filters['tag'] ?? '';
             </div>
 
             <div class="filter-group">
-                <label for="filter-owner">Owner</label>
+                <label for="filter-owner"><?= Security::esc(t('labels.owner')) ?></label>
                 <select id="filter-owner" name="owner_id" class="form-input form-input-sm">
-                    <option value="">Alle</option>
+                    <option value=""><?= Security::esc(t('labels.all')) ?></option>
                     <?php foreach ($users as $u): ?>
                         <option value="<?= (int) $u['id'] ?>"
                             <?= (string) $currentOwnerId === (string) $u['id'] ? 'selected' : '' ?>>
@@ -58,9 +58,9 @@ $currentTag      = $filters['tag'] ?? '';
             </div>
 
             <div class="filter-group">
-                <label for="filter-tag">Tag</label>
+                <label for="filter-tag"><?= Security::esc(t('labels.tags')) ?></label>
                 <select id="filter-tag" name="tag" class="form-input form-input-sm">
-                    <option value="">Alle</option>
+                    <option value=""><?= Security::esc(t('labels.all')) ?></option>
                     <?php foreach ($allTags as $tg): ?>
                         <option value="<?= Security::esc($tg['name']) ?>"
                             <?= $currentTag === $tg['name'] ? 'selected' : '' ?>>
@@ -71,9 +71,9 @@ $currentTag      = $filters['tag'] ?? '';
             </div>
 
             <div class="filter-group filter-actions">
-                <button type="submit" class="btn btn-primary btn-sm-pad">Filtern</button>
+                <button type="submit" class="btn btn-primary btn-sm-pad"><?= Security::esc(t('actions.filter')) ?></button>
                 <?php if ($currentColumnId !== '' || $currentOwnerId !== '' || $currentTag !== ''): ?>
-                    <a href="<?= Security::esc($baseUrl) ?>/?r=tasks" class="btn btn-secondary btn-sm-pad">Zuruecksetzen</a>
+                    <a href="<?= Security::esc($baseUrl) ?>/?r=tasks" class="btn btn-secondary btn-sm-pad"><?= Security::esc(t('actions.reset')) ?></a>
                 <?php endif; ?>
             </div>
         </div>
@@ -82,10 +82,10 @@ $currentTag      = $filters['tag'] ?? '';
 
 <?php if (empty($tasks)): ?>
     <div class="section-block">
-        <p class="placeholder-text">Keine Aufgaben gefunden.</p>
+        <p class="placeholder-text"><?= Security::esc(t('messages.no_tasks')) ?></p>
         <?php if ($canEdit): ?>
         <p style="margin-top: var(--sp-4);">
-            <a href="<?= Security::esc($baseUrl) ?>/?r=task_create" class="btn btn-primary">Erste Aufgabe erstellen</a>
+            <a href="<?= Security::esc($baseUrl) ?>/?r=task_create" class="btn btn-primary"><?= Security::esc(t('tasks.create_first')) ?></a>
         </p>
         <?php endif; ?>
     </div>
@@ -94,13 +94,13 @@ $currentTag      = $filters['tag'] ?? '';
         <table class="pages-table tasks-table">
             <thead>
                 <tr>
-                    <th>Titel</th>
-                    <th>Spalte</th>
-                    <th>Owner</th>
-                    <th>Faellig</th>
-                    <th>Tags</th>
+                    <th><?= Security::esc(t('tasks.th_title')) ?></th>
+                    <th><?= Security::esc(t('tasks.th_column')) ?></th>
+                    <th><?= Security::esc(t('tasks.th_owner')) ?></th>
+                    <th><?= Security::esc(t('tasks.th_due')) ?></th>
+                    <th><?= Security::esc(t('tasks.th_tags')) ?></th>
                     <?php if ($canEdit): ?>
-                    <th>Aktionen</th>
+                    <th><?= Security::esc(t('labels.actions')) ?></th>
                     <?php endif; ?>
                 </tr>
             </thead>
@@ -112,19 +112,19 @@ $currentTag      = $filters['tag'] ?? '';
                             <?= Security::esc($t['title']) ?>
                         </a>
                     </td>
-                    <td data-label="Spalte">
+                    <td data-label="<?= Security::esc(t('tasks.th_column')) ?>">
                         <span class="status-badge">
                             <?= Security::esc($t['column_name'] ?? '') ?>
                         </span>
                     </td>
-                    <td data-label="Owner">
+                    <td data-label="<?= Security::esc(t('tasks.th_owner')) ?>">
                         <?php if ($t['owner_name']): ?>
                             <?= Security::esc($t['owner_name']) ?>
                         <?php else: ?>
                             <span class="text-muted">&mdash;</span>
                         <?php endif; ?>
                     </td>
-                    <td data-label="Faellig">
+                    <td data-label="<?= Security::esc(t('tasks.th_due')) ?>">
                         <?php if ($t['due_date']): ?>
                             <?php
                                 $dueTs   = strtotime($t['due_date']);
@@ -137,7 +137,7 @@ $currentTag      = $filters['tag'] ?? '';
                             <span class="text-muted">&mdash;</span>
                         <?php endif; ?>
                     </td>
-                    <td data-label="Tags">
+                    <td data-label="<?= Security::esc(t('tasks.th_tags')) ?>">
                         <?php
                             $taskTags = $tagsByTask[(int) $t['id']] ?? [];
                             if (!empty($taskTags)):
@@ -153,7 +153,7 @@ $currentTag      = $filters['tag'] ?? '';
                     </td>
                     <?php if ($canEdit): ?>
                     <td class="card-cell-actions">
-                        <a href="<?= Security::esc($baseUrl) ?>/?r=task_edit&amp;id=<?= (int) $t['id'] ?>" class="btn-sm">Bearbeiten</a>
+                        <a href="<?= Security::esc($baseUrl) ?>/?r=task_edit&amp;id=<?= (int) $t['id'] ?>" class="btn-sm"><?= Security::esc(t('actions.edit')) ?></a>
                     </td>
                     <?php endif; ?>
                 </tr>

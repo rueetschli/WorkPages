@@ -7,7 +7,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 ?>
 
 <div class="page-header">
-    <h1>Benachrichtigungseinstellungen</h1>
+    <h1><?= Security::esc(t('settings.notifications_title')) ?></h1>
 </div>
 
 <?php if ($error): ?>
@@ -19,44 +19,44 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 
     <!-- E-Mail Einstellungen -->
     <fieldset class="section-block">
-        <legend class="fieldset-legend">E-Mail Benachrichtigungen</legend>
+        <legend class="fieldset-legend"><?= Security::esc(t('settings.email_notifications')) ?></legend>
 
         <div class="form-group">
             <label class="form-checkbox-label">
                 <input type="checkbox" name="email_enabled" value="1"
                     <?= !empty($settings['email_enabled']) ? 'checked' : '' ?>>
-                E-Mail Benachrichtigungen aktiviert
+                <?= Security::esc(t('settings.email_notifications_enabled')) ?>
             </label>
         </div>
 
         <div class="form-group">
-            <label for="email_mode" class="form-label">Versandmodus</label>
+            <label for="email_mode" class="form-label"><?= Security::esc(t('settings.send_mode')) ?></label>
             <select id="email_mode" name="email_mode" class="form-input">
-                <option value="immediate" <?= ($settings['email_mode'] ?? '') === 'immediate' ? 'selected' : '' ?>>Sofort</option>
-                <option value="digest_daily" <?= ($settings['email_mode'] ?? '') === 'digest_daily' ? 'selected' : '' ?>>Tages-Zusammenfassung</option>
-                <option value="digest_weekly" <?= ($settings['email_mode'] ?? '') === 'digest_weekly' ? 'selected' : '' ?>>Wochen-Zusammenfassung</option>
-                <option value="digest_off" <?= ($settings['email_mode'] ?? '') === 'digest_off' ? 'selected' : '' ?>>Keine E-Mails</option>
+                <option value="immediate" <?= ($settings['email_mode'] ?? '') === 'immediate' ? 'selected' : '' ?>><?= Security::esc(t('settings.mode_immediate')) ?></option>
+                <option value="digest_daily" <?= ($settings['email_mode'] ?? '') === 'digest_daily' ? 'selected' : '' ?>><?= Security::esc(t('settings.mode_daily')) ?></option>
+                <option value="digest_weekly" <?= ($settings['email_mode'] ?? '') === 'digest_weekly' ? 'selected' : '' ?>><?= Security::esc(t('settings.mode_weekly')) ?></option>
+                <option value="digest_off" <?= ($settings['email_mode'] ?? '') === 'digest_off' ? 'selected' : '' ?>><?= Security::esc(t('settings.mode_off')) ?></option>
             </select>
         </div>
 
         <div class="form-group">
-            <label for="email_address_override" class="form-label">Alternative E-Mail Adresse (optional)</label>
+            <label for="email_address_override" class="form-label"><?= Security::esc(t('settings.alt_email')) ?></label>
             <input type="email" id="email_address_override" name="email_address_override"
-                   class="form-input" placeholder="Standard: Account E-Mail"
+                   class="form-input" placeholder="<?= Security::esc(t('placeholders.default_account_email')) ?>"
                    value="<?= Security::esc($settings['email_address_override'] ?? '') ?>">
-            <small class="form-hint">Leer lassen fuer die E-Mail Adresse des Benutzerkontos.</small>
+            <small class="form-hint"><?= Security::esc(t('settings.alt_email_hint')) ?></small>
         </div>
     </fieldset>
 
     <!-- Auto-Watch Einstellungen -->
     <fieldset class="section-block">
-        <legend class="fieldset-legend">Automatisches Beobachten</legend>
+        <legend class="fieldset-legend"><?= Security::esc(t('settings.auto_watch')) ?></legend>
 
         <div class="form-group">
             <label class="form-checkbox-label">
                 <input type="checkbox" name="watch_auto_on_create" value="1"
                     <?= !empty($settings['watch_auto_on_create']) ? 'checked' : '' ?>>
-                Erstellte Seiten/Aufgaben automatisch beobachten
+                <?= Security::esc(t('settings.watch_on_create')) ?>
             </label>
         </div>
 
@@ -64,21 +64,21 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
             <label class="form-checkbox-label">
                 <input type="checkbox" name="watch_auto_on_comment" value="1"
                     <?= !empty($settings['watch_auto_on_comment']) ? 'checked' : '' ?>>
-                Kommentierte Seiten/Aufgaben automatisch beobachten
+                <?= Security::esc(t('settings.watch_on_comment')) ?>
             </label>
         </div>
     </fieldset>
 
     <!-- Benachrichtigungstypen -->
     <fieldset class="section-block">
-        <legend class="fieldset-legend">Benachrichtigungstypen</legend>
-        <p class="form-hint" style="margin-bottom: var(--sp-3);">Welche Ereignisse sollen Benachrichtigungen ausloesen?</p>
+        <legend class="fieldset-legend"><?= Security::esc(t('settings.notification_types')) ?></legend>
+        <p class="form-hint" style="margin-bottom: var(--sp-3);"><?= Security::esc(t('settings.notification_types_hint')) ?></p>
 
         <div class="form-group">
             <label class="form-checkbox-label">
                 <input type="checkbox" name="notify_on_mentions" value="1"
                     <?= !empty($settings['notify_on_mentions']) ? 'checked' : '' ?>>
-                Erwaehnungen (@mention)
+                <?= Security::esc(t('settings.notify_mentions')) ?>
             </label>
         </div>
 
@@ -86,7 +86,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
             <label class="form-checkbox-label">
                 <input type="checkbox" name="notify_on_assignments" value="1"
                     <?= !empty($settings['notify_on_assignments']) ? 'checked' : '' ?>>
-                Aufgaben-Zuweisungen
+                <?= Security::esc(t('settings.notify_assignments')) ?>
             </label>
         </div>
 
@@ -94,7 +94,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
             <label class="form-checkbox-label">
                 <input type="checkbox" name="notify_on_comments" value="1"
                     <?= !empty($settings['notify_on_comments']) ? 'checked' : '' ?>>
-                Kommentare
+                <?= Security::esc(t('settings.notify_comments')) ?>
             </label>
         </div>
 
@@ -102,7 +102,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
             <label class="form-checkbox-label">
                 <input type="checkbox" name="notify_on_task_updates" value="1"
                     <?= !empty($settings['notify_on_task_updates']) ? 'checked' : '' ?>>
-                Aufgaben-Aenderungen
+                <?= Security::esc(t('settings.notify_task_updates')) ?>
             </label>
         </div>
 
@@ -110,7 +110,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
             <label class="form-checkbox-label">
                 <input type="checkbox" name="notify_on_page_updates" value="1"
                     <?= !empty($settings['notify_on_page_updates']) ? 'checked' : '' ?>>
-                Seiten-Aenderungen
+                <?= Security::esc(t('settings.notify_page_updates')) ?>
             </label>
         </div>
 
@@ -118,12 +118,12 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
             <label class="form-checkbox-label">
                 <input type="checkbox" name="notify_on_moves" value="1"
                     <?= !empty($settings['notify_on_moves']) ? 'checked' : '' ?>>
-                Board-Verschiebungen
+                <?= Security::esc(t('settings.notify_moves')) ?>
             </label>
         </div>
     </fieldset>
 
     <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Einstellungen speichern</button>
+        <button type="submit" class="btn btn-primary"><?= Security::esc(t('actions.save_settings')) ?></button>
     </div>
 </form>

@@ -36,7 +36,7 @@ if ($canEdit) {
 <div class="board-header">
     <div class="board-header-row">
         <div style="display:flex; align-items:center; gap:var(--sp-3);">
-            <a href="<?= $esc($baseUrl) ?>/?r=boards" class="btn btn-secondary btn-sm-pad" title="Alle Boards">&larr;</a>
+            <a href="<?= $esc($baseUrl) ?>/?r=boards" class="btn btn-secondary btn-sm-pad" title="<?= $esc(t('board.all_boards')) ?>">&larr;</a>
             <h1><?= $esc($board['name']) ?></h1>
             <?php if ($board['team_name'] ?? ''): ?>
                 <span class="status-badge"><?= $esc($board['team_name']) ?></span>
@@ -44,8 +44,8 @@ if ($canEdit) {
         </div>
         <div style="display:flex; gap:var(--sp-2);">
             <?php if ($canManage): ?>
-                <button type="button" class="btn btn-secondary btn-sm-pad" onclick="document.getElementById('board-edit-panel').style.display = document.getElementById('board-edit-panel').style.display === 'none' ? 'block' : 'none'">Bearbeiten</button>
-                <a href="<?= $esc($baseUrl) ?>/?r=board_columns" class="btn btn-secondary btn-sm-pad">Spalten</a>
+                <button type="button" class="btn btn-secondary btn-sm-pad" onclick="document.getElementById('board-edit-panel').style.display = document.getElementById('board-edit-panel').style.display === 'none' ? 'block' : 'none'"><?= $esc(t('actions.edit')) ?></button>
+                <a href="<?= $esc($baseUrl) ?>/?r=board_columns" class="btn btn-secondary btn-sm-pad"><?= $esc(t('board.columns')) ?></a>
             <?php endif; ?>
         </div>
     </div>
@@ -60,19 +60,19 @@ if ($canEdit) {
             <?= Security::csrfField() ?>
             <input type="hidden" name="id" value="<?= $boardId ?>">
             <div class="form-group">
-                <label class="form-label">Name</label>
+                <label class="form-label"><?= $esc(t('labels.name')) ?></label>
                 <input type="text" name="name" class="form-input" value="<?= $esc($board['name']) ?>" required maxlength="150">
             </div>
             <div class="form-group">
-                <label class="form-label">Beschreibung</label>
+                <label class="form-label"><?= $esc(t('labels.description')) ?></label>
                 <input type="text" name="description" class="form-input" value="<?= $esc($board['description'] ?? '') ?>" maxlength="255">
             </div>
-            <button type="submit" class="btn btn-primary btn-sm-pad">Speichern</button>
+            <button type="submit" class="btn btn-primary btn-sm-pad"><?= $esc(t('actions.save')) ?></button>
         </form>
-        <form method="post" action="<?= $esc($baseUrl) ?>/?r=board_delete" onsubmit="return confirm('Board wirklich loeschen? Tasks werden vom Board entfernt, aber nicht geloescht.');">
+        <form method="post" action="<?= $esc($baseUrl) ?>/?r=board_delete" onsubmit="return confirm('<?= $esc(t('messages.confirm_delete_board')) ?>');">
             <?= Security::csrfField() ?>
             <input type="hidden" name="id" value="<?= $boardId ?>">
-            <button type="submit" class="btn btn-danger btn-sm-pad">Board loeschen</button>
+            <button type="submit" class="btn btn-danger btn-sm-pad"><?= $esc(t('board.delete_button')) ?></button>
         </form>
     </div>
     <?php endif; ?>
@@ -83,9 +83,9 @@ if ($canEdit) {
         <input type="hidden" name="id" value="<?= $boardId ?>">
         <div class="filter-row">
             <div class="filter-group">
-                <label for="bf-owner">Owner</label>
+                <label for="bf-owner"><?= $esc(t('labels.owner')) ?></label>
                 <select id="bf-owner" name="owner_id" class="form-input form-input-sm">
-                    <option value="">Alle</option>
+                    <option value=""><?= $esc(t('labels.all')) ?></option>
                     <?php foreach ($users as $u): ?>
                         <option value="<?= (int) $u['id'] ?>"
                             <?= (int) $fOwner === (int) $u['id'] ? 'selected' : '' ?>>
@@ -95,9 +95,9 @@ if ($canEdit) {
                 </select>
             </div>
             <div class="filter-group">
-                <label for="bf-tag">Tag</label>
+                <label for="bf-tag"><?= $esc(t('labels.tags')) ?></label>
                 <select id="bf-tag" name="tag" class="form-input form-input-sm">
-                    <option value="">Alle</option>
+                    <option value=""><?= $esc(t('labels.all')) ?></option>
                     <?php foreach ($allTags as $tag): ?>
                         <option value="<?= $esc($tag['name']) ?>"
                             <?= $fTag === $tag['name'] ? 'selected' : '' ?>>
@@ -107,24 +107,24 @@ if ($canEdit) {
                 </select>
             </div>
             <div class="filter-group">
-                <label for="bf-due">Faellig</label>
+                <label for="bf-due"><?= $esc(t('board.filter_due')) ?></label>
                 <select id="bf-due" name="due" class="form-input form-input-sm">
-                    <option value="">Alle</option>
-                    <option value="overdue" <?= $fDue === 'overdue' ? 'selected' : '' ?>>Ueberfaellig</option>
-                    <option value="today"   <?= $fDue === 'today'   ? 'selected' : '' ?>>Heute</option>
-                    <option value="week"    <?= $fDue === 'week'    ? 'selected' : '' ?>>Diese Woche</option>
-                    <option value="none"    <?= $fDue === 'none'    ? 'selected' : '' ?>>Kein Datum</option>
+                    <option value=""><?= $esc(t('labels.all')) ?></option>
+                    <option value="overdue" <?= $fDue === 'overdue' ? 'selected' : '' ?>><?= $esc(t('board.filter_overdue')) ?></option>
+                    <option value="today"   <?= $fDue === 'today'   ? 'selected' : '' ?>><?= $esc(t('board.filter_today')) ?></option>
+                    <option value="week"    <?= $fDue === 'week'    ? 'selected' : '' ?>><?= $esc(t('board.filter_week')) ?></option>
+                    <option value="none"    <?= $fDue === 'none'    ? 'selected' : '' ?>><?= $esc(t('board.filter_no_date')) ?></option>
                 </select>
             </div>
             <div class="filter-group">
-                <label for="bf-q">Suche</label>
+                <label for="bf-q"><?= $esc(t('board.filter_search')) ?></label>
                 <input id="bf-q" type="text" name="q" value="<?= $esc($fQ) ?>"
-                       class="form-input form-input-sm" placeholder="Titel...">
+                       class="form-input form-input-sm" placeholder="<?= $esc(t('placeholders.title_input')) ?>">
             </div>
             <div class="filter-group filter-actions">
-                <button type="submit" class="btn btn-primary btn-sm-pad">Filtern</button>
+                <button type="submit" class="btn btn-primary btn-sm-pad"><?= $esc(t('actions.filter')) ?></button>
                 <?php if ($fOwner !== '' || $fTag !== '' || $fDue !== '' || $fQ !== ''): ?>
-                    <a href="<?= $esc($baseUrl) ?>/?r=board_view&amp;id=<?= $boardId ?>" class="btn btn-secondary btn-sm-pad">Zuruecksetzen</a>
+                    <a href="<?= $esc($baseUrl) ?>/?r=board_view&amp;id=<?= $boardId ?>" class="btn btn-secondary btn-sm-pad"><?= $esc(t('actions.reset')) ?></a>
                 <?php endif; ?>
             </div>
         </div>
@@ -173,7 +173,7 @@ if ($canEdit) {
                     <?php endif; ?>
                     <strong><?= $esc($colName) ?></strong>
                     <?php if ($isDoneColumn): ?>
-                        <span class="text-muted" style="font-size:0.75rem; font-weight:normal;"> (erledigt)</span>
+                        <span class="text-muted" style="font-size:0.75rem; font-weight:normal;"> <?= $esc(t('board.done')) ?></span>
                     <?php endif; ?>
                 </span>
                 <span class="kanban-column-count <?= $wipExceeded ? 'kanban-wip-warning' : '' ?>">
@@ -188,7 +188,7 @@ if ($canEdit) {
                     <?= Security::csrfField() ?>
                     <input type="hidden" name="board_id" value="<?= $boardId ?>">
                     <input type="hidden" name="column_id" value="<?= $colId ?>">
-                    <input type="text" name="title" class="kanban-quick-add-input" placeholder="+ Task hinzufuegen..." maxlength="190" autocomplete="off">
+                    <input type="text" name="title" class="kanban-quick-add-input" placeholder="<?= $esc(t('placeholders.add_task')) ?>" maxlength="190" autocomplete="off">
                 </form>
             </div>
             <?php endif; ?>
@@ -256,7 +256,7 @@ if ($canEdit) {
                                     <input type="hidden" name="task_id" value="<?= $taskId ?>">
                                     <select name="target_board_id" class="kanban-card-select kanban-card-select-board"
                                             onchange="if(this.value)this.form.submit()">
-                                        <option value="">Board...</option>
+                                        <option value=""><?= $esc(t('board.select_board')) ?></option>
                                         <?php foreach ($__availableBoards as $ab): ?>
                                             <?php if ((int) $ab['id'] !== $boardId): ?>
                                             <option value="<?= (int) $ab['id'] ?>"><?= $esc($ab['name']) ?></option>

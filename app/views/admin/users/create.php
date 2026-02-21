@@ -9,16 +9,16 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <ol class="breadcrumb-list">
         <li class="breadcrumb-item">
-            <a href="<?= Security::esc($baseUrl) ?>/?r=admin_users">Benutzerverwaltung</a>
+            <a href="<?= Security::esc($baseUrl) ?>/?r=admin_users"><?= Security::esc(t('admin.users_title')) ?></a>
         </li>
         <li class="breadcrumb-item breadcrumb-current">
-            <span>Neuer Benutzer</span>
+            <span><?= Security::esc(t('admin.user_create')) ?></span>
         </li>
     </ol>
 </nav>
 
 <div class="page-header">
-    <h1>Neuer Benutzer</h1>
+    <h1><?= Security::esc(t('admin.user_create')) ?></h1>
 </div>
 
 <?php if ($error): ?>
@@ -29,21 +29,21 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
     <?= Security::csrfField() ?>
 
     <div class="form-group">
-        <label for="email">E-Mail <span class="required">*</span></label>
+        <label for="email"><?= Security::esc(t('labels.email')) ?> <span class="required">*</span></label>
         <input type="email" id="email" name="email" required
                value="<?= Security::esc($formData['email']) ?>"
-               placeholder="name@firma.ch" class="form-input">
+               placeholder="<?= Security::esc(t('placeholders.email')) ?>" class="form-input">
     </div>
 
     <div class="form-group">
-        <label for="name">Name <span class="required">*</span></label>
+        <label for="name"><?= Security::esc(t('labels.name')) ?> <span class="required">*</span></label>
         <input type="text" id="name" name="name" required
                value="<?= Security::esc($formData['name']) ?>"
-               placeholder="Vor- und Nachname" class="form-input">
+               placeholder="<?= Security::esc(t('placeholders.name')) ?>" class="form-input">
     </div>
 
     <div class="form-group">
-        <label for="role">Rolle <span class="required">*</span></label>
+        <label for="role"><?= Security::esc(t('labels.role')) ?> <span class="required">*</span></label>
         <select id="role" name="role" class="form-input">
             <?php foreach (User::ROLES as $role): ?>
                 <option value="<?= Security::esc($role) ?>"
@@ -55,21 +55,21 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
     </div>
 
     <div class="form-group">
-        <label for="password">Passwort <span class="required">*</span></label>
+        <label for="password"><?= Security::esc(t('labels.password')) ?> <span class="required">*</span></label>
         <input type="password" id="password" name="password" required
-               placeholder="Mindestens 10 Zeichen" class="form-input" minlength="10">
+               placeholder="<?= Security::esc(t('placeholders.password_new')) ?>" class="form-input" minlength="10">
     </div>
 
     <div class="form-group">
         <label class="checkbox-label">
             <input type="checkbox" name="is_active" value="1"
                 <?= (int) $formData['is_active'] === 1 ? 'checked' : '' ?>>
-            Benutzer ist aktiv
+            <?= Security::esc(t('messages.user_is_active')) ?>
         </label>
     </div>
 
     <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Benutzer erstellen</button>
-        <a href="<?= Security::esc($baseUrl) ?>/?r=admin_users" class="btn btn-secondary">Abbrechen</a>
+        <button type="submit" class="btn btn-primary"><?= Security::esc(t('admin.user_create_button')) ?></button>
+        <a href="<?= Security::esc($baseUrl) ?>/?r=admin_users" class="btn btn-secondary"><?= Security::esc(t('actions.cancel')) ?></a>
     </div>
 </form>

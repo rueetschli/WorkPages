@@ -7,7 +7,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 ?>
 
 <div class="page-header">
-    <h1>Seite bearbeiten</h1>
+    <h1><?= Security::esc(t('pages.edit_title')) ?></h1>
     <p class="subtitle"><?= Security::esc($page['title']) ?></p>
 </div>
 
@@ -20,16 +20,16 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
         <?= Security::csrfField() ?>
 
         <div class="form-group">
-            <label for="title">Titel</label>
+            <label for="title"><?= Security::esc(t('labels.title')) ?></label>
             <input type="text" id="title" name="title" class="form-input"
                    value="<?= Security::esc($formData['title']) ?>"
                    required autofocus>
         </div>
 
         <div class="form-group">
-            <label for="parent_id">Uebergeordnete Seite (optional)</label>
+            <label for="parent_id"><?= Security::esc(t('labels.parent_page')) ?></label>
             <select id="parent_id" name="parent_id" class="form-input">
-                <option value="">-- Keine --</option>
+                <option value=""><?= Security::esc(t('pages.parent_none')) ?></option>
                 <?php foreach ($parentPages as $pp): ?>
                     <option value="<?= (int) $pp['id'] ?>"
                         <?= (string) $formData['parent_id'] === (string) $pp['id'] ? 'selected' : '' ?>>
@@ -41,9 +41,9 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 
         <?php if (!empty($availableTeams)): ?>
         <div class="form-group">
-            <label for="team_id">Team (optional)</label>
+            <label for="team_id"><?= Security::esc(t('labels.team')) ?></label>
             <select id="team_id" name="team_id" class="form-input team-select">
-                <option value="">-- Global (kein Team) --</option>
+                <option value=""><?= Security::esc(t('pages.team_global')) ?></option>
                 <?php foreach ($availableTeams as $__t): ?>
                     <option value="<?= (int) $__t['id'] ?>"
                         <?= (string) ($formData['team_id'] ?? '') === (string) $__t['id'] ? 'selected' : '' ?>>
@@ -55,15 +55,15 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
         <?php endif; ?>
 
         <div class="form-group">
-            <label for="content_md">Inhalt (Markdown)</label>
+            <label for="content_md"><?= Security::esc(t('labels.content_md')) ?></label>
             <textarea id="content_md" name="content_md" class="form-input form-textarea"
                       rows="18" data-mentions="true" data-context="page"><?= Security::esc($formData['content_md']) ?></textarea>
-            <span class="textarea-hint">@ fuer Mentions, # fuer Tags, /task Titel fuer neue Aufgabe</span>
+            <span class="textarea-hint"><?= Security::esc(t('pages.textarea_hint')) ?></span>
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Aenderungen speichern</button>
-            <a href="<?= Security::esc($baseUrl) ?>/?r=page_view&slug=<?= Security::esc($page['slug']) ?>" class="btn btn-secondary">Abbrechen</a>
+            <button type="submit" class="btn btn-primary"><?= Security::esc(t('actions.save_changes')) ?></button>
+            <a href="<?= Security::esc($baseUrl) ?>/?r=page_view&slug=<?= Security::esc($page['slug']) ?>" class="btn btn-secondary"><?= Security::esc(t('actions.cancel')) ?></a>
         </div>
     </form>
 </div>

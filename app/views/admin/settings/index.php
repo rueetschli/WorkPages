@@ -10,8 +10,8 @@ $logoUrl = SystemSettingsService::logoUrl();
 <div class="page-header">
     <div class="page-header-row">
         <div>
-            <h1>Einstellungen</h1>
-            <p class="subtitle">Systemweite Personalisierung und Branding</p>
+            <h1><?= Security::esc(t('admin.settings_title')) ?></h1>
+            <p class="subtitle"><?= Security::esc(t('admin.settings_subtitle')) ?></p>
         </div>
     </div>
 </div>
@@ -26,48 +26,48 @@ $logoUrl = SystemSettingsService::logoUrl();
 <!-- Tabs -->
 <div class="admin-settings-tabs">
     <a href="<?= Security::esc($baseUrl) ?>/?r=admin_settings&tab=general"
-       class="admin-settings-tab <?= $activeTab === 'general' ? 'admin-settings-tab-active' : '' ?>">Allgemein</a>
+       class="admin-settings-tab <?= $activeTab === 'general' ? 'admin-settings-tab-active' : '' ?>"><?= Security::esc(t('admin.tab_general')) ?></a>
     <a href="<?= Security::esc($baseUrl) ?>/?r=admin_settings&tab=design"
-       class="admin-settings-tab <?= $activeTab === 'design' ? 'admin-settings-tab-active' : '' ?>">Design</a>
+       class="admin-settings-tab <?= $activeTab === 'design' ? 'admin-settings-tab-active' : '' ?>"><?= Security::esc(t('admin.tab_design')) ?></a>
     <a href="<?= Security::esc($baseUrl) ?>/?r=admin_settings&tab=maintenance"
-       class="admin-settings-tab <?= $activeTab === 'maintenance' ? 'admin-settings-tab-active' : '' ?>">Systemhinweise</a>
+       class="admin-settings-tab <?= $activeTab === 'maintenance' ? 'admin-settings-tab-active' : '' ?>"><?= Security::esc(t('admin.tab_maintenance')) ?></a>
     <a href="<?= Security::esc($baseUrl) ?>/?r=admin_settings&tab=info"
-       class="admin-settings-tab <?= $activeTab === 'info' ? 'admin-settings-tab-active' : '' ?>">Information</a>
+       class="admin-settings-tab <?= $activeTab === 'info' ? 'admin-settings-tab-active' : '' ?>"><?= Security::esc(t('admin.tab_info')) ?></a>
 </div>
 
 <!-- Tab: General -->
 <?php if ($activeTab === 'general'): ?>
 <div class="section-block">
-    <h2>Allgemeine Einstellungen</h2>
+    <h2><?= Security::esc(t('admin.general_settings')) ?></h2>
     <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=admin_settings&tab=general" enctype="multipart/form-data">
         <?= Security::csrfField() ?>
         <input type="hidden" name="action" value="save_general">
 
         <div class="form-group">
-            <label for="company_name" class="form-label">Firmenname</label>
+            <label for="company_name" class="form-label"><?= Security::esc(t('admin.company_name')) ?></label>
             <input type="text" id="company_name" name="company_name"
                    value="<?= Security::esc($settings['company_name'] ?? '') ?>"
                    class="form-input" maxlength="150"
                    placeholder="WorkPages">
-            <p class="form-hint">Wird im Header, Login und in E-Mails angezeigt. Leer lassen fuer Standard (WorkPages).</p>
+            <p class="form-hint"><?= Security::esc(t('admin.company_name_hint')) ?></p>
         </div>
 
         <div class="form-group">
-            <label for="logo" class="form-label">Logo</label>
+            <label for="logo" class="form-label"><?= Security::esc(t('admin.logo')) ?></label>
             <?php if ($logoUrl !== ''): ?>
                 <div class="logo-preview">
                     <img src="<?= Security::esc($logoUrl) ?>" alt="Logo" class="logo-preview-img">
                 </div>
             <?php endif; ?>
             <input type="file" id="logo" name="logo" class="form-input" accept=".png,.jpg,.jpeg,.svg">
-            <p class="form-hint">PNG, JPG oder SVG, maximal 1 MB. Transparenter Hintergrund empfohlen.</p>
+            <p class="form-hint"><?= Security::esc(t('admin.logo_hint')) ?></p>
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Speichern</button>
+            <button type="submit" class="btn btn-primary"><?= Security::esc(t('actions.save')) ?></button>
             <?php if ($logoUrl !== ''): ?>
                 <button type="submit" name="action" value="remove_logo" class="btn btn-secondary"
-                        onclick="return confirm('Logo wirklich entfernen?')">Logo entfernen</button>
+                        onclick="return confirm('<?= Security::esc(t('messages.confirm_remove_logo')) ?>')"><?= Security::esc(t('admin.remove_logo')) ?></button>
             <?php endif; ?>
         </div>
     </form>
@@ -77,25 +77,25 @@ $logoUrl = SystemSettingsService::logoUrl();
 <!-- Tab: Design -->
 <?php if ($activeTab === 'design'): ?>
 <div class="section-block">
-    <h2>Farbschema</h2>
+    <h2><?= Security::esc(t('admin.color_scheme')) ?></h2>
     <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=admin_settings&tab=design" id="design-form">
         <?= Security::csrfField() ?>
         <input type="hidden" name="action" value="save_design">
 
         <div class="form-group">
-            <label class="form-label">Modus</label>
+            <label class="form-label"><?= Security::esc(t('admin.mode')) ?></label>
             <div class="radio-group">
                 <label class="radio-label">
                     <input type="radio" name="theme_mode" value="preset"
                            <?= ($settings['theme_mode'] ?? 'preset') === 'preset' ? 'checked' : '' ?>
                            onchange="document.getElementById('preset-section').style.display='block';document.getElementById('custom-section').style.display='none';">
-                    Vordefinierte Farbsets
+                    <?= Security::esc(t('admin.preset_colors')) ?>
                 </label>
                 <label class="radio-label">
                     <input type="radio" name="theme_mode" value="custom"
                            <?= ($settings['theme_mode'] ?? 'preset') === 'custom' ? 'checked' : '' ?>
                            onchange="document.getElementById('preset-section').style.display='none';document.getElementById('custom-section').style.display='block';">
-                    Eigene Farben
+                    <?= Security::esc(t('admin.custom_colors')) ?>
                 </label>
             </div>
         </div>
@@ -103,7 +103,7 @@ $logoUrl = SystemSettingsService::logoUrl();
         <!-- Preset selection -->
         <div id="preset-section" style="<?= ($settings['theme_mode'] ?? 'preset') === 'custom' ? 'display:none' : '' ?>">
             <div class="form-group">
-                <label class="form-label">Farbset waehlen</label>
+                <label class="form-label"><?= Security::esc(t('admin.choose_color_set')) ?></label>
                 <div class="preset-grid">
                     <?php foreach ($presets as $key => $preset): ?>
                     <label class="preset-card <?= ($settings['theme_preset'] ?? 'blau') === $key ? 'preset-card-active' : '' ?>">
@@ -126,7 +126,7 @@ $logoUrl = SystemSettingsService::logoUrl();
         <div id="custom-section" style="<?= ($settings['theme_mode'] ?? 'preset') !== 'custom' ? 'display:none' : '' ?>">
             <div class="color-fields">
                 <div class="form-group">
-                    <label for="color_primary" class="form-label">Primaerfarbe</label>
+                    <label for="color_primary" class="form-label"><?= Security::esc(t('admin.color_primary')) ?></label>
                     <div class="color-input-wrap">
                         <input type="color" id="color_primary_picker" value="<?= Security::esc($settings['color_primary'] ?? '#2563eb') ?>"
                                onchange="document.getElementById('color_primary').value=this.value">
@@ -138,7 +138,7 @@ $logoUrl = SystemSettingsService::logoUrl();
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="color_secondary" class="form-label">Sekundaerfarbe</label>
+                    <label for="color_secondary" class="form-label"><?= Security::esc(t('admin.color_secondary')) ?></label>
                     <div class="color-input-wrap">
                         <input type="color" id="color_secondary_picker" value="<?= Security::esc($settings['color_secondary'] ?? '#1e293b') ?>"
                                onchange="document.getElementById('color_secondary').value=this.value">
@@ -150,7 +150,7 @@ $logoUrl = SystemSettingsService::logoUrl();
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="color_accent" class="form-label">Akzentfarbe</label>
+                    <label for="color_accent" class="form-label"><?= Security::esc(t('admin.color_accent')) ?></label>
                     <div class="color-input-wrap">
                         <input type="color" id="color_accent_picker" value="<?= Security::esc($settings['color_accent'] ?? '#3b82f6') ?>"
                                onchange="document.getElementById('color_accent').value=this.value">
@@ -164,17 +164,17 @@ $logoUrl = SystemSettingsService::logoUrl();
             </div>
             <div class="color-preview" id="color-preview">
                 <div class="color-preview-header" style="background: var(--wp-color-primary, #2563eb)">
-                    <span style="color: #fff; font-weight: 600;">Vorschau Header</span>
+                    <span style="color: #fff; font-weight: 600;"><?= Security::esc(t('admin.preview_header')) ?></span>
                 </div>
                 <div class="color-preview-body">
-                    <button type="button" class="btn btn-primary" style="pointer-events:none">Primaer</button>
-                    <button type="button" class="btn btn-secondary" style="pointer-events:none">Sekundaer</button>
+                    <button type="button" class="btn btn-primary" style="pointer-events:none"><?= Security::esc(t('admin.primary')) ?></button>
+                    <button type="button" class="btn btn-secondary" style="pointer-events:none"><?= Security::esc(t('admin.secondary')) ?></button>
                 </div>
             </div>
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Speichern</button>
+            <button type="submit" class="btn btn-primary"><?= Security::esc(t('actions.save')) ?></button>
         </div>
     </form>
 </div>
@@ -228,8 +228,8 @@ $logoUrl = SystemSettingsService::logoUrl();
 <!-- Tab: Maintenance -->
 <?php if ($activeTab === 'maintenance'): ?>
 <div class="section-block">
-    <h2>Systemhinweise</h2>
-    <p class="subtitle">Zeigt ein Banner unter dem Header an. Rein informativ, kein Lockout.</p>
+    <h2><?= Security::esc(t('admin.maintenance_title')) ?></h2>
+    <p class="subtitle"><?= Security::esc(t('admin.maintenance_subtitle')) ?></p>
     <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=admin_settings&tab=maintenance">
         <?= Security::csrfField() ?>
         <input type="hidden" name="action" value="save_maintenance">
@@ -238,29 +238,29 @@ $logoUrl = SystemSettingsService::logoUrl();
             <label class="form-label">
                 <input type="checkbox" name="maintenance_active" value="1"
                        <?= (int) ($settings['maintenance_active'] ?? 0) === 1 ? 'checked' : '' ?>>
-                Systemhinweis aktiv
+                <?= Security::esc(t('admin.maintenance_active')) ?>
             </label>
         </div>
 
         <div class="form-group">
-            <label for="maintenance_message" class="form-label">Hinweistext</label>
+            <label for="maintenance_message" class="form-label"><?= Security::esc(t('admin.maintenance_message')) ?></label>
             <input type="text" id="maintenance_message" name="maintenance_message"
                    value="<?= Security::esc($settings['maintenance_message'] ?? '') ?>"
                    class="form-input" maxlength="255"
-                   placeholder="z.B. Wartungsarbeiten am Samstag 08:00-10:00 Uhr">
+                   placeholder="<?= Security::esc(t('placeholders.maintenance_message')) ?>">
         </div>
 
         <div class="form-group">
-            <label for="maintenance_level" class="form-label">Stufe</label>
+            <label for="maintenance_level" class="form-label"><?= Security::esc(t('admin.maintenance_level')) ?></label>
             <select id="maintenance_level" name="maintenance_level" class="form-input">
-                <option value="info" <?= ($settings['maintenance_level'] ?? 'info') === 'info' ? 'selected' : '' ?>>Information (blau)</option>
-                <option value="warning" <?= ($settings['maintenance_level'] ?? 'info') === 'warning' ? 'selected' : '' ?>>Warnung (gelb)</option>
-                <option value="critical" <?= ($settings['maintenance_level'] ?? 'info') === 'critical' ? 'selected' : '' ?>>Kritisch (rot)</option>
+                <option value="info" <?= ($settings['maintenance_level'] ?? 'info') === 'info' ? 'selected' : '' ?>><?= Security::esc(t('admin.level_info')) ?></option>
+                <option value="warning" <?= ($settings['maintenance_level'] ?? 'info') === 'warning' ? 'selected' : '' ?>><?= Security::esc(t('admin.level_warning')) ?></option>
+                <option value="critical" <?= ($settings['maintenance_level'] ?? 'info') === 'critical' ? 'selected' : '' ?>><?= Security::esc(t('admin.level_critical')) ?></option>
             </select>
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Speichern</button>
+            <button type="submit" class="btn btn-primary"><?= Security::esc(t('actions.save')) ?></button>
         </div>
     </form>
 </div>
@@ -269,48 +269,48 @@ $logoUrl = SystemSettingsService::logoUrl();
 <!-- Tab: Info -->
 <?php if ($activeTab === 'info'): ?>
 <div class="section-block">
-    <h2>Ueber WorkPages</h2>
+    <h2><?= Security::esc(t('admin.about_workpages')) ?></h2>
     <table class="pages-table" style="margin-top: 0.75rem;">
         <tbody>
             <tr>
-                <td style="font-weight: 600; width: 40%;">Version</td>
-                <td>v<?= Security::esc($versionInfo['version'] ?? 'Unbekannt') ?></td>
+                <td style="font-weight: 600; width: 40%;"><?= Security::esc(t('admin.version')) ?></td>
+                <td>v<?= Security::esc($versionInfo['version'] ?? t('admin.unknown')) ?></td>
             </tr>
             <tr>
-                <td style="font-weight: 600;">Lizenz</td>
+                <td style="font-weight: 600;"><?= Security::esc(t('admin.license')) ?></td>
                 <td><?= Security::esc($versionInfo['license'] ?? 'MIT') ?></td>
             </tr>
             <tr>
-                <td style="font-weight: 600;">Repository</td>
+                <td style="font-weight: 600;"><?= Security::esc(t('admin.repository')) ?></td>
                 <td><a href="<?= Security::esc($versionInfo['repo'] ?? '#') ?>" target="_blank" rel="noopener"><?= Security::esc($versionInfo['repo'] ?? '') ?></a></td>
             </tr>
             <tr>
-                <td style="font-weight: 600;">Projekt</td>
-                <td>Selbst hostbare Alternative zu Jira und Confluence fuer KMU, Vereine, Schulen und Agenturen.</td>
+                <td style="font-weight: 600;"><?= Security::esc(t('admin.project')) ?></td>
+                <td><?= Security::esc(t('admin.project_description')) ?></td>
             </tr>
         </tbody>
     </table>
 </div>
 
 <div class="section-block">
-    <h2>Technologie</h2>
+    <h2><?= Security::esc(t('admin.technology')) ?></h2>
     <table class="pages-table" style="margin-top: 0.75rem;">
         <tbody>
             <tr>
-                <td style="font-weight: 600; width: 40%;">Backend</td>
+                <td style="font-weight: 600; width: 40%;"><?= Security::esc(t('admin.backend')) ?></td>
                 <td>PHP <?= Security::esc(PHP_VERSION) ?></td>
             </tr>
             <tr>
-                <td style="font-weight: 600;">Datenbank</td>
+                <td style="font-weight: 600;"><?= Security::esc(t('admin.database')) ?></td>
                 <td>MySQL (PDO)</td>
             </tr>
             <tr>
-                <td style="font-weight: 600;">Frontend</td>
-                <td>Serverseitiges Rendering, Vanilla CSS, minimales Vanilla JS</td>
+                <td style="font-weight: 600;"><?= Security::esc(t('admin.frontend')) ?></td>
+                <td><?= Security::esc(t('admin.frontend_description')) ?></td>
             </tr>
             <tr>
-                <td style="font-weight: 600;">Architektur</td>
-                <td>MVC, kein Framework, kein Build-Schritt</td>
+                <td style="font-weight: 600;"><?= Security::esc(t('admin.architecture')) ?></td>
+                <td><?= Security::esc(t('admin.architecture_description')) ?></td>
             </tr>
         </tbody>
     </table>
