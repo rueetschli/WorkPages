@@ -11,13 +11,13 @@ $fqs = ReportsController::filterQueryString($filters);
 ?>
 
 <div class="report-header">
-    <h1>Reports</h1>
+    <h1><?= Security::esc(t('reports.title')) ?></h1>
     <div class="report-nav">
-        <a href="<?= Security::esc($baseUrl) ?>/?r=reports_overview" class="report-nav-link active">Uebersicht</a>
-        <a href="<?= Security::esc($baseUrl) ?>/?r=reports_flow<?= Security::esc($fqs) ?>" class="report-nav-link">Flow Metrics</a>
-        <a href="<?= Security::esc($baseUrl) ?>/?r=reports_aging<?= Security::esc($fqs) ?>" class="report-nav-link">Aging</a>
+        <a href="<?= Security::esc($baseUrl) ?>/?r=reports_overview" class="report-nav-link active"><?= Security::esc(t('reports.overview')) ?></a>
+        <a href="<?= Security::esc($baseUrl) ?>/?r=reports_flow<?= Security::esc($fqs) ?>" class="report-nav-link"><?= Security::esc(t('reports.flow_metrics')) ?></a>
+        <a href="<?= Security::esc($baseUrl) ?>/?r=reports_aging<?= Security::esc($fqs) ?>" class="report-nav-link"><?= Security::esc(t('reports.aging')) ?></a>
         <?php if (Authz::can(Authz::REPORT_EXPORT)): ?>
-        <a href="<?= Security::esc($baseUrl) ?>/?r=reports_export_csv&type=overview<?= Security::esc($fqs) ?>" class="report-nav-link report-export-link">CSV Export</a>
+        <a href="<?= Security::esc($baseUrl) ?>/?r=reports_export_csv&type=overview<?= Security::esc($fqs) ?>" class="report-nav-link report-export-link"><?= Security::esc(t('reports.csv_export')) ?></a>
         <?php endif; ?>
     </div>
 </div>
@@ -28,28 +28,28 @@ $fqs = ReportsController::filterQueryString($filters);
 <div class="kpi-grid">
     <div class="kpi-card">
         <div class="kpi-value"><?= (int) $wip ?></div>
-        <div class="kpi-label">WIP (Work in Progress)</div>
-        <div class="kpi-hint">Tasks in aktiven Spalten</div>
+        <div class="kpi-label"><?= Security::esc(t('reports.wip')) ?></div>
+        <div class="kpi-hint"><?= Security::esc(t('reports.wip_hint')) ?></div>
     </div>
     <div class="kpi-card">
         <div class="kpi-value"><?= (int) $throughput ?></div>
-        <div class="kpi-label">Throughput</div>
-        <div class="kpi-hint">Abgeschlossen im Zeitraum</div>
+        <div class="kpi-label"><?= Security::esc(t('reports.throughput')) ?></div>
+        <div class="kpi-hint"><?= Security::esc(t('reports.throughput_hint')) ?></div>
     </div>
     <div class="kpi-card">
         <div class="kpi-value"><?= $avgCycleTime !== null ? number_format($avgCycleTime, 1) : '-' ?></div>
-        <div class="kpi-label">Cycle Time (Tage)</div>
-        <div class="kpi-hint">Durchschnitt im Zeitraum</div>
+        <div class="kpi-label"><?= Security::esc(t('reports.cycle_time')) ?></div>
+        <div class="kpi-hint"><?= Security::esc(t('reports.cycle_time_hint')) ?></div>
     </div>
     <div class="kpi-card <?= $overdueCount > 0 ? 'kpi-card-warning' : '' ?>">
         <div class="kpi-value"><?= (int) $overdueCount ?></div>
-        <div class="kpi-label">Ueberfaellig</div>
-        <div class="kpi-hint">Offene Tasks nach Faelligkeit</div>
+        <div class="kpi-label"><?= Security::esc(t('reports.overdue')) ?></div>
+        <div class="kpi-hint"><?= Security::esc(t('reports.overdue_hint')) ?></div>
     </div>
     <?php if ($bottleneck): ?>
     <div class="kpi-card">
         <div class="kpi-value"><?= Security::esc($bottleneck['name']) ?></div>
-        <div class="kpi-label">Engpass-Spalte</div>
+        <div class="kpi-label"><?= Security::esc(t('reports.bottleneck')) ?></div>
         <div class="kpi-hint"><?= (int) $bottleneck['task_count'] ?> Tasks</div>
     </div>
     <?php endif; ?>
@@ -58,7 +58,7 @@ $fqs = ReportsController::filterQueryString($filters);
 <!-- Top Tags -->
 <?php if (!empty($topTags)): ?>
 <div class="report-section">
-    <h2 class="report-section-title">Top Tags im Zeitraum</h2>
+    <h2 class="report-section-title"><?= Security::esc(t('reports.top_tags')) ?></h2>
     <div class="tag-chips">
         <?php foreach ($topTags as $tt): ?>
         <span class="tag"><?= Security::esc($tt['name']) ?> <span class="tag-count">(<?= (int) $tt['task_count'] ?>)</span></span>
@@ -71,18 +71,18 @@ $fqs = ReportsController::filterQueryString($filters);
 <div class="report-grid-2">
     <!-- Overdue Tasks -->
     <div class="report-section">
-        <h2 class="report-section-title">Ueberfaellige Tasks</h2>
+        <h2 class="report-section-title"><?= Security::esc(t('reports.overdue_tasks')) ?></h2>
         <?php if (empty($topOverdue)): ?>
-        <p class="text-muted">Keine ueberfaelligen Tasks.</p>
+        <p class="text-muted"><?= Security::esc(t('reports.no_overdue')) ?></p>
         <?php else: ?>
         <div class="table-responsive">
             <table class="report-table">
                 <thead>
                     <tr>
                         <th>Task</th>
-                        <th>Owner</th>
-                        <th>Spalte</th>
-                        <th>Tage ueberfaellig</th>
+                        <th><?= Security::esc(t('labels.owner')) ?></th>
+                        <th><?= Security::esc(t('labels.column')) ?></th>
+                        <th><?= Security::esc(t('reports.days_overdue')) ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -102,18 +102,18 @@ $fqs = ReportsController::filterQueryString($filters);
 
     <!-- Aged Tasks -->
     <div class="report-section">
-        <h2 class="report-section-title">Aelteste offene Tasks</h2>
+        <h2 class="report-section-title"><?= Security::esc(t('reports.oldest_tasks')) ?></h2>
         <?php if (empty($topAged)): ?>
-        <p class="text-muted">Keine offenen Tasks.</p>
+        <p class="text-muted"><?= Security::esc(t('reports.no_open_tasks')) ?></p>
         <?php else: ?>
         <div class="table-responsive">
             <table class="report-table">
                 <thead>
                     <tr>
                         <th>Task</th>
-                        <th>Owner</th>
-                        <th>Spalte</th>
-                        <th>Alter (Tage)</th>
+                        <th><?= Security::esc(t('labels.owner')) ?></th>
+                        <th><?= Security::esc(t('labels.column')) ?></th>
+                        <th><?= Security::esc(t('reports.age_days')) ?></th>
                     </tr>
                 </thead>
                 <tbody>

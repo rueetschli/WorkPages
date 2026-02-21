@@ -163,6 +163,18 @@ require_once APP_DIR . '/services/BoardService.php';
 // AP22: Home Dashboard
 require_once APP_DIR . '/services/HomeDashboardService.php';
 
+// AP24: Internationalization (i18n)
+require_once APP_DIR . '/services/I18nService.php';
+
+/**
+ * Global translation shortcut.
+ * Usage in views: <?= t('actions.save') ?>
+ */
+function t(string $key, array $params = [], ?string $lang = null): string
+{
+    return I18nService::t($key, $params, $lang);
+}
+
 // AP19: API and Integrations
 require_once APP_DIR . '/services/ApiResponse.php';
 require_once APP_DIR . '/services/ApiAuthService.php';
@@ -206,7 +218,7 @@ if (preg_match('#^/api/v1/(.+)$#', $pathInfo, $apiMatches)) {
 // ── Routing ─────────────────────────────────────────────────────────
 
 // Routes that do NOT require authentication
-$publicRoutes = ['login', 'setup', 'share'];
+$publicRoutes = ['login', 'setup', 'share', 'language_switch'];
 
 // Allowed routes mapped to controller files and methods
 $routes = [
@@ -336,6 +348,10 @@ $routes = [
 
     // AP20: System Settings and Branding
     'admin_settings'           => ['controller' => 'AdminSettingsController', 'action' => 'index'],
+
+    // AP24: i18n - Language switching and admin
+    'language_switch'          => ['controller' => 'LanguageController', 'action' => 'switchLang'],
+    'admin_languages'          => ['controller' => 'AdminLanguagesController', 'action' => 'index'],
 ];
 
 if (!isset($routes[$route])) {

@@ -14,26 +14,26 @@ $canComment       = Authz::can(Authz::COMMENT_CREATE);
 $canDeleteComment = Authz::can(Authz::COMMENT_DELETE);
 ?>
 <div class="section-block comments-section">
-    <h2>Kommentare</h2>
+    <h2><?= Security::esc(t('comments.title')) ?></h2>
 
     <?php if (!empty($flashError)): ?>
         <div class="alert alert-error"><?= Security::esc($flashError) ?></div>
     <?php endif; ?>
 
     <?php if (empty($comments)): ?>
-        <p class="placeholder-text">Noch keine Kommentare.</p>
+        <p class="placeholder-text"><?= Security::esc(t('messages.no_comments')) ?></p>
     <?php else: ?>
         <div class="comments-list">
             <?php foreach ($comments as $comment): ?>
             <div class="comment-item" id="comment-<?= (int) $comment['id'] ?>">
                 <div class="comment-header">
-                    <span class="comment-author"><?= Security::esc($comment['author_name'] ?? 'Unbekannt') ?></span>
+                    <span class="comment-author"><?= Security::esc($comment['author_name'] ?? t('comments.unknown_author')) ?></span>
                     <span class="comment-date"><?= Security::esc(date('d.m.Y H:i', strtotime($comment['created_at']))) ?></span>
                     <?php if ($canDeleteComment): ?>
                     <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=comment_delete&amp;id=<?= (int) $comment['id'] ?>"
-                          class="inline-form comment-delete-form" onsubmit="return confirm('Kommentar wirklich loeschen?');">
+                          class="inline-form comment-delete-form" onsubmit="return confirm('<?= Security::esc(t('messages.confirm_delete_comment')) ?>');">
                         <?= Security::csrfField() ?>
-                        <button type="submit" class="btn-comment-delete" title="Loeschen">&times;</button>
+                        <button type="submit" class="btn-comment-delete" title="<?= Security::esc(t('actions.delete')) ?>">&times;</button>
                     </form>
                     <?php endif; ?>
                 </div>
@@ -51,15 +51,15 @@ $canDeleteComment = Authz::can(Authz::COMMENT_DELETE);
         <input type="hidden" name="entity_type" value="<?= Security::esc($entityType) ?>">
         <input type="hidden" name="entity_id" value="<?= (int) $entityId ?>">
         <div class="form-group">
-            <label for="comment-body">Neuer Kommentar</label>
+            <label for="comment-body"><?= Security::esc(t('comments.new_comment')) ?></label>
             <textarea id="comment-body" name="body_md" class="form-input form-textarea comment-textarea"
-                      placeholder="Kommentar schreiben (Markdown wird unterstuetzt)..."
+                      placeholder="<?= Security::esc(t('placeholders.comment')) ?>"
                       required maxlength="<?= Comment::MAX_BODY_LENGTH ?>"
                       data-mentions="true" data-context="comment"></textarea>
-            <span class="textarea-hint">@ fuer Mentions, # fuer Tags</span>
+            <span class="textarea-hint"><?= Security::esc(t('comments.hint')) ?></span>
         </div>
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Kommentar speichern</button>
+            <button type="submit" class="btn btn-primary"><?= Security::esc(t('comments.save')) ?></button>
         </div>
     </form>
     <?php endif; ?>

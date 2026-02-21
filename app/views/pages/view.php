@@ -19,7 +19,7 @@ if ($canShare) {
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <ol class="breadcrumb-list">
         <li class="breadcrumb-item">
-            <a href="<?= Security::esc($baseUrl) ?>/?r=pages">Pages</a>
+            <a href="<?= Security::esc($baseUrl) ?>/?r=pages"><?= Security::esc(t('pages.title')) ?></a>
         </li>
         <?php foreach ($breadcrumb as $i => $crumb): ?>
         <li class="breadcrumb-item <?= $i === count($breadcrumb) - 1 ? 'breadcrumb-current' : '' ?>">
@@ -46,14 +46,14 @@ if ($canShare) {
                 require APP_DIR . '/views/partials/watch_button.php';
             ?>
             <?php if ($canShare): ?>
-            <button type="button" class="btn btn-secondary btn-sm-pad" onclick="document.getElementById('share-panel').style.display = document.getElementById('share-panel').style.display === 'none' ? 'block' : 'none'">Teilen</button>
+            <button type="button" class="btn btn-secondary btn-sm-pad" onclick="document.getElementById('share-panel').style.display = document.getElementById('share-panel').style.display === 'none' ? 'block' : 'none'"><?= Security::esc(t('actions.share')) ?></button>
             <?php endif; ?>
             <?php if ($canEdit): ?>
-            <a href="<?= Security::esc($baseUrl) ?>/?r=page_edit&slug=<?= Security::esc($page['slug']) ?>" class="btn btn-primary">Bearbeiten</a>
+            <a href="<?= Security::esc($baseUrl) ?>/?r=page_edit&slug=<?= Security::esc($page['slug']) ?>" class="btn btn-primary"><?= Security::esc(t('actions.edit')) ?></a>
             <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=page_delete&slug=<?= Security::esc($page['slug']) ?>"
-                  class="inline-form" onsubmit="return confirm('Seite wirklich loeschen?');">
+                  class="inline-form" onsubmit="return confirm(<?= Security::esc(json_encode(t('messages.confirm_delete_page'))) ?>);">
                 <?= Security::csrfField() ?>
-                <button type="submit" class="btn btn-danger">Loeschen</button>
+                <button type="submit" class="btn btn-danger"><?= Security::esc(t('actions.delete')) ?></button>
             </form>
             <?php endif; ?>
         </div>
@@ -105,24 +105,24 @@ if ($canShare) {
 <!-- AP5: Linked Tasks section -->
 <div class="section-block page-tasks-section">
     <div class="page-tasks-header">
-        <h2>Tasks</h2>
+        <h2><?= Security::esc(t('nav.tasks')) ?></h2>
         <?php if ($canEdit): ?>
-            <a href="<?= Security::esc($baseUrl) ?>/?r=page_tasks_add&amp;slug=<?= Security::esc($page['slug']) ?>" class="btn btn-primary btn-sm-pad">Task hinzufuegen</a>
+            <a href="<?= Security::esc($baseUrl) ?>/?r=page_tasks_add&amp;slug=<?= Security::esc($page['slug']) ?>" class="btn btn-primary btn-sm-pad"><?= Security::esc(t('pages.add_task')) ?></a>
         <?php endif; ?>
     </div>
 
     <?php if (empty($pageTasks)): ?>
-        <p class="placeholder-text">Keine Aufgaben mit dieser Seite verknuepft.</p>
+        <p class="placeholder-text"><?= Security::esc(t('messages.no_tasks_linked')) ?></p>
     <?php else: ?>
         <div class="pages-table-wrap responsive-cards">
         <table class="pages-table page-tasks-table">
             <thead>
                 <tr>
                     <?php if ($canEdit): ?><th style="width:60px;">Pos.</th><?php endif; ?>
-                    <th>Titel</th>
-                    <th>Spalte</th>
-                    <th>Owner</th>
-                    <th>Faellig</th>
+                    <th><?= Security::esc(t('labels.title')) ?></th>
+                    <th><?= Security::esc(t('labels.column')) ?></th>
+                    <th><?= Security::esc(t('labels.owner')) ?></th>
+                    <th><?= Security::esc(t('labels.due_date')) ?></th>
                     <th>Tags</th>
                     <?php if ($canEdit): ?><th style="width:80px;"></th><?php endif; ?>
                 </tr>
@@ -151,7 +151,7 @@ if ($canShare) {
                             <?= Security::esc($pt['title']) ?>
                         </a>
                     </td>
-                    <td data-label="Spalte">
+                    <td data-label="<?= Security::esc(t('labels.column')) ?>">
                         <?php if ($canEdit): ?>
                         <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=task_update_status" class="inline-form status-change-form">
                             <?= Security::csrfField() ?>
@@ -169,14 +169,14 @@ if ($canShare) {
                         </span>
                         <?php endif; ?>
                     </td>
-                    <td data-label="Owner">
+                    <td data-label="<?= Security::esc(t('labels.owner')) ?>">
                         <?php if ($pt['owner_name']): ?>
                             <?= Security::esc($pt['owner_name']) ?>
                         <?php else: ?>
                             <span class="text-muted">&mdash;</span>
                         <?php endif; ?>
                     </td>
-                    <td data-label="Faellig">
+                    <td data-label="<?= Security::esc(t('labels.due_date')) ?>">
                         <?php if ($pt['due_date']): ?>
                             <?php
                                 $dueTs = strtotime($pt['due_date']);
@@ -206,9 +206,9 @@ if ($canShare) {
                     <?php if ($canEdit): ?>
                     <td class="card-cell-actions">
                         <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=page_tasks_remove&amp;slug=<?= Security::esc($page['slug']) ?>&amp;task_id=<?= (int) $pt['id'] ?>"
-                              class="inline-form" onsubmit="return confirm('Verknuepfung wirklich entfernen? Die Aufgabe wird nicht geloescht.');">
+                              class="inline-form" onsubmit="return confirm(<?= Security::esc(json_encode(t('messages.confirm_remove_link'))) ?>);">
                             <?= Security::csrfField() ?>
-                            <button type="submit" class="btn-sm btn-remove" title="Verknuepfung entfernen">Entfernen</button>
+                            <button type="submit" class="btn-sm btn-remove" title="<?= Security::esc(t('actions.remove_link')) ?>"><?= Security::esc(t('actions.remove_link')) ?></button>
                         </form>
                     </td>
                     <?php endif; ?>
@@ -234,7 +234,7 @@ if ($canShare) {
 
 <!-- AP22: Activity - collapsible, visually subdued -->
 <details class="activity-collapsible">
-    <summary class="activity-collapsible-summary">Aktivitaet (<?= count($activities) ?>)</summary>
+    <summary class="activity-collapsible-summary"><?= Security::esc(t('pages.activity_count', ['count' => count($activities)])) ?></summary>
     <?php require APP_DIR . '/views/partials/activity.php'; ?>
 </details>
 

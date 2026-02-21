@@ -19,7 +19,7 @@ if ($canEdit) {
 <nav class="breadcrumb" aria-label="Breadcrumb">
     <ol class="breadcrumb-list">
         <li class="breadcrumb-item">
-            <a href="<?= Security::esc($baseUrl) ?>/?r=tasks">Tasks</a>
+            <a href="<?= Security::esc($baseUrl) ?>/?r=tasks"><?= Security::esc(t('tasks.title')) ?></a>
         </li>
         <li class="breadcrumb-item breadcrumb-current">
             <span><?= Security::esc($task['title']) ?></span>
@@ -37,11 +37,11 @@ if ($canEdit) {
                 require APP_DIR . '/views/partials/watch_button.php';
             ?>
             <?php if ($canEdit): ?>
-            <a href="<?= Security::esc($baseUrl) ?>/?r=task_edit&amp;id=<?= (int) $task['id'] ?>" class="btn btn-primary">Bearbeiten</a>
+            <a href="<?= Security::esc($baseUrl) ?>/?r=task_edit&amp;id=<?= (int) $task['id'] ?>" class="btn btn-primary"><?= Security::esc(t('actions.edit')) ?></a>
             <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=task_delete&amp;id=<?= (int) $task['id'] ?>"
-                  class="inline-form" onsubmit="return confirm('Aufgabe wirklich loeschen?');">
+                  class="inline-form" onsubmit="return confirm('<?= Security::esc(t('messages.confirm_delete_task')) ?>');">
                 <?= Security::csrfField() ?>
-                <button type="submit" class="btn btn-danger">Loeschen</button>
+                <button type="submit" class="btn btn-danger"><?= Security::esc(t('actions.delete')) ?></button>
             </form>
             <?php endif; ?>
         </div>
@@ -56,9 +56,9 @@ if ($canEdit) {
                 <?= $renderedContent ?>
             </div>
         <?php else: ?>
-            <p class="placeholder-text">Keine Beschreibung vorhanden.
+            <p class="placeholder-text"><?= Security::esc(t('messages.no_description')) ?>
                 <?php if ($canEdit): ?>
-                    <a href="<?= Security::esc($baseUrl) ?>/?r=task_edit&amp;id=<?= (int) $task['id'] ?>">Beschreibung hinzufuegen</a>
+                    <a href="<?= Security::esc($baseUrl) ?>/?r=task_edit&amp;id=<?= (int) $task['id'] ?>"><?= Security::esc(t('tasks.add_description')) ?></a>
                 <?php endif; ?>
             </p>
         <?php endif; ?>
@@ -67,7 +67,7 @@ if ($canEdit) {
     <!-- Meta sidebar - compact -->
     <div class="task-meta-card">
         <dl class="task-meta-list">
-            <dt>Spalte</dt>
+            <dt><?= Security::esc(t('labels.column')) ?></dt>
             <dd>
                 <span class="status-badge"
                       <?php if (!empty($task['column_color'])): ?>style="border-left: 3px solid <?= Security::esc($task['column_color']) ?>;"<?php endif; ?>>
@@ -75,16 +75,16 @@ if ($canEdit) {
                 </span>
             </dd>
 
-            <dt>Owner</dt>
+            <dt><?= Security::esc(t('labels.owner')) ?></dt>
             <dd>
                 <?php if ($task['owner_name']): ?>
                     <?= Security::esc($task['owner_name']) ?>
                 <?php else: ?>
-                    <span class="text-muted">Nicht zugewiesen</span>
+                    <span class="text-muted"><?= Security::esc(t('tasks.not_assigned')) ?></span>
                 <?php endif; ?>
             </dd>
 
-            <dt>Faellig</dt>
+            <dt><?= Security::esc(t('labels.due')) ?></dt>
             <dd>
                 <?php if ($task['due_date']): ?>
                     <?php
@@ -99,7 +99,7 @@ if ($canEdit) {
                 <?php endif; ?>
             </dd>
 
-            <dt>Tags</dt>
+            <dt><?= Security::esc(t('labels.tags')) ?></dt>
             <dd>
                 <?php if (!empty($tags)): ?>
                     <div class="tag-list">
@@ -108,7 +108,7 @@ if ($canEdit) {
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
-                    <span class="text-muted">Keine Tags</span>
+                    <span class="text-muted"><?= Security::esc(t('tasks.no_tags')) ?></span>
                 <?php endif; ?>
             </dd>
 
@@ -119,7 +119,7 @@ if ($canEdit) {
                 }
             ?>
             <?php if ($__taskBoard): ?>
-            <dt>Board</dt>
+            <dt><?= Security::esc(t('labels.board')) ?></dt>
             <dd>
                 <a href="<?= Security::esc($baseUrl) ?>/?r=board_view&amp;id=<?= (int) $__taskBoard['id'] ?>">
                     <?= Security::esc($__taskBoard['name']) ?>
@@ -133,9 +133,9 @@ if ($canEdit) {
             <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=board_move_task_board" class="inline-form">
                 <?= Security::csrfField() ?>
                 <input type="hidden" name="task_id" value="<?= (int) $task['id'] ?>">
-                <label class="form-label form-label-sm">In Board verschieben</label>
+                <label class="form-label form-label-sm"><?= Security::esc(t('tasks.move_to_board')) ?></label>
                 <select name="target_board_id" class="form-input form-input-sm" onchange="if(this.value)this.form.submit()">
-                    <option value="">Board waehlen...</option>
+                    <option value=""><?= Security::esc(t('tasks.select_board')) ?></option>
                     <?php foreach ($__taskBoards as $tb): ?>
                         <?php if ((int) $tb['id'] !== (int) ($task['board_id'] ?? 0)): ?>
                         <option value="<?= (int) $tb['id'] ?>"><?= Security::esc($tb['name']) ?><?= $tb['team_name'] ? ' (' . Security::esc($tb['team_name']) . ')' : '' ?></option>
@@ -151,7 +151,7 @@ if ($canEdit) {
 <!-- AP5: Linked Pages -->
 <?php if (!empty($linkedPages)): ?>
 <div class="section-block section-secondary">
-    <h2>Verknuepfte Seiten</h2>
+    <h2><?= Security::esc(t('tasks.linked_pages')) ?></h2>
     <ul class="linked-pages-list">
         <?php foreach ($linkedPages as $lp): ?>
             <li>
@@ -178,18 +178,18 @@ if ($canEdit) {
 
 <!-- AP22: Activity - collapsible, visually subdued -->
 <details class="activity-collapsible">
-    <summary class="activity-collapsible-summary">Aktivitaet (<?= count($activities) ?>)</summary>
+    <summary class="activity-collapsible-summary"><?= Security::esc(t('tasks.activity')) ?> (<?= count($activities) ?>)</summary>
     <?php require APP_DIR . '/views/partials/activity.php'; ?>
 </details>
 
 <div class="page-meta">
     <span class="text-muted">
-        Erstellt am <?= Security::esc(date('d.m.Y H:i', strtotime($task['created_at']))) ?>
+        <?= Security::esc(t('labels.created_at')) ?> <?= Security::esc(date('d.m.Y H:i', strtotime($task['created_at']))) ?>
         <?php if ($task['creator_name']): ?>
-            von <?= Security::esc($task['creator_name']) ?>
+            <?= Security::esc(t('labels.by')) ?> <?= Security::esc($task['creator_name']) ?>
         <?php endif; ?>
         <?php if ($task['updated_at']): ?>
-            &middot; Aktualisiert am <?= Security::esc(date('d.m.Y H:i', strtotime($task['updated_at']))) ?>
+            &middot; <?= Security::esc(t('labels.updated_at')) ?> <?= Security::esc(date('d.m.Y H:i', strtotime($task['updated_at']))) ?>
         <?php endif; ?>
     </span>
 </div>

@@ -7,8 +7,8 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 ?>
 
 <div class="page-header">
-    <h1>Neue Aufgabe</h1>
-    <p class="subtitle">Erstelle eine neue Aufgabe.</p>
+    <h1><?= Security::esc(t('tasks.create_title')) ?></h1>
+    <p class="subtitle"><?= Security::esc(t('tasks.create_subtitle')) ?></p>
 </div>
 
 <?php if ($error): ?>
@@ -20,7 +20,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
         <?= Security::csrfField() ?>
 
         <div class="form-group">
-            <label for="title">Titel</label>
+            <label for="title"><?= Security::esc(t('labels.title')) ?></label>
             <input type="text" id="title" name="title" class="form-input"
                    value="<?= Security::esc($formData['title']) ?>"
                    required autofocus>
@@ -28,7 +28,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 
         <div class="form-row">
             <div class="form-group form-group-half">
-                <label for="column_id">Spalte</label>
+                <label for="column_id"><?= Security::esc(t('labels.column')) ?></label>
                 <select id="column_id" name="column_id" class="form-input">
                     <?php foreach ($boardColumns as $col): ?>
                         <option value="<?= (int) $col['id'] ?>"
@@ -40,9 +40,9 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
             </div>
 
             <div class="form-group form-group-half">
-                <label for="owner_id">Owner</label>
+                <label for="owner_id"><?= Security::esc(t('labels.owner')) ?></label>
                 <select id="owner_id" name="owner_id" class="form-input">
-                    <option value="">-- Nicht zugewiesen --</option>
+                    <option value=""><?= Security::esc(t('tasks.owner_none')) ?></option>
                     <?php foreach ($users as $u): ?>
                         <option value="<?= (int) $u['id'] ?>"
                             <?= (string) $formData['owner_id'] === (string) $u['id'] ? 'selected' : '' ?>>
@@ -55,13 +55,13 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 
         <div class="form-row">
             <div class="form-group form-group-half">
-                <label for="due_date">Faelligkeitsdatum</label>
+                <label for="due_date"><?= Security::esc(t('labels.due_date')) ?></label>
                 <input type="date" id="due_date" name="due_date" class="form-input"
                        value="<?= Security::esc($formData['due_date']) ?>">
             </div>
 
             <div class="form-group form-group-half">
-                <label for="tags">Tags</label>
+                <label for="tags"><?= Security::esc(t('labels.tags')) ?></label>
                 <?php
                     $tagInputId    = 'tags';
                     $tagInputName  = 'tags';
@@ -73,9 +73,9 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 
         <?php if (!empty($availableTeams)): ?>
         <div class="form-group">
-            <label for="team_id">Team (optional)</label>
+            <label for="team_id"><?= Security::esc(t('labels.team')) ?></label>
             <select id="team_id" name="team_id" class="form-input team-select">
-                <option value="">-- Global (kein Team) --</option>
+                <option value=""><?= Security::esc(t('pages.team_global')) ?></option>
                 <?php foreach ($availableTeams as $__t): ?>
                     <option value="<?= (int) $__t['id'] ?>"
                         <?= (string) ($formData['team_id'] ?? '') === (string) $__t['id'] ? 'selected' : '' ?>>
@@ -88,9 +88,9 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 
         <?php if (!empty($availableBoards)): ?>
         <div class="form-group">
-            <label for="board_id">Board (optional)</label>
+            <label for="board_id"><?= Security::esc(t('labels.board')) ?></label>
             <select id="board_id" name="board_id" class="form-input">
-                <option value="">-- Kein Board --</option>
+                <option value=""><?= Security::esc(t('tasks.board_none')) ?></option>
                 <?php foreach ($availableBoards as $__b): ?>
                     <option value="<?= (int) $__b['id'] ?>"
                         <?= (string) ($formData['board_id'] ?? '') === (string) $__b['id'] ? 'selected' : '' ?>>
@@ -102,15 +102,15 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
         <?php endif; ?>
 
         <div class="form-group">
-            <label for="description_md">Beschreibung (Markdown)</label>
+            <label for="description_md"><?= Security::esc(t('labels.description_md')) ?></label>
             <textarea id="description_md" name="description_md" class="form-input form-textarea"
                       rows="14" data-mentions="true" data-context="task"><?= Security::esc($formData['description_md']) ?></textarea>
-            <span class="textarea-hint">@ fuer Mentions, # fuer Tags, /due YYYY-MM-DD, /assign @Name</span>
+            <span class="textarea-hint"><?= Security::esc(t('tasks.textarea_hint')) ?></span>
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Aufgabe erstellen</button>
-            <a href="<?= Security::esc($baseUrl) ?>/?r=tasks" class="btn btn-secondary">Abbrechen</a>
+            <button type="submit" class="btn btn-primary"><?= Security::esc(t('tasks.create_button')) ?></button>
+            <a href="<?= Security::esc($baseUrl) ?>/?r=tasks" class="btn btn-secondary"><?= Security::esc(t('actions.cancel')) ?></a>
         </div>
     </form>
 </div>

@@ -26,22 +26,23 @@ class AuthController
             $password = $_POST['password'] ?? '';
 
             if ($email === '' || $password === '') {
-                $error = 'Login fehlgeschlagen.';
+                $error = t('messages.login_failed');
             } else {
                 $user = User::findByEmail($email);
 
                 if ($user && password_verify($password, $user['password_hash'])) {
                     // Check if user account is active (AP9)
                     if (isset($user['is_active']) && (int) $user['is_active'] === 0) {
-                        $error = 'Ihr Konto ist deaktiviert. Bitte kontaktieren Sie den Administrator.';
+                        $error = t('messages.account_disabled');
                         Logger::info('Login attempt for deactivated account', ['email' => $email]);
                     } else {
                         // Regenerate session ID to prevent session fixation
                         session_regenerate_id(true);
 
-                        $_SESSION['user_id']   = (int) $user['id'];
-                        $_SESSION['user_role']  = $user['role'];
-                        $_SESSION['user_name']  = $user['name'];
+                        $_SESSION['user_id']       = (int) $user['id'];
+                        $_SESSION['user_role']      = $user['role'];
+                        $_SESSION['user_name']      = $user['name'];
+                        $_SESSION['user_language']   = $user['language'] ?? null;
 
                         User::touchLogin((int) $user['id']);
 
@@ -52,7 +53,7 @@ class AuthController
                         exit;
                     }
                 } else {
-                    $error = 'Login fehlgeschlagen.';
+                    $error = t('messages.login_failed');
                     Logger::info('Failed login attempt', ['email' => $email]);
                 }
             }
@@ -116,14 +117,14 @@ class AuthController
             $password = $_POST['password'] ?? '';
 
             if ($email === '' || $name === '' || $password === '') {
-                $error = 'Alle Felder sind erforderlich.';
+                $error = t('messages.all_fields_required');
             } elseif (strlen($password) < 6) {
-                $error = 'Passwort muss mindestens 6 Zeichen lang sein.';
+                $error = t('messages.password_min_length', ['min' => 6]);
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $error = 'Bitte eine gueltige E-Mail-Adresse eingeben.';
+                $error = t('messages.invalid_email');
             } else {
                 User::create($email, $name, $password, 'admin');
-                $success = 'Admin-Benutzer wurde erstellt. Sie koennen sich jetzt anmelden.';
+                $success = t('messages.admin_created');
                 Logger::info('Initial admin user created via setup', ['email' => $email]);
             }
         }
