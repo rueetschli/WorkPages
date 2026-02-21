@@ -297,6 +297,7 @@ $routes = [
     'admin_email_retry'        => ['controller' => 'AdminEmailController', 'action' => 'retry'],
     'admin_email_digest_daily' => ['controller' => 'AdminEmailController', 'action' => 'digestDaily'],
     'admin_email_digest_weekly'=> ['controller' => 'AdminEmailController', 'action' => 'digestWeekly'],
+    'admin_email_test'         => ['controller' => 'AdminEmailController', 'action' => 'testEmail'],
 
     // AP16: Teams
     'admin_teams'              => ['controller' => 'TeamAdminController', 'action' => 'index'],

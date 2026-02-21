@@ -36,6 +36,19 @@ class EventService
             ]);
         }
 
+        // AP23: Process pending emails immediately after enqueue.
+        // Without this, emails sit in email_outbox with status 'pending'
+        // until an admin manually triggers sending. This ensures emails
+        // are delivered right after they are created.
+        try {
+            EmailService::processPending(5);
+        } catch (\Throwable $e) {
+            Logger::error('EventService email processing failed', [
+                'event' => $eventName,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         // AP19: Enqueue webhook deliveries for supported events
         try {
             if (in_array($eventName, WebhookService::EVENTS, true)) {

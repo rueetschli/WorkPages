@@ -109,6 +109,73 @@ class AdminEmailController
         $this->redirect('admin_email_queue');
     }
 
+    /**
+     * AP23: Send a test email to the current admin's address (POST).
+     */
+    public function testEmail(): void
+    {
+        Authz::require(Authz::ADMIN_SETTINGS_MANAGE);
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('admin_email_queue');
+            return;
+        }
+
+        Security::csrfGuard();
+
+        $userId = (int) $_SESSION['user_id'];
+        $user = User::findById($userId);
+
+        if (!$user) {
+            $_SESSION['_flash_error'] = 'Benutzer nicht gefunden.';
+            $this->redirect('admin_email_queue');
+            return;
+        }
+
+        $toEmail = $user['email'];
+
+        try {
+            $appName = SystemSettingsService::companyName();
+        } catch (Throwable $e) {
+            $appName = $GLOBALS['config']['APP_NAME'] ?? 'WorkPages';
+        }
+
+        $subject = '[' . $appName . '] Test-E-Mail';
+        $bodyHtml = '<p>Dies ist eine Test-E-Mail von ' . htmlspecialchars($appName, ENT_QUOTES, 'UTF-8') . '.</p>'
+                  . '<p>Wenn Sie diese E-Mail erhalten, funktioniert der E-Mail-Versand korrekt.</p>'
+                  . '<p>Gesendet: ' . date('d.m.Y H:i:s') . '</p>';
+        $bodyText = 'Dies ist eine Test-E-Mail von ' . $appName . ".\n\nWenn Sie diese E-Mail erhalten, funktioniert der E-Mail-Versand korrekt.\n\nGesendet: " . date('d.m.Y H:i:s');
+
+        // Enqueue the test email
+        $outboxId = EmailOutbox::enqueue([
+            'user_id'         => $userId,
+            'notification_id' => null,
+            'to_email'        => $toEmail,
+            'subject'         => $subject,
+            'body_html'       => $bodyHtml,
+            'body_text'       => $bodyText,
+            'send_after'      => date('Y-m-d H:i:s'),
+        ]);
+
+        // Try to send immediately
+        $outboxRow = EmailOutbox::findById($outboxId);
+        if ($outboxRow) {
+            $result = EmailService::send($outboxRow);
+            if ($result === true) {
+                EmailOutbox::markSent($outboxId);
+                $_SESSION['_flash_success'] = 'Test-E-Mail an ' . $toEmail . ' erfolgreich gesendet.';
+            } else {
+                EmailOutbox::markFailed($outboxId, $result);
+                $_SESSION['_flash_error'] = 'Test-E-Mail fehlgeschlagen: ' . $result;
+                Logger::error('Test email failed', ['to' => $toEmail, 'error' => $result]);
+            }
+        } else {
+            $_SESSION['_flash_error'] = 'Test-E-Mail konnte nicht erstellt werden.';
+        }
+
+        $this->redirect('admin_email_queue');
+    }
+
     private function redirect(string $route): void
     {
         $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');

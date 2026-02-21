@@ -5,7 +5,7 @@
  * Steps:
  *   1. Environment check (PHP version, extensions, write permissions)
  *   2. Database configuration (test connection, write config.php)
- *   3. Schema creation (run 001_init.sql)
+ *   3. Schema creation (run 001_init.sql + all pending migrations)
  *   4. Admin user creation
  *   5. Done (write lock file, link to login)
  */
@@ -352,6 +352,7 @@ class InstallController
     {
         $error = null;
         $success = null;
+        $migrationCount = 0;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Security::csrfGuard();
@@ -365,15 +366,112 @@ class InstallController
                     $error = 'Schema konnte nicht erstellt werden. Details im Log.';
                     Logger::error('Schema creation failed', ['error' => $result]);
                 } else {
-                    $success = 'Datenbank-Schema erfolgreich erstellt.';
+                    // AP23: Run all pending migrations after base schema creation.
+                    // 001_init.sql sets schema_version=2, so migrations 003+ are pending.
+                    $migResult = $this->runPendingMigrations();
+                    if ($migResult['success']) {
+                        $migrationCount = $migResult['count'];
+                        $success = 'Datenbank-Schema und ' . $migrationCount . ' Migration(en) erfolgreich ausgefuehrt.';
+                    } else {
+                        $error = 'Basis-Schema erstellt, aber Migration fehlgeschlagen: ' . $migResult['error'] . ' Details im Log.';
+                    }
                 }
             }
         }
 
         $this->renderInstallView('schema', [
-            'error'   => $error,
-            'success' => $success,
+            'error'          => $error,
+            'success'        => $success,
+            'migrationCount' => $migrationCount,
         ]);
+    }
+
+    /**
+     * AP23: Run all pending migrations after initial schema creation.
+     * Reuses the same logic as AdminController::migrate() but operates
+     * without session context (installer runs before login).
+     *
+     * @return array{success: bool, count: int, error: string}
+     */
+    private function runPendingMigrations(): array
+    {
+        try {
+            $config = require $this->configFile;
+            $dsn = sprintf(
+                'mysql:host=%s;dbname=%s;charset=%s',
+                $config['DB_HOST'],
+                $config['DB_NAME'],
+                $config['DB_CHARSET'] ?? 'utf8mb4'
+            );
+            $pdo = new PDO($dsn, $config['DB_USER'], $config['DB_PASS'], [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            ]);
+
+            // Read current schema version
+            $stmt = $pdo->query("SELECT meta_value FROM app_meta WHERE meta_key = 'schema_version'");
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $currentVersion = $row ? (int) $row['meta_value'] : 0;
+
+            // Collect pending migrations
+            $pending = [];
+            $files = scandir($this->migrationsDir);
+            foreach ($files as $file) {
+                if (!preg_match('/^(\d{3})_.*\.sql$/', $file, $matches)) {
+                    continue;
+                }
+                $version = (int) $matches[1];
+                if ($version > $currentVersion) {
+                    $pending[] = [
+                        'file'    => $file,
+                        'version' => $version,
+                        'path'    => $this->migrationsDir . '/' . $file,
+                    ];
+                }
+            }
+
+            usort($pending, fn($a, $b) => $a['version'] <=> $b['version']);
+
+            if (empty($pending)) {
+                return ['success' => true, 'count' => 0, 'error' => ''];
+            }
+
+            $count = 0;
+            foreach ($pending as $migration) {
+                $sql = file_get_contents($migration['path']);
+                $statements = $this->splitSql($sql);
+
+                foreach ($statements as $s) {
+                    $s = trim($s);
+                    if ($s === '') {
+                        continue;
+                    }
+                    $pdo->exec($s);
+                }
+
+                // Update schema version
+                $update = $pdo->prepare(
+                    "INSERT INTO app_meta (meta_key, meta_value) VALUES ('schema_version', ?)
+                     ON DUPLICATE KEY UPDATE meta_value = ?"
+                );
+                $update->execute([(string) $migration['version'], (string) $migration['version']]);
+
+                Logger::info('Installer: migration applied', [
+                    'file'        => $migration['file'],
+                    'new_version' => $migration['version'],
+                ]);
+
+                $count++;
+            }
+
+            return ['success' => true, 'count' => $count, 'error' => ''];
+        } catch (Throwable $e) {
+            Logger::error('Installer: migration failed', [
+                'error' => $e->getMessage(),
+                'file'  => $e->getFile(),
+                'line'  => $e->getLine(),
+            ]);
+            return ['success' => false, 'count' => 0, 'error' => $e->getMessage()];
+        }
     }
 
     private function executeSqlFile(string $filePath): string|true
