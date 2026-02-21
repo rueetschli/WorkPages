@@ -39,6 +39,12 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
             <button type="submit" class="btn btn-secondary btn-sm-pad">Wochen-Digest erstellen</button>
         </form>
     </div>
+    <div class="filter-group">
+        <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=admin_email_test" class="inline-form">
+            <?= Security::csrfField() ?>
+            <button type="submit" class="btn btn-secondary btn-sm-pad">Test-E-Mail senden</button>
+        </form>
+    </div>
 </div>
 
 <?php if (empty($entries)): ?>

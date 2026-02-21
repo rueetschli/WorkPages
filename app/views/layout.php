@@ -1,6 +1,7 @@
 <?php
 /**
  * Main application shell: header, sidebar navigation, content area.
+ * AP23: Work-centered navigation, user dropdown, collapsible page tree.
  *
  * Variables expected:
  *   $pageTitle   - string, used in <title> and header
@@ -52,6 +53,16 @@ try {
     // teams table may not exist yet
 }
 
+// AP15: Notification bell - unread count
+$__notifCount = 0;
+try {
+    if (!empty($_SESSION['user_id'])) {
+        $__notifCount = Notification::countUnread((int) $_SESSION['user_id']);
+    }
+} catch (Throwable $e) {
+    // Table may not exist yet before migration
+}
+
 // Flash messages
 $flashSuccess = $_SESSION['_flash_success'] ?? null;
 $flashError   = $_SESSION['_flash_error'] ?? null;
@@ -91,7 +102,7 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
     <div class="header-center">
         <form class="search-form" action="<?= Security::esc($baseUrl) ?>/" method="get">
             <input type="hidden" name="r" value="search">
-            <input type="text" name="q" placeholder="Suchen..." class="search-input" aria-label="Suche" value="<?= Security::esc($_GET['q'] ?? '') ?>">
+            <input type="text" name="q" placeholder="Pages und Tasks durchsuchen..." class="search-input" aria-label="Suche" value="<?= Security::esc($_GET['q'] ?? '') ?>">
         </form>
     </div>
     <div class="header-right">
@@ -130,17 +141,6 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
         <button type="button" class="mobile-search-btn" id="mobile-search-btn" aria-label="Suche">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </button>
-        <?php
-            // AP15: Notification bell - unread count
-            $__notifCount = 0;
-            try {
-                if (!empty($_SESSION['user_id'])) {
-                    $__notifCount = Notification::countUnread((int) $_SESSION['user_id']);
-                }
-            } catch (Throwable $e) {
-                // Table may not exist yet before migration
-            }
-        ?>
         <div class="notif-bell-wrap">
             <button type="button" class="notif-bell-btn" id="notif-bell-btn" aria-label="Benachrichtigungen">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
@@ -163,9 +163,46 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
             <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
             <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
         </button>
-        <span class="user-badge"><?= $userName ?></span>
-        <span class="user-role-label"><?= $userRole ?></span>
-        <a href="<?= Security::esc($baseUrl) ?>/?r=logout" class="logout-link">Abmelden</a>
+        <!-- AP23: User dropdown menu -->
+        <div class="user-menu-wrap">
+            <button type="button" class="user-menu-btn" id="user-menu-btn" aria-label="Benutzermenu">
+                <span class="user-menu-avatar"><?= mb_strtoupper(mb_substr($userName, 0, 1, 'UTF-8'), 'UTF-8') ?></span>
+                <span class="user-menu-name"><?= $userName ?></span>
+                <svg class="user-menu-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="user-menu-dropdown" id="user-menu-dropdown">
+                <div class="user-menu-dropdown-header">
+                    <span class="user-menu-dropdown-name"><?= $userName ?></span>
+                    <span class="user-menu-dropdown-role"><?= $userRole ?></span>
+                </div>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=settings_notifications" class="user-menu-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                    Einstellungen
+                </a>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=settings_api_keys" class="user-menu-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.78 7.78 5.5 5.5 0 017.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                    API-Schluessel
+                </a>
+                <?php if (Authz::can(Authz::TASK_CREATE)): ?>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=export_tasks_csv" class="user-menu-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Export
+                </a>
+                <?php endif; ?>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=notifications" class="user-menu-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                    Benachrichtigungen
+                    <?php if ($__notifCount > 0): ?>
+                        <span class="notif-tab-badge" style="margin-left:auto"><?= $__notifCount > 99 ? '99+' : (int) $__notifCount ?></span>
+                    <?php endif; ?>
+                </a>
+                <div class="user-menu-separator"></div>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=logout" class="user-menu-item user-menu-item-danger">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Abmelden
+                </a>
+            </div>
+        </div>
     </div>
 </header>
 
@@ -178,7 +215,7 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
 <!-- Body: sidebar + main -->
 <div class="app-body">
 
-    <!-- Sidebar navigation -->
+    <!-- AP23: Work-centered sidebar navigation -->
     <nav class="sidebar" id="sidebar" aria-label="Hauptnavigation">
         <ul class="nav-list">
             <li>
@@ -186,6 +223,13 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
                    class="nav-link <?= $currentRoute === 'home' ? 'active' : '' ?>">
                     <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
                     Home
+                </a>
+            </li>
+            <li>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=boards"
+                   class="nav-link <?= in_array($currentRoute, ['boards', 'board', 'board_view'], true) ? 'active' : '' ?>">
+                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></span>
+                    Boards
                 </a>
             </li>
             <li>
@@ -202,13 +246,6 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
                     Tasks
                 </a>
             </li>
-            <li>
-                <a href="<?= Security::esc($baseUrl) ?>/?r=boards"
-                   class="nav-link <?= in_array($currentRoute, ['boards', 'board', 'board_view'], true) ? 'active' : '' ?>">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></span>
-                    Boards
-                </a>
-            </li>
             <?php if (Authz::can(Authz::REPORT_VIEW)): ?>
             <li>
                 <a href="<?= Security::esc($baseUrl) ?>/?r=reports_overview"
@@ -218,112 +255,10 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
                 </a>
             </li>
             <?php endif; ?>
-            <li>
-                <a href="<?= Security::esc($baseUrl) ?>/?r=search"
-                   class="nav-link <?= $currentRoute === 'search' ? 'active' : '' ?>">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-                    Suche
-                </a>
-            </li>
-            <li>
-                <a href="<?= Security::esc($baseUrl) ?>/?r=notifications"
-                   class="nav-link <?= $currentRoute === 'notifications' ? 'active' : '' ?>">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span>
-                    Benachrichtigungen
-                    <?php if ($__notifCount > 0): ?>
-                        <span class="notif-tab-badge" style="margin-left:auto"><?= $__notifCount > 99 ? '99+' : (int) $__notifCount ?></span>
-                    <?php endif; ?>
-                </a>
-            </li>
-            <li>
-                <a href="<?= Security::esc($baseUrl) ?>/?r=settings_notifications"
-                   class="nav-link <?= $currentRoute === 'settings_notifications' ? 'active' : '' ?>">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
-                    Einstellungen
-                </a>
-            </li>
-            <li>
-                <a href="<?= Security::esc($baseUrl) ?>/?r=settings_api_keys"
-                   class="nav-link <?= in_array($currentRoute, ['settings_api_keys', 'settings_api_key_create'], true) ? 'active' : '' ?>">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.78 7.78 5.5 5.5 0 017.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></span>
-                    API-Schluessel
-                </a>
-            </li>
-            <?php if (Authz::can(Authz::ADMIN_USERS_MANAGE)): ?>
-            <li class="nav-separator"></li>
-            <li>
-                <a href="<?= Security::esc($baseUrl) ?>/?r=admin_users"
-                   class="nav-link <?= in_array($currentRoute, ['admin_users', 'admin_user_create', 'admin_user_edit'], true) ? 'active' : '' ?>">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></span>
-                    Benutzer
-                </a>
-            </li>
-            <li>
-                <a href="<?= Security::esc($baseUrl) ?>/?r=admin_migrate"
-                   class="nav-link <?= $currentRoute === 'admin_migrate' ? 'active' : '' ?>">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></span>
-                    Migrationen
-                </a>
-            </li>
-            <li>
-                <a href="<?= Security::esc($baseUrl) ?>/?r=admin_system"
-                   class="nav-link <?= $currentRoute === 'admin_system' ? 'active' : '' ?>">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
-                    System
-                </a>
-            </li>
-            <li>
-                <a href="<?= Security::esc($baseUrl) ?>/?r=admin_email_queue"
-                   class="nav-link <?= $currentRoute === 'admin_email_queue' ? 'active' : '' ?>">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
-                    E-Mail Queue
-                </a>
-            </li>
-            <li>
-                <a href="<?= Security::esc($baseUrl) ?>/?r=admin_webhooks"
-                   class="nav-link <?= in_array($currentRoute, ['admin_webhooks', 'admin_webhook_create', 'admin_webhook_edit'], true) ? 'active' : '' ?>">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></span>
-                    Webhooks
-                </a>
-            </li>
-            <li>
-                <a href="<?= Security::esc($baseUrl) ?>/?r=admin_webhook_queue"
-                   class="nav-link <?= $currentRoute === 'admin_webhook_queue' ? 'active' : '' ?>">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
-                    Webhook Queue
-                </a>
-            </li>
-            <li>
-                <a href="<?= Security::esc($baseUrl) ?>/?r=admin_settings"
-                   class="nav-link <?= $currentRoute === 'admin_settings' ? 'active' : '' ?>">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
-                    Branding
-                </a>
-            </li>
-            <?php endif; ?>
-            <?php if (Authz::can(Authz::TEAM_MANAGE)): ?>
-            <li>
-                <a href="<?= Security::esc($baseUrl) ?>/?r=admin_teams"
-                   class="nav-link <?= in_array($currentRoute, ['admin_teams', 'admin_team_edit'], true) ? 'active' : '' ?>">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></span>
-                    Teams
-                </a>
-            </li>
-            <?php endif; ?>
-            <?php if (Authz::can(Authz::TASK_CREATE)): ?>
-            <li class="nav-separator"></li>
-            <li>
-                <a href="<?= Security::esc($baseUrl) ?>/?r=export_tasks_csv"
-                   class="nav-link" title="Tasks als CSV exportieren">
-                    <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></span>
-                    Export Tasks
-                </a>
-            </li>
-            <?php endif; ?>
         </ul>
 
         <?php
-            // AP16: Team-filtered page tree
+            // AP23: Hierarchical page tree with collapsible nodes
             $__pageTree = [];
             try {
                 if (!empty($_SESSION['user_id'])) {
@@ -335,33 +270,125 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
                 }
             } catch (Throwable $e) {
                 // Fallback for pre-migration
-                $__pageTree = Page::getTree();
+                try {
+                    $__pageTree = Page::getTree();
+                } catch (Throwable $e2) {
+                    $__pageTree = [];
+                }
             }
             if (!empty($__pageTree)):
         ?>
         <div class="sidebar-pages">
             <span class="sidebar-label">Seiten</span>
+            <div class="page-tree-scroll">
             <?php
             $__currentSlug = $_GET['slug'] ?? '';
             function renderPageTree(array $nodes, string $baseUrl, string $currentSlug, int $depth = 0): void {
                 echo '<ul class="page-tree' . ($depth === 0 ? ' page-tree-root' : '') . '">';
                 foreach ($nodes as $node) {
                     $isActive = ($currentSlug === $node['slug']);
-                    echo '<li class="page-tree-item">';
+                    $hasChildren = !empty($node['children']);
+                    // Auto-expand if active page or descendant is active
+                    $isExpanded = $isActive || ($hasChildren && self_or_descendant_active($node, $currentSlug));
+                    echo '<li class="page-tree-item' . ($hasChildren ? ' has-children' : '') . ($isExpanded ? ' expanded' : '') . '">';
+                    echo '<div class="page-tree-row" style="padding-left: ' . (4 + $depth * 16) . 'px">';
+                    if ($hasChildren) {
+                        echo '<button type="button" class="page-tree-toggle" aria-label="Auf-/zuklappen">'
+                           . '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>'
+                           . '</button>';
+                    } else {
+                        echo '<span class="page-tree-spacer"></span>';
+                    }
                     echo '<a href="' . Security::esc($baseUrl) . '/?r=page_view&amp;slug=' . Security::esc($node['slug']) . '"'
-                       . ' class="page-tree-link' . ($isActive ? ' page-tree-active' : '') . '"'
-                       . ' style="padding-left: ' . (12 + $depth * 16) . 'px">'
+                       . ' class="page-tree-link' . ($isActive ? ' page-tree-active' : '') . '">'
                        . Security::esc($node['title'])
                        . '</a>';
-                    if (!empty($node['children'])) {
+                    echo '</div>';
+                    if ($hasChildren) {
                         renderPageTree($node['children'], $baseUrl, $currentSlug, $depth + 1);
                     }
                     echo '</li>';
                 }
                 echo '</ul>';
             }
+
+            function self_or_descendant_active(array $node, string $currentSlug): bool {
+                if ($currentSlug === $node['slug']) {
+                    return true;
+                }
+                if (!empty($node['children'])) {
+                    foreach ($node['children'] as $child) {
+                        if (self_or_descendant_active($child, $currentSlug)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
             renderPageTree($__pageTree, $baseUrl, $__currentSlug);
             ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if (Authz::can(Authz::ADMIN_USERS_MANAGE)): ?>
+        <!-- AP23: Admin navigation block -->
+        <div class="sidebar-admin">
+            <span class="sidebar-label">Administration</span>
+            <ul class="nav-list">
+                <li>
+                    <a href="<?= Security::esc($baseUrl) ?>/?r=admin_users"
+                       class="nav-link <?= in_array($currentRoute, ['admin_users', 'admin_user_create', 'admin_user_edit'], true) ? 'active' : '' ?>">
+                        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></span>
+                        Benutzer
+                    </a>
+                </li>
+                <?php if (Authz::can(Authz::TEAM_MANAGE)): ?>
+                <li>
+                    <a href="<?= Security::esc($baseUrl) ?>/?r=admin_teams"
+                       class="nav-link <?= in_array($currentRoute, ['admin_teams', 'admin_team_edit'], true) ? 'active' : '' ?>">
+                        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></span>
+                        Teams
+                    </a>
+                </li>
+                <?php endif; ?>
+                <li>
+                    <a href="<?= Security::esc($baseUrl) ?>/?r=admin_system"
+                       class="nav-link <?= $currentRoute === 'admin_system' ? 'active' : '' ?>">
+                        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></span>
+                        System
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= Security::esc($baseUrl) ?>/?r=admin_migrate"
+                       class="nav-link <?= $currentRoute === 'admin_migrate' ? 'active' : '' ?>">
+                        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></span>
+                        Migrationen
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= Security::esc($baseUrl) ?>/?r=admin_email_queue"
+                       class="nav-link <?= $currentRoute === 'admin_email_queue' ? 'active' : '' ?>">
+                        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+                        E-Mail Queue
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= Security::esc($baseUrl) ?>/?r=admin_webhooks"
+                       class="nav-link <?= in_array($currentRoute, ['admin_webhooks', 'admin_webhook_create', 'admin_webhook_edit', 'admin_webhook_queue'], true) ? 'active' : '' ?>">
+                        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></span>
+                        Webhooks
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= Security::esc($baseUrl) ?>/?r=admin_settings"
+                       class="nav-link <?= $currentRoute === 'admin_settings' ? 'active' : '' ?>">
+                        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span>
+                        Branding
+                    </a>
+                </li>
+            </ul>
         </div>
         <?php endif; ?>
 
@@ -483,9 +510,37 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
             e.stopPropagation();
             teamSwitcherDropdown.classList.toggle('open');
         });
-        document.addEventListener('click', function(e) {
-            if (!teamSwitcherDropdown.contains(e.target) && e.target !== teamSwitcherBtn) {
-                teamSwitcherDropdown.classList.remove('open');
+    }
+
+    /* -- AP23: User Menu Toggle -- */
+    var userMenuBtn = document.getElementById('user-menu-btn');
+    var userMenuDropdown = document.getElementById('user-menu-dropdown');
+    if (userMenuBtn && userMenuDropdown) {
+        userMenuBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            userMenuDropdown.classList.toggle('open');
+        });
+    }
+
+    /* -- Close all dropdowns on outside click -- */
+    document.addEventListener('click', function(e) {
+        if (teamSwitcherDropdown && !teamSwitcherDropdown.contains(e.target) && e.target !== teamSwitcherBtn) {
+            teamSwitcherDropdown.classList.remove('open');
+        }
+        if (userMenuDropdown && !userMenuDropdown.contains(e.target) && e.target !== userMenuBtn && !userMenuBtn.contains(e.target)) {
+            userMenuDropdown.classList.remove('open');
+        }
+    });
+
+    /* -- AP23: Page Tree Toggle -- */
+    var treeToggles = document.querySelectorAll('.page-tree-toggle');
+    for (var t = 0; t < treeToggles.length; t++) {
+        treeToggles[t].addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var item = this.closest('.page-tree-item');
+            if (item) {
+                item.classList.toggle('expanded');
             }
         });
     }
