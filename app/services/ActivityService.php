@@ -141,6 +141,22 @@ class ActivityService
                 $target  = isset($meta['target_column']) ? ' (Tasks verschoben nach "' . Security::esc($meta['target_column']) . '")' : '';
                 return $user . ' hat die Board-Spalte' . $colName . ' geloescht' . $target;
 
+            // AP25: Structure View events
+            case 'task_parent_changed':
+                if (($meta['new_parent_id'] ?? null) === null) {
+                    return $user . ' hat den Parent entfernt';
+                }
+                return $user . ' hat den Parent auf #' . Security::esc((string) ($meta['new_parent_id'] ?? '')) . ' gesetzt';
+
+            case 'task_type_changed':
+                $oldType = isset($meta['old_task_type']) ? Security::esc($meta['old_task_type']) : '?';
+                $newType = isset($meta['new_task_type']) ? Security::esc($meta['new_task_type']) : '?';
+                return $user . ' hat den Typ von ' . $oldType . ' auf ' . $newType . ' geaendert';
+
+            case 'task_structure_reordered':
+                $dir = ($meta['direction'] ?? '') === 'up' ? 'nach oben' : 'nach unten';
+                return $user . ' hat die Reihenfolge ' . $dir . ' verschoben';
+
             // AP22: Board changed
             case 'task_board_changed':
                 $oldBoard = isset($meta['old_board_name']) ? Security::esc($meta['old_board_name']) : '?';

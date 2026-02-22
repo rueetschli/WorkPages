@@ -286,8 +286,30 @@ class TaskController
             $formData['tags']           = trim($_POST['tags'] ?? '');
             $formData['team_id']        = $_POST['team_id'] ?? '';
             $formData['board_id']       = $_POST['board_id'] ?? '';
+            // AP25: structure fields
+            $formData['task_type']      = $_POST['task_type'] ?? ($task['task_type'] ?? 'task');
+            $formData['parent_task_id'] = !empty($_POST['parent_task_id']) ? (int) $_POST['parent_task_id'] : null;
 
             $error = $this->validate($formData);
+
+            // AP25: Validate type/parent changes
+            if ($error === null && isset($_POST['task_type'])) {
+                $newType = $formData['task_type'];
+                $typeErr = TaskStructureService::validateTypeChange($task, $newType);
+                if ($typeErr !== null) {
+                    $error = t($typeErr);
+                }
+            }
+            if ($error === null && array_key_exists('parent_task_id', $_POST)) {
+                $newParent = null;
+                if ($formData['parent_task_id'] !== null) {
+                    $newParent = Task::findById($formData['parent_task_id']);
+                }
+                $parentErr = TaskStructureService::validateParent($task, $newParent);
+                if ($parentErr !== null) {
+                    $error = t($parentErr);
+                }
+            }
 
             if ($error === null) {
                 try {
@@ -314,6 +336,42 @@ class TaskController
 
                     $tagNames = Task::parseTagString($formData['tags']);
                     Task::setTags($id, $tagNames);
+
+                    // AP25: Save type and parent if submitted
+                    if (isset($_POST['task_type'])) {
+                        $newType    = $formData['task_type'];
+                        $oldType    = $task['task_type'] ?? 'task';
+                        if ($newType !== $oldType) {
+                            Task::setType($id, $newType, $userId);
+                            // Epics must not have a parent
+                            if ($newType === 'epic') {
+                                Task::setParent($id, null, $userId);
+                            }
+                            ActivityService::log('task', $id, 'task_type_changed', $userId, [
+                                'old_task_type' => $oldType,
+                                'new_task_type' => $newType,
+                            ]);
+                        }
+                    }
+                    if (array_key_exists('parent_task_id', $_POST)) {
+                        $newParentId = $formData['parent_task_id'];
+                        $oldParentId = $task['parent_task_id'] ?? null;
+                        if ((string) $newParentId !== (string) $oldParentId) {
+                            Task::setParent($id, $newParentId, $userId);
+                            // Assign end of sibling group
+                            if ($newParentId !== null) {
+                                $boardIdForStruct = !empty($task['board_id']) ? (int) $task['board_id'] : 0;
+                                if ($boardIdForStruct > 0) {
+                                    $newPos = Task::maxStructurePosition($boardIdForStruct, $newParentId) + 1000;
+                                    Task::setStructurePosition($id, $newPos, $userId);
+                                }
+                            }
+                            ActivityService::log('task', $id, 'task_parent_changed', $userId, [
+                                'old_parent_id' => $oldParentId,
+                                'new_parent_id' => $newParentId,
+                            ]);
+                        }
+                    }
 
                     // AP14: Sync mentions
                     TextCommands::syncMentions($cleanedDesc, 'task', $id, $userId);

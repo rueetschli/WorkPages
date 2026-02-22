@@ -124,9 +124,52 @@ if ($canEdit) {
                 <a href="<?= Security::esc($baseUrl) ?>/?r=board_view&amp;id=<?= (int) $__taskBoard['id'] ?>">
                     <?= Security::esc($__taskBoard['name']) ?>
                 </a>
+                &nbsp;<a href="<?= Security::esc($baseUrl) ?>/?r=structure&amp;board_id=<?= (int) $__taskBoard['id'] ?>" class="text-muted" style="font-size:0.85em;"><?= Security::esc(t('structure.tab_structure')) ?></a>
+            </dd>
+            <?php endif; ?>
+
+            <?php
+                // AP25: Task type and parent
+                $__taskType    = $task['task_type'] ?? 'task';
+                $__parentTask  = null;
+                if (!empty($task['parent_task_id'])) {
+                    try { $__parentTask = Task::findById((int) $task['parent_task_id']); } catch (Throwable $e) {}
+                }
+            ?>
+            <dt><?= Security::esc(t('structure.type_label')) ?></dt>
+            <dd>
+                <?php
+                    $typeLabels = [
+                        'epic'    => t('structure.type.epic'),
+                        'feature' => t('structure.type.feature'),
+                        'task'    => t('structure.type.task'),
+                    ];
+                    $typeBadgeClass = [
+                        'epic'    => 'struct-type struct-type--epic',
+                        'feature' => 'struct-type struct-type--feature',
+                        'task'    => 'struct-type struct-type--task',
+                    ];
+                ?>
+                <span class="<?= Security::esc($typeBadgeClass[$__taskType] ?? 'struct-type struct-type--task') ?>">
+                    <?= Security::esc($typeLabels[$__taskType] ?? $__taskType) ?>
+                </span>
+            </dd>
+
+            <?php if ($__parentTask): ?>
+            <dt><?= Security::esc(t('structure.parent_label')) ?></dt>
+            <dd>
+                <a href="<?= Security::esc($baseUrl) ?>/?r=task_view&amp;id=<?= (int) $__parentTask['id'] ?>">
+                    <?= Security::esc($__parentTask['title']) ?>
+                </a>
             </dd>
             <?php endif; ?>
         </dl>
+        <style>
+        .struct-type{display:inline-block;padding:2px 7px;border-radius:3px;font-size:.72em;font-weight:700;letter-spacing:.03em;text-transform:uppercase;}
+        .struct-type--epic{background:#6f42c1;color:#fff;}
+        .struct-type--feature{background:#0d6efd;color:#fff;}
+        .struct-type--task{background:#6c757d;color:#fff;}
+        </style>
 
         <?php if ($canEdit && count($__taskBoards) > 1): ?>
         <div class="task-meta-move">
