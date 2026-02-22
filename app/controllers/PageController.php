@@ -541,6 +541,293 @@ class PageController
         $this->redirect('page_view&slug=' . urlencode($page['slug']));
     }
 
+    // -- AP30: Page Move --------------------------------------------------
+
+    /**
+     * AP30: Show move form (GET) or process move (POST).
+     */
+    public function move(): void
+    {
+        Authz::require(Authz::PAGE_EDIT);
+
+        $slug = $_GET['slug'] ?? '';
+        if ($slug === '') {
+            $this->redirect('pages');
+            return;
+        }
+
+        $page = Page::findBySlug($slug);
+        if (!$page) {
+            http_response_code(404);
+            require APP_DIR . '/views/404.php';
+            return;
+        }
+
+        $userId     = (int) $_SESSION['user_id'];
+        $globalRole = $_SESSION['user_role'] ?? 'viewer';
+        $pageId     = (int) $page['id'];
+
+        // AP16: Team edit check
+        if (!TeamService::canEditPage($userId, $page)) {
+            Authz::deny();
+        }
+
+        $error = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            Security::csrfGuard();
+
+            $targetType    = $_POST['target_type'] ?? 'root';
+            $targetParentId = null;
+
+            if ($targetType === 'parent') {
+                $targetParentId = !empty($_POST['parent_id']) ? (int) $_POST['parent_id'] : null;
+            }
+
+            // Validate
+            if ($targetParentId !== null) {
+                $targetPage = Page::findById($targetParentId);
+                if (!$targetPage) {
+                    $error = t('ap30.move_error_not_found');
+                } elseif ($targetParentId === $pageId) {
+                    $error = t('ap30.move_error_self');
+                } elseif (Page::wouldCreateCycle($pageId, $targetParentId)) {
+                    $error = t('ap30.move_error_cycle');
+                } elseif (($page['team_id'] ?? null) !== ($targetPage['team_id'] ?? null)) {
+                    $error = t('ap30.move_error_team');
+                }
+            }
+
+            // Skip if parent doesn't change
+            $currentParent = $page['parent_id'] !== null ? (int) $page['parent_id'] : null;
+
+            if ($error === null) {
+                try {
+                    $oldParentId = $currentParent;
+                    Page::moveTo($pageId, $targetParentId, $userId);
+
+                    ActivityService::log('page', $pageId, 'page_moved', $userId, [
+                        'title'          => $page['title'],
+                        'old_parent_id'  => $oldParentId,
+                        'new_parent_id'  => $targetParentId,
+                    ]);
+                    Logger::info('Page moved', [
+                        'page_id'       => $pageId,
+                        'old_parent_id' => $oldParentId,
+                        'new_parent_id' => $targetParentId,
+                    ]);
+
+                    $_SESSION['_flash_info'] = t('ap30.move_success');
+                    $this->redirect('page_view&slug=' . urlencode($page['slug']));
+                    return;
+                } catch (Throwable $e) {
+                    Logger::error('Failed to move page', ['error' => $e->getMessage()]);
+                    $error = t('ap30.move_error_failed');
+                }
+            }
+        }
+
+        // Load pages for target selection (exclude self and descendants)
+        $availableParents = Page::allForMoveTarget($pageId, $userId, $globalRole);
+
+        $pageTitle   = t('ap30.move_page_title');
+        $contentView = APP_DIR . '/views/pages/move.php';
+        require APP_DIR . '/views/layout.php';
+    }
+
+    // -- AP30: Page Copy --------------------------------------------------
+
+    /**
+     * AP30: Show copy form (GET) or process copy (POST).
+     */
+    public function copy(): void
+    {
+        Authz::require(Authz::PAGE_CREATE);
+
+        $slug = $_GET['slug'] ?? '';
+        if ($slug === '') {
+            $this->redirect('pages');
+            return;
+        }
+
+        $page = Page::findBySlug($slug);
+        if (!$page) {
+            http_response_code(404);
+            require APP_DIR . '/views/404.php';
+            return;
+        }
+
+        $userId     = (int) $_SESSION['user_id'];
+        $globalRole = $_SESSION['user_role'] ?? 'viewer';
+        $pageId     = (int) $page['id'];
+
+        // AP16: Team visibility check
+        if (!TeamService::canViewPage($userId, $page)) {
+            Authz::deny();
+        }
+
+        $error = null;
+        $defaultTitle = t('ap30.copy_title_prefix', ['title' => $page['title']]);
+        $formData = [
+            'title'            => $defaultTitle,
+            'target_type'      => 'root',
+            'parent_id'        => '',
+            'copy_attachments' => false,
+            'copy_tasks'       => false,
+        ];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            Security::csrfGuard();
+
+            $formData['title']            = trim($_POST['title'] ?? '');
+            $formData['target_type']      = $_POST['target_type'] ?? 'root';
+            $formData['parent_id']        = $_POST['parent_id'] ?? '';
+            $formData['copy_attachments'] = !empty($_POST['copy_attachments']);
+            $formData['copy_tasks']       = !empty($_POST['copy_tasks']);
+
+            if ($formData['title'] === '') {
+                $error = t('errors.required', ['field' => t('labels.title')]);
+            } else {
+                $targetParentId = null;
+                if ($formData['target_type'] === 'parent' && $formData['parent_id'] !== '') {
+                    $targetParentId = (int) $formData['parent_id'];
+                    $targetPage = Page::findById($targetParentId);
+                    if (!$targetPage) {
+                        $error = t('ap30.move_error_not_found');
+                    } elseif (($page['team_id'] ?? null) !== ($targetPage['team_id'] ?? null)) {
+                        $error = t('ap30.move_error_team');
+                    }
+                }
+
+                if ($error === null) {
+                    try {
+                        // Create new page
+                        $newPageId = Page::create([
+                            'title'      => $formData['title'],
+                            'parent_id'  => $targetParentId,
+                            'content_md' => $page['content_md'] ?? '',
+                            'created_by' => $userId,
+                            'team_id'    => $page['team_id'] ?? null,
+                        ]);
+
+                        // Copy attachments if requested
+                        if ($formData['copy_attachments']) {
+                            $this->copyAttachments('page', $pageId, 'page', $newPageId, $userId, $page['team_id'] ?? null);
+                        }
+
+                        // Copy linked tasks if requested
+                        if ($formData['copy_tasks']) {
+                            $linkedTasks = PageTask::getTasks($pageId);
+                            foreach ($linkedTasks as $lt) {
+                                PageTask::addTask($newPageId, (int) $lt['id'], $userId);
+                            }
+                        }
+
+                        ActivityService::log('page', $newPageId, 'page_copied', $userId, [
+                            'title'          => $formData['title'],
+                            'original_id'    => $pageId,
+                            'original_title' => $page['title'],
+                        ]);
+                        // Also log on the original page
+                        ActivityService::log('page', $pageId, 'page_copied_from', $userId, [
+                            'new_id'    => $newPageId,
+                            'new_title' => $formData['title'],
+                        ]);
+
+                        Logger::info('Page copied', [
+                            'original_id' => $pageId,
+                            'new_id'      => $newPageId,
+                        ]);
+
+                        // AP15: Auto-watch
+                        WatcherService::autoWatchOnCreate('page', $newPageId, $userId);
+
+                        $newPage = Page::findById($newPageId);
+                        $_SESSION['_flash_info'] = t('ap30.copy_page_success');
+                        $this->redirect('page_view&slug=' . urlencode($newPage['slug']));
+                        return;
+                    } catch (Throwable $e) {
+                        Logger::error('Failed to copy page', ['error' => $e->getMessage()]);
+                        $error = t('ap30.copy_page_error_failed');
+                    }
+                }
+            }
+        }
+
+        // Load pages for parent selection
+        $parentPages = Page::allForDropdown();
+
+        $pageTitle   = t('ap30.copy_page_title');
+        $contentView = APP_DIR . '/views/pages/copy.php';
+        require APP_DIR . '/views/layout.php';
+    }
+
+    /**
+     * AP30: Copy attachments from one entity to another.
+     */
+    private function copyAttachments(string $srcType, int $srcId, string $dstType, int $dstId, int $userId, ?int $teamId): void
+    {
+        $attachments = Attachment::listFor($srcType, $srcId);
+        $uploadDir = AttachmentService::getUploadDir();
+
+        foreach ($attachments as $att) {
+            $srcPath = $uploadDir . '/' . $att['stored_path'];
+            if (!file_exists($srcPath)) {
+                continue;
+            }
+
+            // Build new storage path
+            $year = date('Y');
+            $month = date('m');
+            $relDir = $dstType . '/' . $year . '/' . $month;
+            $absDir = $uploadDir . '/' . $relDir;
+
+            if (!is_dir($absDir)) {
+                @mkdir($absDir, 0755, true);
+            }
+
+            $random = bin2hex(random_bytes(8));
+            $ext = $att['file_ext'] ?? '';
+            $storedName = $random . '.' . $ext;
+            $storedPath = $relDir . '/' . $storedName;
+            $absPath = $absDir . '/' . $storedName;
+
+            if (!@copy($srcPath, $absPath)) {
+                Logger::error('Failed to copy attachment file', ['src' => $srcPath, 'dst' => $absPath]);
+                continue;
+            }
+            @chmod($absPath, 0644);
+
+            $checksum = @hash_file('sha256', $absPath);
+
+            $newAttId = Attachment::create([
+                'entity_type'     => $dstType,
+                'entity_id'       => $dstId,
+                'team_id'         => $teamId,
+                'original_name'   => $att['original_name'],
+                'stored_name'     => $storedName,
+                'stored_path'     => $storedPath,
+                'mime_type'       => $att['mime_type'],
+                'file_ext'        => $ext,
+                'file_size'       => (int) $att['file_size'],
+                'checksum_sha256' => $checksum ?: null,
+                'uploaded_by'     => $userId,
+            ]);
+
+            // Rename to include attachment ID
+            $finalName = $newAttId . '_' . $random . '.' . $ext;
+            $finalPath = $relDir . '/' . $finalName;
+            $finalAbs = $absDir . '/' . $finalName;
+
+            if (rename($absPath, $finalAbs)) {
+                DB::query(
+                    'UPDATE attachments SET stored_name = ?, stored_path = ? WHERE id = ?',
+                    [$finalName, $finalPath, $newAttId]
+                );
+            }
+        }
+    }
+
     /**
      * AP14: Store command execution results as flash messages.
      */

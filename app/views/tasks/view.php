@@ -37,6 +37,7 @@ if ($canEdit) {
                 require APP_DIR . '/views/partials/watch_button.php';
             ?>
             <?php if ($canEdit): ?>
+            <a href="<?= Security::esc($baseUrl) ?>/?r=task_copy&amp;id=<?= (int) $task['id'] ?>" class="btn btn-secondary btn-sm-pad"><?= Security::esc(t('ap30.copy_task')) ?></a>
             <a href="<?= Security::esc($baseUrl) ?>/?r=task_edit&amp;id=<?= (int) $task['id'] ?>" class="btn btn-primary"><?= Security::esc(t('actions.edit')) ?></a>
             <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=task_delete&amp;id=<?= (int) $task['id'] ?>"
                   class="inline-form" onsubmit="return confirm('<?= Security::esc(t('messages.confirm_delete_task')) ?>');">

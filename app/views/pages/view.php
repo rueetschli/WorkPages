@@ -49,6 +49,8 @@ if ($canShare) {
             <button type="button" class="btn btn-secondary btn-sm-pad" onclick="document.getElementById('share-panel').style.display = document.getElementById('share-panel').style.display === 'none' ? 'block' : 'none'"><?= Security::esc(t('actions.share')) ?></button>
             <?php endif; ?>
             <?php if ($canEdit): ?>
+            <a href="<?= Security::esc($baseUrl) ?>/?r=page_move&slug=<?= Security::esc($page['slug']) ?>" class="btn btn-secondary btn-sm-pad"><?= Security::esc(t('ap30.move_page')) ?></a>
+            <a href="<?= Security::esc($baseUrl) ?>/?r=page_copy&slug=<?= Security::esc($page['slug']) ?>" class="btn btn-secondary btn-sm-pad"><?= Security::esc(t('ap30.copy_page')) ?></a>
             <a href="<?= Security::esc($baseUrl) ?>/?r=page_edit&slug=<?= Security::esc($page['slug']) ?>" class="btn btn-primary"><?= Security::esc(t('actions.edit')) ?></a>
             <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=page_delete&slug=<?= Security::esc($page['slug']) ?>"
                   class="inline-form" onsubmit="return confirm(<?= Security::esc(json_encode(t('messages.confirm_delete_page'))) ?>);">

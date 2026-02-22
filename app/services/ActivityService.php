@@ -232,6 +232,27 @@ class ActivityService
                 $fileName = isset($meta['original_name']) ? ' "' . Security::esc($meta['original_name']) . '"' : '';
                 return $user . ' hat eine Datei' . $fileName . ' entfernt';
 
+            // AP30: Move & Copy actions
+            case 'page_moved':
+                $title = isset($meta['title']) ? ' "' . Security::esc($meta['title']) . '"' : '';
+                return $user . ' hat die Seite' . $title . ' verschoben';
+
+            case 'page_copied':
+                $origTitle = isset($meta['original_title']) ? ' (Vorlage: "' . Security::esc($meta['original_title']) . '")' : '';
+                return $user . ' hat eine Seite kopiert' . $origTitle;
+
+            case 'page_copied_from':
+                $newTitle = isset($meta['new_title']) ? ' "' . Security::esc($meta['new_title']) . '"' : '';
+                return $user . ' hat eine Kopie' . $newTitle . ' erstellt';
+
+            case 'task_copied':
+                $origTitle = isset($meta['original_title']) ? ' (Vorlage: "' . Security::esc($meta['original_title']) . '")' : '';
+                return $user . ' hat eine Aufgabe kopiert' . $origTitle;
+
+            case 'task_copied_from':
+                $newTitle = isset($meta['new_title']) ? ' "' . Security::esc($meta['new_title']) . '"' : '';
+                return $user . ' hat eine Kopie' . $newTitle . ' erstellt';
+
             // Legacy action names (backward compatibility with pre-AP8 data)
             case 'created':
                 $title = isset($meta['title']) ? ' "' . Security::esc($meta['title']) . '"' : '';
