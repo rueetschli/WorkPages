@@ -129,6 +129,48 @@ if ($canEdit) {
             <?php endif; ?>
 
             <?php
+                // AP26: Sprint assignment
+                $__taskSprint = null;
+                $__assignableSprints = [];
+                if (!empty($task['sprint_id'])) {
+                    try { $__taskSprint = Sprint::findById((int) $task['sprint_id']); } catch (Throwable $e) {}
+                }
+                if (!empty($task['board_id'])) {
+                    try { $__assignableSprints = Sprint::assignableForBoard((int) $task['board_id']); } catch (Throwable $e) {}
+                }
+            ?>
+            <dt><?= Security::esc(t('sprint.sprint')) ?></dt>
+            <dd>
+                <?php if ($__taskSprint): ?>
+                    <a href="<?= Security::esc($baseUrl) ?>/?r=sprint_burndown&amp;id=<?= (int) $__taskSprint['id'] ?>">
+                        <?= Security::esc($__taskSprint['name']) ?>
+                    </a>
+                    <?php if (Authz::can(Authz::SPRINT_ASSIGN)): ?>
+                    <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=sprint_unassign_task" class="inline-form" style="display:inline;">
+                        <?= Security::csrfField() ?>
+                        <input type="hidden" name="task_id" value="<?= (int) $task['id'] ?>">
+                        <input type="hidden" name="return_to" value="<?= Security::esc('?r=task_view&id=' . (int) $task['id']) ?>">
+                        <button type="submit" class="btn-link text-muted" style="font-size:0.85em;" title="<?= Security::esc(t('sprint.remove_from_sprint')) ?>">&times;</button>
+                    </form>
+                    <?php endif; ?>
+                <?php elseif (Authz::can(Authz::SPRINT_ASSIGN) && !empty($__assignableSprints)): ?>
+                    <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=sprint_assign_task" class="inline-form">
+                        <?= Security::csrfField() ?>
+                        <input type="hidden" name="task_id" value="<?= (int) $task['id'] ?>">
+                        <input type="hidden" name="return_to" value="<?= Security::esc('?r=task_view&id=' . (int) $task['id']) ?>">
+                        <select name="sprint_id" class="form-input form-input-sm" onchange="if(this.value)this.form.submit()">
+                            <option value=""><?= Security::esc(t('sprint.select_sprint')) ?></option>
+                            <?php foreach ($__assignableSprints as $__as): ?>
+                                <option value="<?= (int) $__as['id'] ?>"><?= Security::esc($__as['name']) ?> (<?= Security::esc(t('sprint.status.' . $__as['status'])) ?>)</option>
+                            <?php endforeach; ?>
+                        </select>
+                    </form>
+                <?php else: ?>
+                    <span class="text-muted">&mdash;</span>
+                <?php endif; ?>
+            </dd>
+
+            <?php
                 // AP25: Task type and parent
                 $__taskType    = $task['task_type'] ?? 'task';
                 $__parentTask  = null;

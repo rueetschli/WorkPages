@@ -282,7 +282,7 @@ class StructureController
             return;
         }
 
-        $allowedActions = ['set_column', 'set_owner', 'add_tags', 'remove_tags'];
+        $allowedActions = ['set_column', 'set_owner', 'add_tags', 'remove_tags', 'set_sprint'];
         if (!in_array($action, $allowedActions, true)) {
             $this->redirectToStructure($boardId, t('structure.bulk.invalid_action'));
             return;
@@ -362,6 +362,22 @@ class StructureController
                         Task::setTags($taskId, $kept);
                         ActivityService::log('task', $taskId, 'task_tags_changed', $userId, []);
                         $processed++;
+                        break;
+
+                    // AP26: Bulk sprint assignment
+                    case 'set_sprint':
+                        $sprintIdVal = !empty($_POST['bulk_sprint_id']) ? (int) $_POST['bulk_sprint_id'] : null;
+                        if ($sprintIdVal !== null) {
+                            $err = SprintService::assignTask($taskId, $sprintIdVal, $userId);
+                            if ($err === null) {
+                                $processed++;
+                            } else {
+                                $errors++;
+                            }
+                        } else {
+                            SprintService::unassignTask($taskId, $userId);
+                            $processed++;
+                        }
                         break;
                 }
             } catch (Throwable $e) {
