@@ -15,6 +15,19 @@ $esc     = [Security::class, 'esc'];
 $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 $boardId = (int) $board['id'];
 
+// AP27: Saved views for structure
+$__viewType   = 'structure';
+$__contextId  = $boardId;
+$__returnTo   = '?' . ($_SERVER['QUERY_STRING'] ?? 'r=structure&board_id=' . $boardId);
+$__viewParams = [];
+foreach (['owner_id', 'tag', 'status'] as $__fk) {
+    if (!empty($_GET[$__fk])) $__viewParams[$__fk] = $_GET[$__fk];
+}
+$__userViews = [];
+try {
+    $__userViews = UserView::allForUserByType((int) $_SESSION['user_id'], 'structure');
+} catch (Throwable $e) {}
+
 // Helper: render type icon/label
 function structTypeLabel(string $type): string
 {
@@ -250,6 +263,10 @@ function renderStructureNode(array $node, int $depth, int $boardId, array $board
            class="struct-tab struct-tab--active"><?= $esc(t('structure.tab_structure')) ?></a>
     </div>
 </div>
+
+<!-- AP27: Saved Views -->
+<?php require APP_DIR . '/views/partials/view_save_form.php'; ?>
+<?php require APP_DIR . '/views/partials/view_manage.php'; ?>
 
 <!-- Bulk action bar (visible only when checkboxes selected) -->
 <?php if ($canEdit): ?>

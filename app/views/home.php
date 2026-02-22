@@ -3,7 +3,7 @@
  * Home view - Personal dashboard "Meine Arbeit" (AP22).
  *
  * Variables: $overdue, $dueToday, $dueWeek, $assignedToMe, $watching,
- *            $doneColumnId, $canEdit, $users
+ *            $doneColumnId, $canEdit, $users, $savedViews
  */
 $baseUrl  = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
 $userName = Security::esc($_SESSION['user_name'] ?? '');
@@ -82,6 +82,37 @@ $userName = Security::esc($_SESSION['user_name'] ?? '');
     <div class="home-task-list">
         <?php foreach ($watching as $t): ?>
             <?php $this_task = $t; $isWatchSection = true; require APP_DIR . '/views/partials/home_task_row.php'; ?>
+        <?php endforeach; ?>
+    </div>
+</section>
+<?php endif; ?>
+
+<?php
+    // AP27: Saved Views block
+    $__allViewsList = array_merge($savedViews['board'] ?? [], $savedViews['structure'] ?? [], $savedViews['tasks'] ?? []);
+    if (!empty($__allViewsList)):
+?>
+<section class="home-section">
+    <h2 class="home-section-title">
+        <?= Security::esc(t('views.saved_views')) ?>
+        <span class="home-section-count"><?= count($__allViewsList) ?></span>
+    </h2>
+    <div class="home-views-list">
+        <?php foreach (['board' => 'views.board_views', 'structure' => 'views.structure_views', 'tasks' => 'views.task_views'] as $__vType => $__vLabel): ?>
+            <?php if (!empty($savedViews[$__vType])): ?>
+            <div class="home-views-group">
+                <span class="home-views-group-label"><?= Security::esc(t($__vLabel)) ?></span>
+                <?php foreach ($savedViews[$__vType] as $__sv): ?>
+                    <a href="<?= Security::esc(UserView::buildUrl($__sv, $baseUrl)) ?>"
+                       class="home-views-link<?= !empty($__sv['is_default']) ? ' home-views-link--default' : '' ?>">
+                        <?= Security::esc($__sv['name']) ?>
+                        <?php if (!empty($__sv['is_default'])): ?>
+                            <span class="views-chip-star">&#9733;</span>
+                        <?php endif; ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
         <?php endforeach; ?>
     </div>
 </section>

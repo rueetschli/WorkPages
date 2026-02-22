@@ -9,6 +9,19 @@ $canEdit = Authz::can(Authz::TASK_CREATE);
 $currentColumnId = $filters['column_id'] ?? '';
 $currentOwnerId  = $filters['owner_id'] ?? '';
 $currentTag      = $filters['tag'] ?? '';
+
+// AP27: Saved views for tasks list
+$__viewType   = 'tasks';
+$__contextId  = null;
+$__returnTo   = '?' . ($_SERVER['QUERY_STRING'] ?? 'r=tasks');
+$__viewParams = [];
+if ($currentColumnId !== '') $__viewParams['column_id'] = $currentColumnId;
+if ($currentOwnerId !== '')  $__viewParams['owner_id']  = $currentOwnerId;
+if ($currentTag !== '')      $__viewParams['tag']       = $currentTag;
+$__userViews = [];
+try {
+    $__userViews = UserView::allForUserByType((int) $_SESSION['user_id'], 'tasks');
+} catch (Throwable $e) {}
 ?>
 
 <div class="page-header">
@@ -78,6 +91,10 @@ $currentTag      = $filters['tag'] ?? '';
             </div>
         </div>
     </form>
+
+    <!-- AP27: Saved Views -->
+    <?php require APP_DIR . '/views/partials/view_save_form.php'; ?>
+    <?php require APP_DIR . '/views/partials/view_manage.php'; ?>
 </div>
 
 <?php if (empty($tasks)): ?>

@@ -16,6 +16,21 @@ class HomeController
             return;
         }
 
+        // AP27: Default-View redirect (only on direct home navigation)
+        if (empty($_GET['no_default'])) {
+            try {
+                $defaultView = UserView::getDefault($userId);
+                if ($defaultView) {
+                    $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
+                    $viewUrl = UserView::buildUrl($defaultView, $baseUrl);
+                    header('Location: ' . $viewUrl);
+                    exit;
+                }
+            } catch (Throwable $e) {
+                // table may not exist yet – continue to normal home
+            }
+        }
+
         require_once APP_DIR . '/services/HomeDashboardService.php';
 
         $overdue     = HomeDashboardService::overdue($userId, $globalRole, $activeTeamId);
@@ -26,6 +41,14 @@ class HomeController
         $doneColumnId = HomeDashboardService::getDoneColumnId();
         $canEdit     = Authz::can(Authz::TASK_EDIT);
         $users       = User::allForDropdown();
+
+        // AP27: Load saved views for home dashboard
+        $savedViews = [];
+        try {
+            $savedViews = UserView::allForUserGrouped($userId);
+        } catch (Throwable $e) {
+            // table may not exist yet
+        }
 
         $pageTitle   = 'Home';
         $contentView = APP_DIR . '/views/home.php';
