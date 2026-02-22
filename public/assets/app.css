@@ -5291,3 +5291,303 @@ a.tag-ref:hover {
     border-color: #7f1d1d;
     color: #fca5a5;
 }
+
+
+/* ============================================================================
+   AP27: Saved Views
+   ============================================================================ */
+
+/* Views bar – sits below the filter form */
+.views-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    flex-wrap: wrap;
+    margin-top: var(--sp-3);
+    padding-top: var(--sp-2);
+    border-top: 1px solid var(--color-border);
+}
+
+.views-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+
+/* Chip list for quick-switch */
+.views-quick-switch {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    flex-wrap: wrap;
+}
+
+.views-chips {
+    display: flex;
+    gap: var(--sp-1);
+    flex-wrap: wrap;
+}
+
+.views-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full, 9999px);
+    font-size: 0.8rem;
+    color: var(--color-text);
+    text-decoration: none;
+    background: var(--color-surface);
+    white-space: nowrap;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.views-chip:hover {
+    border-color: var(--color-primary);
+    background: var(--c-blue-50, #eff6ff);
+    color: var(--color-primary);
+}
+
+[data-theme="dark"] .views-chip:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.views-chip--default {
+    border-color: var(--color-primary);
+    background: var(--c-blue-50, #eff6ff);
+}
+
+[data-theme="dark"] .views-chip--default {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.views-chip-star {
+    color: var(--c-yellow-500, #f59e0b);
+    font-size: 0.85em;
+}
+
+/* Save button */
+.views-save-btn {
+    margin-left: auto;
+    font-size: 0.82rem;
+}
+
+/* Save form (inline, hidden by default) */
+.views-save-form {
+    width: 100%;
+    margin-top: var(--sp-2);
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+.views-save-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    flex-wrap: wrap;
+}
+
+.views-name-input {
+    flex: 1;
+    min-width: 180px;
+}
+
+.views-default-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.views-hint {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    margin: var(--sp-1) 0 0 0;
+}
+
+/* Manage panel (details/summary) */
+.views-manage {
+    margin-top: var(--sp-2);
+}
+
+.views-manage-details {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+.views-manage-summary {
+    padding: var(--sp-2) var(--sp-3);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    user-select: none;
+}
+
+.views-manage-summary:hover {
+    color: var(--color-text);
+}
+
+.views-manage-list {
+    padding: 0 var(--sp-3) var(--sp-2);
+}
+
+.views-manage-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    padding: var(--sp-2) 0;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.views-manage-item:last-child {
+    border-bottom: none;
+}
+
+.views-manage-item-header {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    flex: 1;
+    min-width: 0;
+}
+
+.views-manage-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.views-manage-type {
+    font-size: 0.72rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: var(--color-border);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+
+.views-manage-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-1);
+    flex-shrink: 0;
+}
+
+/* Extra-small button variant */
+.btn-xs {
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+
+.btn-xs:hover {
+    background: var(--color-border);
+    color: var(--color-text);
+}
+
+.btn-danger.btn-xs {
+    color: var(--c-red-600, #dc2626);
+    border-color: var(--c-red-600, #dc2626);
+}
+
+.btn-danger.btn-xs:hover {
+    background: var(--c-red-600, #dc2626);
+    color: #fff;
+}
+
+/* Home dashboard: saved views */
+.home-views-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+}
+
+.home-views-group {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    flex-wrap: wrap;
+}
+
+.home-views-group-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    min-width: 100px;
+}
+
+.home-views-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 4px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full, 9999px);
+    font-size: 0.82rem;
+    color: var(--color-text);
+    text-decoration: none;
+    background: var(--color-surface);
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.home-views-link:hover {
+    border-color: var(--color-primary);
+    background: var(--c-blue-50, #eff6ff);
+    color: var(--color-primary);
+}
+
+[data-theme="dark"] .home-views-link:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.home-views-link--default {
+    border-color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* Responsive: stack views-bar vertically on small screens */
+@media (max-width: 768px) {
+    .views-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .views-save-btn {
+        margin-left: 0;
+    }
+    .views-save-row {
+        flex-direction: column;
+    }
+    .views-name-input {
+        min-width: 0;
+        width: 100%;
+    }
+    .views-manage-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .home-views-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

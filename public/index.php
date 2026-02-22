@@ -170,6 +170,9 @@ require_once APP_DIR . '/services/TaskStructureService.php';
 require_once APP_DIR . '/models/Sprint.php';
 require_once APP_DIR . '/services/SprintService.php';
 
+// AP27: Saved Views
+require_once APP_DIR . '/models/UserView.php';
+
 // AP24: Internationalization (i18n)
 require_once APP_DIR . '/services/I18nService.php';
 
@@ -378,6 +381,12 @@ $routes = [
     'sprint_unassign_task'     => ['controller' => 'SprintController', 'action' => 'unassignTask'],
     'sprint_burndown'          => ['controller' => 'SprintController', 'action' => 'burndown'],
     'sprint_velocity'          => ['controller' => 'SprintController', 'action' => 'velocity'],
+
+    // AP27: Saved Views
+    'view_save'                => ['controller' => 'UserViewController', 'action' => 'save'],
+    'view_update'              => ['controller' => 'UserViewController', 'action' => 'update'],
+    'view_delete'              => ['controller' => 'UserViewController', 'action' => 'delete'],
+    'view_set_default'         => ['controller' => 'UserViewController', 'action' => 'setDefault'],
 ];
 
 if (!isset($routes[$route])) {

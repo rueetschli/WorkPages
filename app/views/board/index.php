@@ -30,6 +30,23 @@ if ($canEdit) {
     $__globalRole = $_SESSION['user_role'] ?? 'viewer';
     $__availableBoards = Board::allVisibleTo($__userId, $__globalRole);
 }
+
+// AP27: Saved views for this board
+$__viewType   = 'board';
+$__contextId  = $boardId;
+$__returnTo   = '?' . ($_SERVER['QUERY_STRING'] ?? 'r=board_view&id=' . $boardId);
+$__viewParams = [];
+if ($fOwner !== '') $__viewParams['owner_id'] = $fOwner;
+if ($fTag !== '')   $__viewParams['tag']      = $fTag;
+if ($fDue !== '')   $__viewParams['due']      = $fDue;
+if ($fQ !== '')     $__viewParams['q']        = $fQ;
+
+$__userViews = [];
+try {
+    $__userViews = UserView::allForUserByType((int) $_SESSION['user_id'], 'board');
+} catch (Throwable $e) {
+    // table may not exist yet
+}
 ?>
 
 <!-- Board header -->
@@ -133,6 +150,10 @@ if ($canEdit) {
             </div>
         </div>
     </form>
+
+    <!-- AP27: Saved Views -->
+    <?php require APP_DIR . '/views/partials/view_save_form.php'; ?>
+    <?php require APP_DIR . '/views/partials/view_manage.php'; ?>
 </div>
 
 <!-- Mobile Kanban Tabs (AP12 / AP13) -->
