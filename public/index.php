@@ -387,6 +387,12 @@ $routes = [
     'view_update'              => ['controller' => 'UserViewController', 'action' => 'update'],
     'view_delete'              => ['controller' => 'UserViewController', 'action' => 'delete'],
     'view_set_default'         => ['controller' => 'UserViewController', 'action' => 'setDefault'],
+
+    // AP28: System Health & Diagnostics
+    'admin_health'              => ['controller' => 'AdminHealthController', 'action' => 'index'],
+    'admin_health_mail_send'    => ['controller' => 'AdminHealthController', 'action' => 'mailSend'],
+    'admin_health_mail_test'    => ['controller' => 'AdminHealthController', 'action' => 'mailTest'],
+    'admin_health_webhook_send' => ['controller' => 'AdminHealthController', 'action' => 'webhookSend'],
 ];
 
 if (!isset($routes[$route])) {
