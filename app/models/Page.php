@@ -226,6 +226,98 @@ class Page
         );
     }
 
+    // -- AP30: Move & Copy -----------------------------------------------
+
+    /**
+     * AP30: Check if moving $pageId under $newParentId would create a cycle.
+     * A cycle exists if $newParentId is the page itself or any descendant of $pageId.
+     */
+    public static function wouldCreateCycle(int $pageId, int $newParentId): bool
+    {
+        if ($pageId === $newParentId) {
+            return true;
+        }
+
+        // Walk upward from $newParentId; if we reach $pageId, it's a cycle
+        $visited = [];
+        $currentId = $newParentId;
+
+        while ($currentId !== null) {
+            if ($currentId === $pageId) {
+                return true;
+            }
+            if (in_array($currentId, $visited, true)) {
+                break; // already a broken cycle in DB, stop
+            }
+            $visited[] = $currentId;
+
+            $row = DB::fetch(
+                'SELECT parent_id FROM pages WHERE id = ? AND deleted_at IS NULL',
+                [$currentId]
+            );
+            if (!$row) {
+                break;
+            }
+            $currentId = $row['parent_id'] !== null ? (int) $row['parent_id'] : null;
+        }
+
+        return false;
+    }
+
+    /**
+     * AP30: Move a page to a new parent (or to root if $newParentId is null).
+     */
+    public static function moveTo(int $pageId, ?int $newParentId, int $updatedBy): void
+    {
+        DB::query(
+            'UPDATE pages SET parent_id = ?, updated_by = ?, updated_at = NOW() WHERE id = ? AND deleted_at IS NULL',
+            [$newParentId, $updatedBy, $pageId]
+        );
+    }
+
+    /**
+     * AP30: Get all non-deleted pages visible to user for parent selection.
+     * Excludes the given page and all its descendants.
+     */
+    public static function allForMoveTarget(int $excludePageId, int $userId, string $globalRole, ?int $filterTeamId = null): array
+    {
+        // Get all descendants of excludePageId to exclude them
+        $excludeIds = self::getDescendantIds($excludePageId);
+        $excludeIds[] = $excludePageId;
+
+        [$visSql, $visParams] = TeamService::pageVisibilityWhere($userId, $globalRole, 'p', $filterTeamId);
+
+        $placeholders = implode(',', array_fill(0, count($excludeIds), '?'));
+
+        $sql = "SELECT p.id, p.title, p.parent_id, p.team_id
+                FROM pages p
+                WHERE p.deleted_at IS NULL AND p.id NOT IN ({$placeholders}) AND {$visSql}
+                ORDER BY p.title ASC";
+
+        $params = array_merge($excludeIds, $visParams);
+        return DB::fetchAll($sql, $params);
+    }
+
+    /**
+     * AP30: Get all descendant IDs of a page (recursive).
+     */
+    public static function getDescendantIds(int $pageId): array
+    {
+        $descendants = [];
+        $children = DB::fetchAll(
+            'SELECT id FROM pages WHERE parent_id = ? AND deleted_at IS NULL',
+            [$pageId]
+        );
+
+        foreach ($children as $child) {
+            $childId = (int) $child['id'];
+            $descendants[] = $childId;
+            $descendants = array_merge($descendants, self::getDescendantIds($childId));
+        }
+
+        return $descendants;
+    }
+
     /**
      * Generate a URL-safe slug from a title.
      */

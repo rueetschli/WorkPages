@@ -588,6 +588,170 @@ class TaskController
         }
     }
 
+    // -- AP30: Task Copy --------------------------------------------------
+
+    /**
+     * AP30: Show task copy form (GET) or process copy (POST).
+     */
+    public function copy(): void
+    {
+        Authz::require(Authz::TASK_CREATE);
+
+        $id = (int) ($_GET['id'] ?? 0);
+        if ($id <= 0) {
+            $this->redirect('tasks');
+            return;
+        }
+
+        $task = Task::findById($id);
+        if (!$task) {
+            http_response_code(404);
+            require APP_DIR . '/views/404.php';
+            return;
+        }
+
+        $userId     = (int) $_SESSION['user_id'];
+        $globalRole = $_SESSION['user_role'] ?? 'viewer';
+
+        // AP16: Team visibility check
+        if (!TeamService::canViewTask($userId, $task)) {
+            Authz::deny();
+        }
+
+        $error = null;
+        $tags = Task::getTags($id);
+        $tagStr = implode(', ', array_column($tags, 'name'));
+
+        $defaultTitle = t('ap30.copy_title_prefix', ['title' => $task['title']]);
+        $formData = [
+            'title'       => $defaultTitle,
+            'board_id'    => $task['board_id'] ?? '',
+            'keep_tags'   => true,
+            'keep_parent' => true,
+            'keep_sprint' => false,
+        ];
+
+        // Load boards for dropdown
+        $availableBoards = Board::allVisibleTo($userId, $globalRole);
+
+        // Load sprint info
+        $taskSprint = null;
+        if (!empty($task['sprint_id'])) {
+            try { $taskSprint = Sprint::findById((int) $task['sprint_id']); } catch (Throwable $e) {}
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            Security::csrfGuard();
+
+            $formData['title']       = trim($_POST['title'] ?? '');
+            $formData['board_id']    = $_POST['board_id'] ?? '';
+            $formData['keep_tags']   = !empty($_POST['keep_tags']);
+            $formData['keep_parent'] = !empty($_POST['keep_parent']);
+            $formData['keep_sprint'] = !empty($_POST['keep_sprint']);
+
+            if ($formData['title'] === '') {
+                $error = t('errors.required', ['field' => t('labels.title')]);
+            } else {
+                try {
+                    $targetBoardId = !empty($formData['board_id']) ? (int) $formData['board_id'] : null;
+                    $originalBoardId = !empty($task['board_id']) ? (int) $task['board_id'] : null;
+                    $sameBoardOrNull = ($targetBoardId === $originalBoardId);
+
+                    // Determine parent task
+                    $parentTaskId = null;
+                    if ($formData['keep_parent'] && !empty($task['parent_task_id']) && $sameBoardOrNull) {
+                        $parentCandidate = Task::findById((int) $task['parent_task_id']);
+                        if ($parentCandidate) {
+                            $parentTaskId = (int) $task['parent_task_id'];
+                        }
+                    }
+
+                    // Determine sprint
+                    $sprintId = null;
+                    if ($formData['keep_sprint'] && !empty($task['sprint_id']) && $sameBoardOrNull) {
+                        // Only keep sprint if it's still active/planned
+                        if ($taskSprint && in_array($taskSprint['status'] ?? '', ['planned', 'active'], true)) {
+                            $sprintId = (int) $task['sprint_id'];
+                        }
+                    }
+
+                    // Get default column for new board
+                    $columnId = BoardColumn::getDefaultId();
+
+                    // Create the copy
+                    $newTaskId = Task::create([
+                        'title'          => $formData['title'],
+                        'description_md' => $task['description_md'] ?? null,
+                        'column_id'      => $columnId,
+                        'owner_id'       => null, // Always reset owner
+                        'due_date'       => $task['due_date'] ?? null,
+                        'created_by'     => $userId,
+                        'team_id'        => $task['team_id'] ?? null,
+                        'board_id'       => $targetBoardId,
+                        'task_type'      => $task['task_type'] ?? 'task',
+                        'parent_task_id' => $parentTaskId,
+                    ]);
+
+                    // AP18: Set initial flow dates
+                    TaskFlowService::onTaskCreated($newTaskId, $columnId);
+
+                    // Set structure position
+                    if ($targetBoardId) {
+                        $newPos = Task::maxStructurePosition($targetBoardId, $parentTaskId) + 1000;
+                        Task::setStructurePosition($newTaskId, $newPos, $userId);
+                    }
+
+                    // Copy tags if requested
+                    if ($formData['keep_tags'] && !empty($tags)) {
+                        $tagNames = array_column($tags, 'name');
+                        Task::setTags($newTaskId, $tagNames);
+                    }
+
+                    // Assign sprint if requested
+                    if ($sprintId !== null) {
+                        try {
+                            SprintService::assignTask($newTaskId, $sprintId, $userId);
+                        } catch (Throwable $e) {
+                            Logger::error('Failed to assign sprint to copied task', ['error' => $e->getMessage()]);
+                        }
+                    }
+
+                    // Activity log on the new task
+                    ActivityService::log('task', $newTaskId, 'task_copied', $userId, [
+                        'title'          => $formData['title'],
+                        'original_id'    => $id,
+                        'original_title' => $task['title'],
+                        'target_board_id' => $targetBoardId,
+                    ]);
+                    // Also log on the original task
+                    ActivityService::log('task', $id, 'task_copied_from', $userId, [
+                        'new_id'    => $newTaskId,
+                        'new_title' => $formData['title'],
+                    ]);
+
+                    Logger::info('Task copied', [
+                        'original_id' => $id,
+                        'new_id'      => $newTaskId,
+                    ]);
+
+                    // AP15: Auto-watch
+                    WatcherService::autoWatchOnCreate('task', $newTaskId, $userId);
+
+                    $_SESSION['_flash_info'] = t('ap30.copy_task_success');
+                    $this->redirect('task_view&id=' . $newTaskId);
+                    return;
+                } catch (Throwable $e) {
+                    Logger::error('Failed to copy task', ['error' => $e->getMessage()]);
+                    $error = t('ap30.copy_task_error_failed');
+                }
+            }
+        }
+
+        $pageTitle   = t('ap30.copy_task_title');
+        $contentView = APP_DIR . '/views/tasks/copy.php';
+        require APP_DIR . '/views/layout.php';
+    }
+
     /**
      * Validate form data. Returns error message or null.
      */

@@ -248,7 +248,11 @@ $routes = [
     'task_edit'   => ['controller' => 'TaskController', 'action' => 'edit'],
     'task_update' => ['controller' => 'TaskController', 'action' => 'edit'],
     'task_delete'        => ['controller' => 'TaskController', 'action' => 'delete'],
+    'task_copy'          => ['controller' => 'TaskController', 'action' => 'copy'],
     'task_update_status' => ['controller' => 'TaskController', 'action' => 'updateStatus'],
+    // AP30: Page move & copy
+    'page_move'          => ['controller' => 'PageController', 'action' => 'move'],
+    'page_copy'          => ['controller' => 'PageController', 'action' => 'copy'],
     'page_tasks_add'     => ['controller' => 'PageController', 'action' => 'tasksAdd'],
     'page_tasks_remove'  => ['controller' => 'PageController', 'action' => 'tasksRemove'],
     'page_tasks_reorder' => ['controller' => 'PageController', 'action' => 'tasksReorder'],
