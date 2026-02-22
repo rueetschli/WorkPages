@@ -203,6 +203,8 @@ class SystemSettingsService
             'maintenance_message'  => '',
             'maintenance_level'    => 'info',
             'maintenance_active'   => 0,
+            'last_backup_at'       => null,
+            'last_backup_note'     => '',
             'default_language'     => 'de',
             'updated_at'           => null,
         ];

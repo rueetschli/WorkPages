@@ -628,5 +628,45 @@
   "health.config.admin_count": "Aktive Administratoren",
   "health.config.no_admin": "Kein aktiver Administrator vorhanden",
   "health.config.mail_from": "E-Mail Absender (MAIL_FROM)",
-  "health.config.mail_from_missing": "MAIL_FROM ist nicht konfiguriert"
+  "health.config.mail_from_missing": "MAIL_FROM ist nicht konfiguriert",
+
+  "nav.admin.backup": "Backup & Betrieb",
+
+  "backup.page_title": "Backup & Betrieb",
+  "backup.page_subtitle": "Checklisten fuer Sicherung, Wiederherstellung und laufenden Betrieb von WorkPages.",
+  "backup.section_backup": "Backup Essentials",
+  "backup.section_restore": "Restore Essentials",
+  "backup.section_operations": "Betrieb",
+  "backup.section_record": "Letztes Backup erfassen",
+
+  "backup.check_db": "Datenbank sichern",
+  "backup.check_db_hint": "SQL-Export per mysqldump (SSH) oder phpMyAdmin (Exportieren > SQL). Sichert alle Tabellen, Benutzer, Tasks und Pages.",
+  "backup.check_storage": "Storage sichern",
+  "backup.check_storage_hint": "Ordner storage/uploads/ (Anhaenge), storage/lang/ (Sprach-Overrides) und public/assets/branding/ (Logo) herunterladen.",
+  "backup.check_config": "Konfiguration sichern",
+  "backup.check_config_hint": "Datei config/config.php sichern. Enthaelt Datenbankzugangsdaten und App-Einstellungen.",
+
+  "backup.restore_db": "Datenbank wiederherstellen",
+  "backup.restore_db_hint": "SQL-Dump importieren per mysql-Kommando (SSH) oder phpMyAdmin (Importieren).",
+  "backup.restore_storage": "Dateien wiederherstellen",
+  "backup.restore_storage_hint": "Gesicherte Dateien an die richtigen Stellen hochladen: storage/, config/config.php, public/assets/branding/.",
+  "backup.restore_smoke": "Smoke Tests",
+  "backup.restore_smoke_hint": "Login testen, Dashboard/Board/Pages pruefen, Systemstatus unter Systemstatus (Admin Health) kontrollieren.",
+
+  "backup.ops_update": "Update-Ablauf",
+  "backup.ops_update_hint": "Backup erstellen → Neue Dateien hochladen → Migrationen ausfuehren → Smoke Tests. Details im Operator Guide.",
+  "backup.ops_migrations": "Migrationen pruefen",
+  "backup.ops_migrations_hint": "Nach jedem Update ausstehende Migrationen unter Migrationen ausfuehren.",
+  "backup.ops_health": "Systemstatus pruefen",
+  "backup.ops_health_hint": "Regelmaessig unter Systemstatus pruefen, ob alle Checks gruen sind.",
+
+  "backup.last_backup_label": "Letztes Backup",
+  "backup.no_backup_recorded": "Kein Backup-Datum erfasst. Tragen Sie nach jedem Backup das Datum ein.",
+  "backup.record_description": "Erfassen Sie hier manuell das Datum Ihres letzten Backups. Dies dient als Erinnerung – es wird kein automatisches Backup durchgefuehrt.",
+  "backup.field_date": "Datum",
+  "backup.field_note": "Notiz (optional)",
+  "backup.field_note_placeholder": "z.B. Vor Update 1.2.0",
+  "backup.save_success": "Backup-Datum wurde gespeichert.",
+  "backup.invalid_date": "Ungueltiges Datumsformat.",
+  "backup.link_operator_guide": "Operator Guide oeffnen"
 }

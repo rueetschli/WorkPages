@@ -428,6 +428,14 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
                         <?= Security::esc(t('nav.admin.health')) ?>
                     </a>
                 </li>
+                <!-- AP29: Backup & Operations -->
+                <li>
+                    <a href="<?= Security::esc($baseUrl) ?>/?r=admin_backup"
+                       class="nav-link <?= $currentRoute === 'admin_backup' ? 'active' : '' ?>">
+                        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>
+                        <?= Security::esc(t('nav.admin.backup')) ?>
+                    </a>
+                </li>
             </ul>
         </div>
         <?php endif; ?>

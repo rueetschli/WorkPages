@@ -393,6 +393,10 @@ $routes = [
     'admin_health_mail_send'    => ['controller' => 'AdminHealthController', 'action' => 'mailSend'],
     'admin_health_mail_test'    => ['controller' => 'AdminHealthController', 'action' => 'mailTest'],
     'admin_health_webhook_send' => ['controller' => 'AdminHealthController', 'action' => 'webhookSend'],
+
+    // AP29: Backup & Operations
+    'admin_backup'              => ['controller' => 'AdminBackupController', 'action' => 'index'],
+    'admin_backup_save'         => ['controller' => 'AdminBackupController', 'action' => 'save'],
 ];
 
 if (!isset($routes[$route])) {
