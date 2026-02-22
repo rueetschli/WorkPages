@@ -628,5 +628,45 @@
   "health.config.admin_count": "Active Administrators",
   "health.config.no_admin": "No active administrator found",
   "health.config.mail_from": "Email Sender (MAIL_FROM)",
-  "health.config.mail_from_missing": "MAIL_FROM is not configured"
+  "health.config.mail_from_missing": "MAIL_FROM is not configured",
+
+  "nav.admin.backup": "Backup & Operations",
+
+  "backup.page_title": "Backup & Operations",
+  "backup.page_subtitle": "Checklists for backup, restore, and ongoing operations of WorkPages.",
+  "backup.section_backup": "Backup Essentials",
+  "backup.section_restore": "Restore Essentials",
+  "backup.section_operations": "Operations",
+  "backup.section_record": "Record Last Backup",
+
+  "backup.check_db": "Back up database",
+  "backup.check_db_hint": "SQL export via mysqldump (SSH) or phpMyAdmin (Export > SQL). Backs up all tables, users, tasks, and pages.",
+  "backup.check_storage": "Back up storage",
+  "backup.check_storage_hint": "Download storage/uploads/ (attachments), storage/lang/ (language overrides), and public/assets/branding/ (logo).",
+  "backup.check_config": "Back up configuration",
+  "backup.check_config_hint": "Save config/config.php. Contains database credentials and app settings.",
+
+  "backup.restore_db": "Restore database",
+  "backup.restore_db_hint": "Import SQL dump via mysql command (SSH) or phpMyAdmin (Import).",
+  "backup.restore_storage": "Restore files",
+  "backup.restore_storage_hint": "Upload backed-up files to the correct locations: storage/, config/config.php, public/assets/branding/.",
+  "backup.restore_smoke": "Smoke tests",
+  "backup.restore_smoke_hint": "Test login, check dashboard/board/pages, verify system status under System Status (Admin Health).",
+
+  "backup.ops_update": "Update process",
+  "backup.ops_update_hint": "Create backup → Upload new files → Run migrations → Smoke tests. See Operator Guide for details.",
+  "backup.ops_migrations": "Check migrations",
+  "backup.ops_migrations_hint": "After each update, run pending migrations under Migrations.",
+  "backup.ops_health": "Check system status",
+  "backup.ops_health_hint": "Regularly check System Status to ensure all checks are green.",
+
+  "backup.last_backup_label": "Last backup",
+  "backup.no_backup_recorded": "No backup date recorded. Enter the date after each backup.",
+  "backup.record_description": "Manually record the date of your last backup here. This serves as a reminder – no automatic backup is performed.",
+  "backup.field_date": "Date",
+  "backup.field_note": "Note (optional)",
+  "backup.field_note_placeholder": "e.g. Before update 1.2.0",
+  "backup.save_success": "Backup date has been saved.",
+  "backup.invalid_date": "Invalid date format.",
+  "backup.link_operator_guide": "Open Operator Guide"
 }
