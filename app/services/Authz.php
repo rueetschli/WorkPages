@@ -78,6 +78,11 @@ class Authz
     const REPORT_VIEW   = 'report.view';
     const REPORT_EXPORT = 'report.export';
 
+    // AP26: Sprints
+    const SPRINT_VIEW   = 'sprint.view';
+    const SPRINT_MANAGE = 'sprint.manage';
+    const SPRINT_ASSIGN = 'sprint.assign';
+
     // ── Action-to-roles mapping ─────────────────────────────────────
 
     /**
@@ -152,6 +157,11 @@ class Authz
         // AP18: Reports (view = all logged-in, export = member+)
         self::REPORT_VIEW   => ['admin', 'member', 'viewer'],
         self::REPORT_EXPORT => ['admin', 'member'],
+
+        // AP26: Sprints (view = all logged-in, manage = admin, assign = member+)
+        self::SPRINT_VIEW   => ['admin', 'member', 'viewer'],
+        self::SPRINT_MANAGE => ['admin'],
+        self::SPRINT_ASSIGN => ['admin', 'member'],
     ];
 
     /**

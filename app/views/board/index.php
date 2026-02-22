@@ -45,6 +45,8 @@ if ($canEdit) {
         <div style="display:flex; gap:var(--sp-2);">
             <!-- AP25: Structure View link -->
             <a href="<?= $esc($baseUrl) ?>/?r=structure&amp;board_id=<?= $boardId ?>" class="btn btn-secondary btn-sm-pad"><?= $esc(t('structure.tab_structure')) ?></a>
+            <!-- AP26: Sprints link -->
+            <a href="<?= $esc($baseUrl) ?>/?r=sprints&amp;board_id=<?= $boardId ?>" class="btn btn-secondary btn-sm-pad"><?= $esc(t('sprint.sprints')) ?></a>
             <?php if ($canManage): ?>
                 <button type="button" class="btn btn-secondary btn-sm-pad" onclick="document.getElementById('board-edit-panel').style.display = document.getElementById('board-edit-panel').style.display === 'none' ? 'block' : 'none'"><?= $esc(t('actions.edit')) ?></button>
                 <a href="<?= $esc($baseUrl) ?>/?r=board_columns" class="btn btn-secondary btn-sm-pad"><?= $esc(t('board.columns')) ?></a>

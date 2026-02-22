@@ -373,6 +373,19 @@ class TaskController
                         }
                     }
 
+                    // AP26: Sprint assignment from edit form
+                    if (array_key_exists('sprint_id', $_POST)) {
+                        $newSprintId = !empty($_POST['sprint_id']) ? (int) $_POST['sprint_id'] : null;
+                        $oldSprintId = !empty($task['sprint_id']) ? (int) $task['sprint_id'] : null;
+                        if ($newSprintId !== $oldSprintId) {
+                            if ($newSprintId !== null) {
+                                SprintService::assignTask($id, $newSprintId, $userId);
+                            } else {
+                                SprintService::unassignTask($id, $userId);
+                            }
+                        }
+                    }
+
                     // AP14: Sync mentions
                     TextCommands::syncMentions($cleanedDesc, 'task', $id, $userId);
 

@@ -101,6 +101,29 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
         </div>
         <?php endif; ?>
 
+        <!-- AP26: Sprint assignment -->
+        <?php
+            $__editAssignableSprints = [];
+            $__editBoardId = !empty($formData['board_id']) ? (int) $formData['board_id'] : 0;
+            if ($__editBoardId > 0) {
+                try { $__editAssignableSprints = Sprint::assignableForBoard($__editBoardId); } catch (Throwable $e) {}
+            }
+        ?>
+        <?php if (!empty($__editAssignableSprints)): ?>
+        <div class="form-group">
+            <label for="sprint_id"><?= Security::esc(t('sprint.sprint')) ?></label>
+            <select id="sprint_id" name="sprint_id" class="form-input">
+                <option value=""><?= Security::esc(t('sprint.no_sprint')) ?></option>
+                <?php foreach ($__editAssignableSprints as $__es): ?>
+                    <option value="<?= (int) $__es['id'] ?>"
+                        <?= (string) ($task['sprint_id'] ?? '') === (string) $__es['id'] ? 'selected' : '' ?>>
+                        <?= Security::esc($__es['name']) ?> (<?= Security::esc(t('sprint.status.' . $__es['status'])) ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <?php endif; ?>
+
         <!-- AP25: Task type and parent -->
         <?php
             $__currentType    = $task['task_type'] ?? 'task';

@@ -267,6 +267,7 @@ function renderStructureNode(array $node, int $depth, int $boardId, array $board
             <option value="set_owner"><?= $esc(t('structure.bulk.set_owner')) ?></option>
             <option value="add_tags"><?= $esc(t('structure.bulk.add_tags')) ?></option>
             <option value="remove_tags"><?= $esc(t('structure.bulk.remove_tags')) ?></option>
+            <option value="set_sprint"><?= $esc(t('structure.bulk.set_sprint')) ?></option>
         </select>
 
         <!-- Dynamic sub-fields -->
@@ -295,6 +296,19 @@ function renderStructureNode(array $node, int $depth, int $boardId, array $board
         <span class="struct-bulk-field" id="bulk-field-remove_tags" style="display:none;">
             <input type="text" name="bulk_tags" class="form-input form-input--inline"
                    placeholder="<?= $esc(t('structure.bulk.tags_placeholder')) ?>">
+        </span>
+
+        <?php
+            $__bulkSprints = [];
+            try { $__bulkSprints = Sprint::assignableForBoard($boardId); } catch (Throwable $e) {}
+        ?>
+        <span class="struct-bulk-field" id="bulk-field-set_sprint" style="display:none;">
+            <select name="bulk_sprint_id" class="form-input form-input--inline">
+                <option value=""><?= $esc(t('sprint.no_sprint')) ?></option>
+                <?php foreach ($__bulkSprints as $__bs): ?>
+                    <option value="<?= (int) $__bs['id'] ?>"><?= $esc($__bs['name']) ?></option>
+                <?php endforeach; ?>
+            </select>
         </span>
 
         <button type="submit" class="btn btn-primary btn-sm-pad" id="bulk-submit"

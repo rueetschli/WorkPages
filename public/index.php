@@ -166,6 +166,10 @@ require_once APP_DIR . '/services/HomeDashboardService.php';
 // AP25: Structure View
 require_once APP_DIR . '/services/TaskStructureService.php';
 
+// AP26: Sprints and Sprint Reports
+require_once APP_DIR . '/models/Sprint.php';
+require_once APP_DIR . '/services/SprintService.php';
+
 // AP24: Internationalization (i18n)
 require_once APP_DIR . '/services/I18nService.php';
 
@@ -363,6 +367,17 @@ $routes = [
     'structure_move_up'        => ['controller' => 'StructureController', 'action' => 'moveUp'],
     'structure_move_down'      => ['controller' => 'StructureController', 'action' => 'moveDown'],
     'structure_bulk_action'    => ['controller' => 'StructureController', 'action' => 'bulkAction'],
+
+    // AP26: Sprints, Burndown, Velocity
+    'sprints'                  => ['controller' => 'SprintController', 'action' => 'index'],
+    'sprint_create'            => ['controller' => 'SprintController', 'action' => 'create'],
+    'sprint_activate'          => ['controller' => 'SprintController', 'action' => 'activate'],
+    'sprint_close'             => ['controller' => 'SprintController', 'action' => 'close'],
+    'sprint_delete'            => ['controller' => 'SprintController', 'action' => 'delete'],
+    'sprint_assign_task'       => ['controller' => 'SprintController', 'action' => 'assignTask'],
+    'sprint_unassign_task'     => ['controller' => 'SprintController', 'action' => 'unassignTask'],
+    'sprint_burndown'          => ['controller' => 'SprintController', 'action' => 'burndown'],
+    'sprint_velocity'          => ['controller' => 'SprintController', 'action' => 'velocity'],
 ];
 
 if (!isset($routes[$route])) {
