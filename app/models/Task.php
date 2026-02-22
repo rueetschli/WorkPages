@@ -2,6 +2,7 @@
 /**
  * Task model - database operations for the tasks table.
  * AP13: Uses column_id (board_columns) instead of fixed status ENUM.
+ * AP25: Structure View - task_type, parent_task_id, structure_position.
  */
 class Task
 {
@@ -12,7 +13,8 @@ class Task
     {
         return DB::fetch(
             'SELECT t.*, u.name AS owner_name, c.name AS creator_name,
-                    bc.name AS column_name, bc.slug AS column_slug, bc.color AS column_color
+                    bc.name AS column_name, bc.slug AS column_slug, bc.color AS column_color,
+                    bc.category AS column_category
              FROM tasks t
              LEFT JOIN users u ON u.id = t.owner_id
              LEFT JOIN users c ON c.id = t.created_by
@@ -90,9 +92,15 @@ class Task
         $teamId  = !empty($data['team_id']) ? (int) $data['team_id'] : null;
         $boardId = !empty($data['board_id']) ? (int) $data['board_id'] : null;
 
+        // AP25: structure fields
+        $taskType = in_array($data['task_type'] ?? '', ['epic','feature','task'], true)
+            ? $data['task_type']
+            : 'task';
+        $parentTaskId = !empty($data['parent_task_id']) ? (int) $data['parent_task_id'] : null;
+
         DB::query(
-            'INSERT INTO tasks (title, description_md, column_id, owner_id, due_date, created_by, team_id, board_id, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())',
+            'INSERT INTO tasks (title, description_md, column_id, owner_id, due_date, created_by, team_id, board_id, task_type, parent_task_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
             [
                 $data['title'],
                 $data['description_md'] ?? null,
@@ -102,6 +110,8 @@ class Task
                 (int) $data['created_by'],
                 $teamId,
                 $boardId,
+                $taskType,
+                $parentTaskId,
             ]
         );
 
@@ -147,6 +157,8 @@ class Task
                 $id,
             ]
         );
+        // AP25: task_type and parent_task_id are managed via dedicated methods
+        // (Task::setType / Task::setParent) to keep validation central.
     }
 
     /**
@@ -618,6 +630,142 @@ class Task
                 'UPDATE tasks SET position = ? WHERE id = ? AND column_id = ?',
                 [$pos, (int) $taskId, $columnId]
             );
+            $pos += 1000;
+        }
+    }
+
+    // -- AP25: Structure View ------------------------------------------------
+
+    /**
+     * Load all tasks for a board in one query, including structure fields
+     * and done-rollup data (column category for each task).
+     * Returns flat array; tree is built in TaskStructureService.
+     */
+    public static function allForStructure(int $boardId): array
+    {
+        return DB::fetchAll(
+            "SELECT t.id, t.title, t.task_type, t.parent_task_id, t.structure_position,
+                    t.column_id, t.owner_id, t.due_date, t.board_id, t.team_id,
+                    bc.name AS column_name, bc.slug AS column_slug, bc.color AS column_color,
+                    bc.category AS column_category,
+                    u.name AS owner_name,
+                    GROUP_CONCAT(DISTINCT tg.name ORDER BY tg.name SEPARATOR ',') AS tag_list
+             FROM tasks t
+             LEFT JOIN board_columns bc ON bc.id = t.column_id
+             LEFT JOIN users u ON u.id = t.owner_id
+             LEFT JOIN task_tags tt ON tt.task_id = t.id
+             LEFT JOIN tags tg ON tg.id = tt.tag_id
+             WHERE t.board_id = ?
+             GROUP BY t.id
+             ORDER BY t.structure_position ASC, t.id ASC",
+            [$boardId]
+        );
+    }
+
+    /**
+     * Set parent_task_id on a task.
+     */
+    public static function setParent(int $taskId, ?int $parentId, int $updatedBy): void
+    {
+        DB::query(
+            'UPDATE tasks SET parent_task_id = ?, updated_by = ?, updated_at = NOW() WHERE id = ?',
+            [$parentId, $updatedBy, $taskId]
+        );
+    }
+
+    /**
+     * Set task_type on a task.
+     */
+    public static function setType(int $taskId, string $type, int $updatedBy): void
+    {
+        DB::query(
+            'UPDATE tasks SET task_type = ?, updated_by = ?, updated_at = NOW() WHERE id = ?',
+            [$type, $updatedBy, $taskId]
+        );
+    }
+
+    /**
+     * Set structure_position on a task.
+     */
+    public static function setStructurePosition(int $taskId, int $position, int $updatedBy): void
+    {
+        DB::query(
+            'UPDATE tasks SET structure_position = ?, updated_by = ?, updated_at = NOW() WHERE id = ?',
+            [$position, $updatedBy, $taskId]
+        );
+    }
+
+    /**
+     * Get the max structure_position among siblings (same parent_task_id and board_id).
+     */
+    public static function maxStructurePosition(int $boardId, ?int $parentId): int
+    {
+        if ($parentId === null) {
+            $row = DB::fetch(
+                'SELECT MAX(structure_position) AS m FROM tasks WHERE board_id = ? AND parent_task_id IS NULL',
+                [$boardId]
+            );
+        } else {
+            $row = DB::fetch(
+                'SELECT MAX(structure_position) AS m FROM tasks WHERE board_id = ? AND parent_task_id = ?',
+                [$boardId, $parentId]
+            );
+        }
+        return (int) ($row['m'] ?? 0);
+    }
+
+    /**
+     * Fetch tasks eligible as parent for a given child type within a board.
+     * epic → no parent needed; feature → epic parents; task → feature parents.
+     */
+    public static function eligibleParents(int $boardId, string $childType, int $excludeId): array
+    {
+        $parentType = match ($childType) {
+            'feature' => 'epic',
+            'task'    => 'feature',
+            default   => null,
+        };
+
+        if ($parentType === null) {
+            return [];
+        }
+
+        return DB::fetchAll(
+            'SELECT id, title FROM tasks WHERE board_id = ? AND task_type = ? AND id != ? ORDER BY structure_position ASC, id ASC',
+            [$boardId, $parentType, $excludeId]
+        );
+    }
+
+    /**
+     * Get direct children of a task.
+     */
+    public static function directChildren(int $parentId): array
+    {
+        return DB::fetchAll(
+            'SELECT id, task_type, board_id, team_id FROM tasks WHERE parent_task_id = ?',
+            [$parentId]
+        );
+    }
+
+    /**
+     * Re-normalize structure_position for siblings so gaps are always >= 1000.
+     */
+    public static function renumberStructure(int $boardId, ?int $parentId): void
+    {
+        if ($parentId === null) {
+            $tasks = DB::fetchAll(
+                'SELECT id FROM tasks WHERE board_id = ? AND parent_task_id IS NULL ORDER BY structure_position ASC, id ASC',
+                [$boardId]
+            );
+        } else {
+            $tasks = DB::fetchAll(
+                'SELECT id FROM tasks WHERE board_id = ? AND parent_task_id = ? ORDER BY structure_position ASC, id ASC',
+                [$boardId, $parentId]
+            );
+        }
+        $pos = 1000;
+        foreach ($tasks as $t) {
+            DB::query('UPDATE tasks SET structure_position = ? WHERE id = ?', [$pos, (int) $t['id']]);
             $pos += 1000;
         }
     }

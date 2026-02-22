@@ -163,6 +163,9 @@ require_once APP_DIR . '/services/BoardService.php';
 // AP22: Home Dashboard
 require_once APP_DIR . '/services/HomeDashboardService.php';
 
+// AP25: Structure View
+require_once APP_DIR . '/services/TaskStructureService.php';
+
 // AP24: Internationalization (i18n)
 require_once APP_DIR . '/services/I18nService.php';
 
@@ -352,6 +355,14 @@ $routes = [
     // AP24: i18n - Language switching and admin
     'language_switch'          => ['controller' => 'LanguageController', 'action' => 'switchLang'],
     'admin_languages'          => ['controller' => 'AdminLanguagesController', 'action' => 'index'],
+
+    // AP25: Structure View
+    'structure'                => ['controller' => 'StructureController', 'action' => 'index'],
+    'structure_set_parent'     => ['controller' => 'StructureController', 'action' => 'setParent'],
+    'structure_set_type'       => ['controller' => 'StructureController', 'action' => 'setType'],
+    'structure_move_up'        => ['controller' => 'StructureController', 'action' => 'moveUp'],
+    'structure_move_down'      => ['controller' => 'StructureController', 'action' => 'moveDown'],
+    'structure_bulk_action'    => ['controller' => 'StructureController', 'action' => 'bulkAction'],
 ];
 
 if (!isset($routes[$route])) {

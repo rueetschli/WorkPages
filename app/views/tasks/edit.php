@@ -101,6 +101,50 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
         </div>
         <?php endif; ?>
 
+        <!-- AP25: Task type and parent -->
+        <?php
+            $__currentType    = $task['task_type'] ?? 'task';
+            $__currentBoardId = !empty($formData['board_id']) ? (int) $formData['board_id'] : 0;
+            $__eligibleParents = [];
+            if ($__currentBoardId > 0) {
+                try {
+                    $__eligibleParents = Task::eligibleParents($__currentBoardId, $__currentType, (int) $task['id']);
+                } catch (Throwable $e) {}
+            }
+        ?>
+        <div class="form-row">
+            <div class="form-group form-group-half">
+                <label for="task_type"><?= Security::esc(t('structure.type_label')) ?></label>
+                <select id="task_type" name="task_type" class="form-input">
+                    <?php foreach (['epic', 'feature', 'task'] as $__tType): ?>
+                        <option value="<?= Security::esc($__tType) ?>"
+                            <?= $__currentType === $__tType ? 'selected' : '' ?>>
+                            <?= Security::esc(t('structure.type.' . $__tType)) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <span class="textarea-hint"><?= Security::esc(t('structure.type_hint')) ?></span>
+            </div>
+
+            <div class="form-group form-group-half">
+                <label for="parent_task_id"><?= Security::esc(t('structure.parent_label')) ?></label>
+                <?php if (!empty($__eligibleParents)): ?>
+                    <select id="parent_task_id" name="parent_task_id" class="form-input">
+                        <option value=""><?= Security::esc(t('structure.no_parent')) ?></option>
+                        <?php foreach ($__eligibleParents as $__ep): ?>
+                            <option value="<?= (int) $__ep['id'] ?>"
+                                <?= (string) ($task['parent_task_id'] ?? '') === (string) $__ep['id'] ? 'selected' : '' ?>>
+                                <?= Security::esc($__ep['title']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php else: ?>
+                    <input type="hidden" name="parent_task_id" value="<?= (int) ($task['parent_task_id'] ?? 0) ?>">
+                    <p class="textarea-hint"><?= Security::esc(t('structure.parent_hint_no_board')) ?></p>
+                <?php endif; ?>
+            </div>
+        </div>
+
         <div class="form-group">
             <label for="description_md"><?= Security::esc(t('labels.description_md')) ?></label>
             <textarea id="description_md" name="description_md" class="form-input form-textarea"
