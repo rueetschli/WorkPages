@@ -420,6 +420,14 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
                         <?= Security::esc(t('nav.admin.languages')) ?>
                     </a>
                 </li>
+                <!-- AP28: System Health -->
+                <li>
+                    <a href="<?= Security::esc($baseUrl) ?>/?r=admin_health"
+                       class="nav-link <?= $currentRoute === 'admin_health' ? 'active' : '' ?>">
+                        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+                        <?= Security::esc(t('nav.admin.health')) ?>
+                    </a>
+                </li>
             </ul>
         </div>
         <?php endif; ?>
