@@ -60,6 +60,25 @@ class CommentController
 
         // Validate body
         $bodyMd = trim($bodyMd);
+
+        // AP14: Execute supported slash commands in comments (e.g. /task)
+        $cmdResult = TextCommands::processCommands($bodyMd, 'comment', $userId, [
+            'page_id' => $entityType === 'page' ? $entityId : null,
+        ]);
+        $bodyMd = $cmdResult['text'];
+        foreach ($cmdResult['results'] as $msg) {
+            if (($msg['type'] ?? '') === 'success') {
+                $_SESSION['_flash_success'] = ($msg['message'] ?? '');
+            } elseif (($msg['type'] ?? '') === 'error') {
+                $_SESSION['_flash_error'] = ($msg['message'] ?? '');
+            }
+        }
+
+        if ($bodyMd === '' && !empty($cmdResult['results'])) {
+            $this->redirectToEntity($entityType, $entity);
+            return;
+        }
+
         $validationError = Comment::validateBody($bodyMd);
         if ($validationError !== null) {
             // Store error in session flash and redirect back

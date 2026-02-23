@@ -57,6 +57,8 @@ class AdminLanguagesController
 
         $systemDefault = I18nService::getSystemDefault();
 
-        require APP_DIR . '/views/admin/languages.php';
+        $pageTitle   = t('admin.languages_title');
+        $contentView = APP_DIR . '/views/admin/languages.php';
+        require APP_DIR . '/views/layout.php';
     }
 }

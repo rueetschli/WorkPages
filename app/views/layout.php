@@ -79,6 +79,7 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
     <link rel="stylesheet" href="<?= Security::esc($baseUrl) ?>/assets/app.css">
     <link rel="stylesheet" href="<?= Security::esc($baseUrl) ?>/assets/github-markdown-css-main/github-markdown.css">
     <link rel="stylesheet" href="<?= Security::esc($baseUrl) ?>/assets/easy-markdown-editor/dist/easymde.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <?= $__themeCssVars ?>
     <script>
     /* Apply saved theme immediately to prevent flash */
@@ -635,6 +636,10 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
             minHeight: '200px',
             placeholder: targets[i].getAttribute('placeholder') || ''
         });
+    }
+
+    if (typeof window.WorkPagesMentionsInit === 'function') {
+        window.WorkPagesMentionsInit();
     }
 })();
 </script>

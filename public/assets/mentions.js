@@ -123,9 +123,9 @@
      * Find the trigger token (@, #) at the current caret position.
      * Returns { type: '@'|'#', query: string, start: int, end: int } or null.
      */
-    function findTrigger(textarea) {
-        var pos = textarea.selectionEnd;
-        var text = textarea.value;
+    function findTrigger(source) {
+        var pos = source.getCursorPos();
+        var text = source.getValue();
 
         // Walk backwards from caret to find trigger character
         var i = pos - 1;
@@ -258,7 +258,7 @@
     /**
      * Initialise autocomplete on a textarea.
      */
-    function initTextarea(textarea) {
+    function createAutocompleteAdapter(adapter) {
         var dropdown = createDropdown();
         var items = [];
         var selectedIndex = 0;
@@ -272,7 +272,7 @@
                 if (items.length > 0) {
                     isOpen = true;
                     renderItems(dropdown, items, type, selectedIndex);
-                    positionDropdown(dropdown, textarea);
+                    adapter.positionDropdown(dropdown);
                 } else {
                     closeDropdown();
                 }
@@ -289,14 +289,14 @@
 
         function selectItem(index) {
             if (index >= 0 && index < items.length && currentTrigger) {
-                insertToken(textarea, currentTrigger, items[index]);
+                adapter.insertToken(currentTrigger, items[index]);
                 closeDropdown();
             }
         }
 
         // Input handler
-        textarea.addEventListener('input', function() {
-            var trigger = findTrigger(textarea);
+        adapter.onInput(function() {
+            var trigger = findTrigger(adapter);
             if (trigger) {
                 currentTrigger = trigger;
                 debouncedFetch(trigger.type, trigger.query);
@@ -306,7 +306,7 @@
         });
 
         // Keyboard handler
-        textarea.addEventListener('keydown', function(e) {
+        adapter.onKeydown(function(e) {
             if (!isOpen) return;
 
             switch (e.key) {
@@ -362,16 +362,78 @@
         });
 
         // Close on blur (with small delay for click events)
-        textarea.addEventListener('blur', function() {
+        adapter.onBlur(function() {
             setTimeout(function() {
                 closeDropdown();
             }, 200);
         });
 
         // Close on scroll
-        textarea.addEventListener('scroll', function() {
+        adapter.onScroll(function() {
             if (isOpen) {
-                positionDropdown(dropdown, textarea);
+                adapter.positionDropdown(dropdown);
+            }
+        });
+
+        // Close when clicking outside
+        document.addEventListener('mousedown', function(e) {
+            if (!isOpen) return;
+            if (dropdown.contains(e.target) || adapter.containsTarget(e.target)) {
+                return;
+            }
+            closeDropdown();
+        });
+    }
+
+    function initTextarea(textarea) {
+        if (textarea.dataset.mentionsInit === '1') {
+            return;
+        }
+        textarea.dataset.mentionsInit = '1';
+
+        createAutocompleteAdapter({
+            getValue: function() { return textarea.value; },
+            getCursorPos: function() { return textarea.selectionEnd; },
+            insertToken: function(trigger, item) { insertToken(textarea, trigger, item); },
+            positionDropdown: function(dropdown) { positionDropdown(dropdown, textarea); },
+            onInput: function(handler) { textarea.addEventListener('input', handler); },
+            onKeydown: function(handler) { textarea.addEventListener('keydown', handler); },
+            onBlur: function(handler) { textarea.addEventListener('blur', handler); },
+            onScroll: function(handler) { textarea.addEventListener('scroll', handler); },
+            containsTarget: function(target) { return textarea === target || textarea.contains(target); }
+        });
+    }
+
+    function initCodeMirror(textarea, cm) {
+        if (!cm || cm.state.workpagesMentionsInit) {
+            return;
+        }
+        cm.state.workpagesMentionsInit = true;
+
+        createAutocompleteAdapter({
+            getValue: function() { return cm.getValue(); },
+            getCursorPos: function() { return cm.indexFromPos(cm.getCursor()); },
+            insertToken: function(trigger, item) {
+                var token = trigger.type === '@'
+                    ? '@[' + item.label + '](user:' + item.id + ') '
+                    : '#' + item.label + ' ';
+                cm.replaceRange(token, cm.posFromIndex(trigger.start), cm.posFromIndex(trigger.end));
+                cm.focus();
+                cm.save();
+            },
+            positionDropdown: function(dropdown) {
+                var coords = cm.cursorCoords(null, 'page');
+                dropdown.style.position = 'fixed';
+                dropdown.style.top = (coords.bottom - window.pageYOffset + 4) + 'px';
+                dropdown.style.left = (coords.left - window.pageXOffset) + 'px';
+            },
+            onInput: function(handler) { cm.on('changes', handler); },
+            onKeydown: function(handler) { cm.on('keydown', function(_, e) { handler(e); }); },
+            onBlur: function(handler) { cm.on('blur', handler); },
+            onScroll: function(handler) { cm.on('scroll', handler); },
+            containsTarget: function(target) {
+                var wrapper = cm.getWrapperElement();
+                return wrapper === target || wrapper.contains(target);
             }
         });
     }
@@ -382,7 +444,16 @@
     function init() {
         var textareas = document.querySelectorAll('textarea[data-mentions="true"]');
         for (var i = 0; i < textareas.length; i++) {
-            initTextarea(textareas[i]);
+            var textarea = textareas[i];
+            initTextarea(textarea);
+
+            var container = textarea.closest('.EasyMDEContainer');
+            if (container) {
+                var cmEl = container.querySelector('.CodeMirror');
+                if (cmEl && cmEl.CodeMirror) {
+                    initCodeMirror(textarea, cmEl.CodeMirror);
+                }
+            }
         }
     }
 
@@ -392,4 +463,6 @@
     } else {
         init();
     }
+
+    window.WorkPagesMentionsInit = init;
 })();
