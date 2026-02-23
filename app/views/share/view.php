@@ -35,7 +35,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
             <h1><?= Security::esc($page['title']) ?></h1>
         </div>
 
-        <div class="page-content md-content">
+        <div class="page-content markdown-body">
             <?= $renderedContent ?>
         </div>
 

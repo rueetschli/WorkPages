@@ -98,9 +98,18 @@ class Task
             : 'task';
         $parentTaskId = !empty($data['parent_task_id']) ? (int) $data['parent_task_id'] : null;
 
+        // Calculate position: append at end of column
+        $position = self::maxPosition($columnId) + 1000;
+
+        // Calculate structure_position: append at end of siblings
+        $structurePosition = 0;
+        if ($boardId !== null) {
+            $structurePosition = self::maxStructurePosition($boardId, $parentTaskId) + 1000;
+        }
+
         DB::query(
-            'INSERT INTO tasks (title, description_md, column_id, owner_id, due_date, created_by, team_id, board_id, task_type, parent_task_id, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
+            'INSERT INTO tasks (title, description_md, column_id, owner_id, due_date, created_by, team_id, board_id, task_type, parent_task_id, position, structure_position, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
             [
                 $data['title'],
                 $data['description_md'] ?? null,
@@ -112,6 +121,8 @@ class Task
                 $boardId,
                 $taskType,
                 $parentTaskId,
+                $position,
+                $structurePosition,
             ]
         );
 

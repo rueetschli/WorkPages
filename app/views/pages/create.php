@@ -57,7 +57,7 @@ $baseUrl = rtrim($GLOBALS['config']['BASE_URL'] ?? '', '/');
         <div class="form-group">
             <label for="content_md"><?= Security::esc(t('labels.content_md')) ?></label>
             <textarea id="content_md" name="content_md" class="form-input form-textarea"
-                      rows="18" data-mentions="true" data-context="page"><?= Security::esc($formData['content_md']) ?></textarea>
+                      rows="18" data-mentions="true" data-context="page" data-easymde="true"><?= Security::esc($formData['content_md']) ?></textarea>
             <span class="textarea-hint"><?= Security::esc(t('pages.textarea_hint')) ?></span>
         </div>
 

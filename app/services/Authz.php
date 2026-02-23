@@ -217,6 +217,15 @@ class Authz
     }
 
     /**
+     * Require the current user to be a global admin.
+     * Used for system-wide admin pages (languages, settings, etc.).
+     */
+    public static function requireGlobalAdmin(): void
+    {
+        self::requireRole('admin');
+    }
+
+    /**
      * Send HTTP 403 and render a clean error page. Exits immediately.
      */
     public static function deny(): void

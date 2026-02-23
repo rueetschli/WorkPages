@@ -77,6 +77,8 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
     <title><?= Security::esc($pageTitle) ?> - <?= Security::esc($appName) ?></title>
     <meta name="base-url" content="<?= Security::esc($baseUrl) ?>">
     <link rel="stylesheet" href="<?= Security::esc($baseUrl) ?>/assets/app.css">
+    <link rel="stylesheet" href="<?= Security::esc($baseUrl) ?>/assets/github-markdown-css-main/github-markdown.css">
+    <link rel="stylesheet" href="<?= Security::esc($baseUrl) ?>/assets/easy-markdown-editor/dist/easymde.min.css">
     <?= $__themeCssVars ?>
     <script>
     /* Apply saved theme immediately to prevent flash */
@@ -455,7 +457,7 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
     </nav>
 
     <!-- Main content area -->
-    <main class="main-content <?= $currentRoute === 'board' ? 'main-content-wide' : '' ?>">
+    <main class="main-content <?= in_array($currentRoute, ['board', 'board_view', 'structure'], true) ? 'main-content-wide' : '' ?>">
         <?php if ($flashSuccess): ?>
             <div class="alert alert-success"><?= Security::esc($flashSuccess) ?></div>
         <?php endif; ?>
@@ -617,6 +619,25 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
 </script>
 <script src="<?= Security::esc($baseUrl) ?>/assets/mentions.js"></script>
 <script src="<?= Security::esc($baseUrl) ?>/assets/notifications.js"></script>
+<script src="<?= Security::esc($baseUrl) ?>/assets/easy-markdown-editor/dist/easymde.min.js"></script>
+<script>
+(function() {
+    'use strict';
+    if (typeof EasyMDE === 'undefined') return;
+    var targets = document.querySelectorAll('textarea[data-easymde]');
+    for (var i = 0; i < targets.length; i++) {
+        new EasyMDE({
+            element: targets[i],
+            spellChecker: false,
+            status: false,
+            autoDownloadFontAwesome: false,
+            toolbar: ['bold', 'italic', 'heading', '|', 'quote', 'unordered-list', 'ordered-list', '|', 'link', 'image', 'code', 'table', '|', 'preview', 'side-by-side', 'fullscreen', '|', 'guide'],
+            minHeight: '200px',
+            placeholder: targets[i].getAttribute('placeholder') || ''
+        });
+    }
+})();
+</script>
 
 </body>
 </html>
