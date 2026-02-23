@@ -99,9 +99,9 @@ class TextCommands
             case 'page':
                 return ['task'];
             case 'task':
-                return ['due', 'assign', 'tag'];
+                return ['task', 'due', 'assign', 'tag'];
             case 'comment':
-                return [];
+                return ['task'];
             default:
                 return [];
         }
