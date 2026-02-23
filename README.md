@@ -12,6 +12,21 @@
 
 ---
 
+## 🎮 Live Demo
+
+Want to see WorkPages in action before installing it? You can test the full functionality in our live demo environment. 
+
+👉 **[Try the WorkPages Demo](https://demo-workpages.rueetschli.dev/)**
+
+Log in using one of the following demo accounts to explore different user roles:
+
+| Role | Email / Login | Password |
+| :--- | :--- | :--- |
+| **Administrator** | `admin@workpages.demo` | `DemoAdmin2026` |
+| **Team Member** | `member@workpages.demo` | `DemoMember2026` |
+
+*Note: This is a public demo environment. Please do not enter any sensitive or real company data. The database might be reset periodically.*
+
 ## 🛑 Why WorkPages? (The Anti-Cloud Approach)
 
 Are you tired of complex Docker setups, endless Node.js dependencies, and SaaS subscriptions that lock your data in US-based clouds? 
