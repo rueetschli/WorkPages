@@ -1,304 +1,129 @@
 # WorkPages
 
-Selbst hostbare Alternative zu Jira und Confluence. Open Source, PHP + MySQL, lauffaehig auf Shared Hosting.
+**The lightweight, self-hosted alternative to Jira and Confluence.** Built for shared hosting. No Docker, no build tools, no cloud lock-in.
 
-**Lizenz:** MIT | **Repository:** [github.com/rueetschli/WorkPages](https://github.com/rueetschli/WorkPages)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![PHP Version](https://img.shields.io/badge/PHP-%3E%3D%208.0-8892BF.svg)](#)
 
 ---
 
-## Was ist WorkPages?
-
-WorkPages ist eine integrierte Wiki- und Aufgabenplattform. Wissensseiten (Pages) und Aufgabenverwaltung (Tasks) laufen in einer einzigen Webanwendung zusammen - ohne externe Abhaengigkeiten, ohne Cloud-Zwang, ohne Tracking.
-
-WorkPages ist **kein SaaS-Produkt**. Es gibt kein Abo, kein Vendor Lock-in, keine Telemetrie. Die Daten gehoeren der Organisation, die es betreibt.
-
-## Fuer wen ist WorkPages gedacht?
-
-- **KMU mit 5-200 Mitarbeitenden** - Projektdokumentation und Aufgabenverwaltung an einem Ort
-- **Agenturen und Marketing-Teams** - Content-Planung, Kampagnensteuerung, Kundenprojekte
-- **Vereine und Schulen** - Interne Organisation und Wissensmanagement
-- **Handwerk und Dienstleister** - Projektuebersicht und Aufgabenzuweisung
-- **Organisationen mit Datenschutzanforderungen** - Volle Kontrolle ueber eigene Daten
-- **Technisch affine Admins** - Einfaches Setup mit PHP und MySQL
-
-## Was WorkPages bewusst nicht ist
-
-- Kein SaaS, kein Cloud-Dienst
-- Kein Enterprise-Tool fuer Grosskonzerne
-- Kein Framework-Monolith (kein Laravel, kein Symfony)
-- Kein SPA (kein React, kein Vue)
-- Kein Node-Build, kein npm, kein Webpack
-- Kein Docker-Zwang
-- Kein Tracking, keine Telemetrie, keine Werbung
-
-## Features
-
-### Authentifizierung und Rollen (AP1-AP3)
-- Login/Logout mit Session-Hardening (httponly, secure, samesite)
-- Drei Rollen: Admin, Member, Viewer
-- Serverseitige Rechtesteuerung
-- Benutzerverwaltung mit Self-Lockout-Schutz
-
-### Pages - Wissensseiten (AP4)
-- CRUD mit Markdown-Rendering
-- Hierarchische Seitenstruktur (Parent-Child)
-- URL-Slugs und Breadcrumb-Navigation
-- Soft Delete
-- Markdown-Export einzelner Seiten
-
-### Tasks - Aufgaben (AP5-AP6)
-- CRUD mit Status (Backlog, Ready, Doing, Review, Done)
-- Owner-Zuweisung, Faelligkeitsdatum, Tags
-- Verknuepfung mit Pages (Many-to-Many)
-- CSV-Export aller Aufgaben
-
-### Kanban Board (AP7, AP13)
-- Flexible, konfigurierbare Spalten
-- Drag-and-Drop-aehnliche Statuswechsel
-- WIP-Limits pro Spalte
-- Farbige Spaltenmarkierungen
-- Filteroptionen
-
-### Suche (AP8)
-- Ueber Pages und Tasks
-- Modi: LIKE, FULLTEXT, Auto
-- Snippet-Anzeige mit Hervorhebung
-
-### Kommentare und Activity Log (AP8)
-- Kommentare auf Pages und Tasks
-- Automatisches Aktivitaetsprotokoll
-- Formatierte Anzeige mit Benutzer und Zeitstempel
-
-### Sharing (AP9)
-- Kryptografisch sichere Share-Links fuer Seiten
-- Nur-Lesen-Zugriff ohne Login
-- Widerruf und Ablaufdatum
-
-### Administration (AP9-AP10)
-- Benutzerverwaltung mit Rollensteuerung
-- Datenbank-Migrationen ueber Browser-UI
-- System-Informationen
-
-### Installer (AP10)
-- Browser-basierter Installations-Wizard
-- Umgebungspruefung, DB-Konfiguration, Schema-Erstellung, Admin-Anlage
-- Automatische Sperre nach Installation
-
-### Design-System und Mobile (AP11-AP12)
-- Responsives Layout fuer Desktop und Mobile
-- Dark Mode
-- Reines CSS ohne Build-Tools
-
-### Smart Text Commands (AP14)
-- @Mentions mit Autocomplete
-- Tag-Referenzen (#tag)
-- Inline-Formatierung in Kommentaren
-
-### Benachrichtigungen (AP15)
-- In-App Benachrichtigungen mit Echtzeit-Badge
-- E-Mail-Benachrichtigungen (einzeln und als Digest)
-- Watcher-System (Seiten und Aufgaben beobachten)
-- Konfigurierbare Benachrichtigungseinstellungen pro Benutzer
-- E-Mail Queue mit Admin-Verwaltung
-
-### Teams und Zugriffskontrolle (AP16)
-- Team-basierte Sichtbarkeit
-- Team-Rollen (Team-Admin, Team-Member, Team-Viewer)
-- Team-Switcher im Header
-- Teamzuweisung fuer Pages und Tasks
-
-### Dateianhänge (AP17)
-- Upload und Download von Dateien
-- MIME-Type und Extension-Validierung
-- Team-basierte Sichtbarkeit
-- Konfigurierbare Limits (Groesse, Anzahl, erlaubte Typen)
-
-### Reporting und Flow Metrics (AP18)
-- Uebersichtsberichte mit KPIs
-- Flow-Metriken (Lead Time, Cycle Time, Throughput)
-- Aging-Analyse fuer offene Aufgaben
-- CSV-Export von Reports
-- Report-Caching fuer Performance
-
-### API und Webhooks (AP19)
-- REST API v1 mit Bearer-Token-Authentifizierung
-- API-Schluessel pro Benutzer mit Scopes
-- Rate Limiting (Token Bucket)
-- Idempotency Keys
-- Webhooks mit HMAC-SHA256-Signaturen
-- Webhook Queue mit Retry-Logik
-
-### Personalisierung und Branding (AP20)
-- Firmenname und Logo konfigurierbar
-- Farbschema: 8 Presets oder eigene Farben (HEX)
-- Wartungs- und Systemhinweise (Banner)
-- Systemweite CSS-Variablen fuer konsistentes Theming
-- Footer mit Version, Lizenz und Repository-Link
-
-### Multi-Board Support (AP21)
-- Mehrere Boards pro Team oder global
-- Board-Erstellung, -Bearbeitung und -Loeschung
-- Quick-Add direkt auf dem Board
-- Tasks zwischen Boards verschieben
-- Letztes Board merken
-
-### Information Hierarchy Redesign (AP22)
-- Page-Inhalt als primaeres Element (keine Box mehr)
-- Task-Beschreibung als primaeres Element im Detail
-- Activity Log als einklappbarer Bereich
-- Dashboard-Startseite mit Uebersichtskarten
-
-### Navigation Redesign (AP23)
-- Seitenleiste mit hierarchischem Seitenbaum (kollabierbar)
-- User-Dropdown-Menue mit Einstellungen, Sprache, API-Keys
-- Team-Switcher im Header
-- Mobile-optimierte Navigation mit Hamburger-Menue
-
-### Internationalisierung (AP24)
-- Komplettuebersetzung Deutsch/Englisch (de/en)
-- Sprachumschaltung im Benutzermenue
-- Admin-Seite fuer Sprachverwaltung und Uebersetzungsgrad
-- Systemstandard-Sprache konfigurierbar
-- Sprachauswahl auf der Login-Seite
-
-### Structure View (AP25)
-- Tasktypen: Epic, Feature, Task
-- Hierarchie: Epic > Feature > Task
-- Eltern-Kind-Beziehungen fuer Tasks
-- Strukturansicht pro Board mit Drag-and-Drop-Reihenfolge
-
-### Sprints (AP26)
-- Sprint-Erstellung und -Verwaltung pro Board
-- Sprint-Status: Planung, Aktiv, Abgeschlossen
-- Task-Zuweisung zu Sprints
-- Burndown-Chart und Velocity-Report
-
-### Saved Views (AP27)
-- Gespeicherte Filteransichten fuer die Task-Liste
-- Pro Benutzer konfigurierbar
-- Schnellzugriff auf haeufig genutzte Filter
-
-### System Health und Diagnostik (AP28)
-- Admin-Dashboard mit Systemstatus
-- PHP- und Datenbank-Informationen
-- Speicherplatz- und Logdatei-Uebersicht
-- Migrationsstatus-Pruefung
-
-### Backup und Operations (AP29)
-- Backup-Anleitungen fuer Datenbank und Dateien
-- Admin-Seite mit Backup-Empfehlungen
-
-### Page Move und Copy (AP30)
-- Seiten verschieben (Parent aendern)
-- Seiten kopieren (inkl. Inhalt)
-- Tasks kopieren
-
-### Templates (AP31)
-- Vordefinierte Seitenvorlagen
-- Template-Import und -Verwaltung fuer Admins
-- Demo-Inhalte beim Installer
-
-### Markdown Rendering
-- Markdown-Rendering via Parsedown mit GitHub Markdown CSS
-- Rich-Text-Editor (Easy Markdown Editor) fuer Pages und Tasks
-- @Mentions und #Tags in Markdown
-
-## Technischer Stack
-
-| Komponente | Technologie |
-|---|---|
-| Backend | PHP 8.0+ (kein Framework) |
-| Datenbank | MySQL 5.7+ / MariaDB 10.3+ |
-| Frontend | Serverseitiges Rendering, Vanilla CSS, minimales Vanilla JS |
-| Architektur | MVC, Front Controller, PDO |
-| Build | Keiner. Kein npm, kein Webpack, kein Bundler |
-| Markdown | Parsedown (PHP), GitHub Markdown CSS, Easy Markdown Editor |
-
-## Hosting-Anforderungen
-
-WorkPages ist fuer Schweizer Shared-Hosting-Anbieter optimiert:
-
-- **PHP** >= 8.0
-- **MySQL** 5.7+ oder MariaDB 10.3+
-- **PHP-Extensions:** PDO, pdo_mysql, mbstring, json
-- **Schreibrechte** auf `/storage/`, `/config/`
-- **Document Root** zeigt auf `/public`
-- Apache mit mod_rewrite oder Nginx
-
-Getestet mit: Cyon, Hostpoint und vergleichbaren Schweizer Anbietern.
-
-## Installation
-
-Siehe [docs/INSTALL.md](docs/INSTALL.md) fuer die vollstaendige Installationsanleitung.
-
-### Kurzanleitung
-
-1. Dateien per FTP/SFTP hochladen
-2. Document Root auf `/public` setzen
-3. Schreibrechte setzen (storage/, config/)
-4. `https://ihre-domain.ch/?r=install` aufrufen
-5. Installer-Wizard durchlaufen
-6. Anmelden unter `https://ihre-domain.ch/?r=login`
-
-## Update und Migration
-
-1. Backup erstellen (Datenbank, storage/uploads/, config/config.php)
-2. Neue Dateien hochladen (config.php und storage/ bleiben erhalten)
-3. Als Admin anmelden
-4. Migrationen ausfuehren unter `?r=admin_migrate`
-5. System-Info pruefen unter `?r=admin_system`
-
-## Konfiguration
-
-Siehe [docs/CONFIG.md](docs/CONFIG.md) fuer alle Konfigurationsoptionen.
-
-Die Konfigurationsdatei `config/config.php` wird vom Installer automatisch erstellt. Eine Vorlage liegt unter `config/config.php.example`.
-
-## Sicherheit und Datenschutz
-
-- Alle Datenbankabfragen verwenden PDO Prepared Statements
-- CSRF-Token-Validierung bei allen POST-Requests
-- Session-Hardening: httponly, secure, samesite=Lax
-- Output-Escaping mit htmlspecialchars
-- Passwort-Hashing mit password_hash / password_verify
-- Rollen und Berechtigungen serverseitig durchgesetzt
-- Fehler ins Log, nicht in den Browser
-- config.php liegt ausserhalb des Document Root
-- Kein Tracking, keine Telemetrie, keine externen Requests
-
-## Credits und Quellen
-
-WorkPages nutzt folgende Open-Source-Bibliotheken:
-
-| Bibliothek | Lizenz | Quelle |
-|---|---|---|
-| Parsedown | MIT | [github.com/erusev/parsedown](https://github.com/erusev/parsedown) |
-| GitHub Markdown CSS | MIT | [github.com/sindresorhus/github-markdown-css](https://github.com/sindresorhus/github-markdown-css) |
-| Easy Markdown Editor | MIT | [github.com/Ionaru/easy-markdown-editor](https://github.com/Ionaru/easy-markdown-editor) |
-
-## Lizenz
-
-WorkPages ist Open Source unter der [MIT License](LICENSE).
-
-Copyright (c) 2024-2026 WorkPages Contributors
-
-## Mitwirken
-
-Beitraege sind willkommen. Bitte beachten Sie:
-
-- PHP 8+ kompatibel
-- Kein Framework-Wechsel
-- Kein SPA-Umbau
-- Kein Node-Build
-- PDO Prepared Statements ueberall
-- Schreibende Aktionen nur via POST mit CSRF-Schutz
-- Rollen serverseitig erzwingen
-- Fehler ins Log, nicht in den Browser
-- Shared-Hosting-kompatibel
-
-## Dokumentation
-
-- [Installation](docs/INSTALL.md)
-- [Konfiguration](docs/CONFIG.md)
-- [Arbeitspakete AP1-AP31](docs/APs.md)
-- [REST API v1](docs/api.md)
+## 🛑 Why WorkPages? (The Anti-Cloud Approach)
+
+Are you tired of complex Docker setups, endless Node.js dependencies, and SaaS subscriptions that lock your data in US-based clouds? 
+
+WorkPages is an integrated Wiki and Task Management platform that goes back to the roots of the web. It combines knowledge sharing (Pages) and project tracking (Tasks) into a single, lightning-fast web application. 
+
+- **No US-Cloud, No Telemetry:** Your data belongs to your organization. There is no tracking, no phoning home, and no vendor lock-in.
+- **No Docker Required:** WorkPages is specifically designed to run on standard Shared Hosting environments. Just upload the files via FTP, run the web installer, and you are good to go.
+- **No Build Pipeline:** Zero npm, Webpack, or frontend frameworks. Pure server-side rendered PHP and Vanilla CSS.
+
+## 🎯 Who is this for?
+
+- **SMEs & Agencies:** Manage client projects, content planning, and internal documentation in one place.
+- **Privacy-Conscious Organizations:** Perfect for companies with strict data protection requirements (GDPR / DSG) who need on-premise solutions.
+- **Schools & Non-Profits:** Cost-effective internal organization and knowledge management.
+- **Pragmatic Admins:** Anyone who appreciates the simplicity of a standard PHP + MySQL stack.
+
+---
+
+## ✨ Features
+
+### 📝 Knowledge Base (Wiki)
+- **Markdown Native:** Create hierarchical pages with a powerful Markdown editor.
+- **Structure:** Parent-child relationships, clean URL slugs, and breadcrumb navigation.
+- **Sharing:** Generate cryptographically secure, read-only share links with expiration dates.
+- **Export & Management:** Markdown exports, soft-deletes, and page move/copy capabilities.
+- **Templates:** Use predefined page templates for recurring documentation.
+
+### 📋 Task Management & Agile Boards
+- **Kanban Boards:** Flexible columns, WIP limits, and drag-and-drop-style status changes.
+- **Sprints & Workflow:** Sprint planning, burndown charts, velocity reports, and time estimates.
+- **Task Hierarchy:** Organize work via Epics > Features > Tasks.
+- **Smart Connections:** Link tasks directly to wiki pages (Many-to-Many).
+- **Flow Metrics:** Built-in reporting for Lead Time, Cycle Time, and Throughput.
+
+### 🤝 Collaboration & UI
+- **Smart Text:** `@mentions` with autocomplete and `#tag` references.
+- **Activity Stream:** Automated activity logs and rich comments on both pages and tasks.
+- **Notifications:** In-app badges, email digests, and a flexible watcher system.
+- **Modern Design:** Fully responsive layout with native Dark Mode and customizable branding (colors, logos).
+- **Internationalization:** Fully translated to English and German.
+
+### 🔒 Security, API & Administration
+- **Enterprise-Grade Security:** Strict PDO Prepared Statements, CSRF tokens everywhere, and session hardening (httponly, secure, samesite=Lax).
+- **Role-Based Access:** Admin, Member, and Viewer roles, plus Team-based visibility control.
+- **Developer Ready:** REST API v1 with Bearer tokens, rate limiting, and HMAC-SHA256 secured Webhooks.
+- **System Diagnostics:** Built-in admin dashboard to monitor PHP/DB health, disk space, and migration status.
+
+---
+
+## 🛠 Technical Stack
+
+| Component | Technology |
+| :--- | :--- |
+| **Backend** | PHP 8.0+ (Vanilla, no frameworks like Laravel or Symfony) |
+| **Database** | MySQL 5.7+ or MariaDB 10.3+ |
+| **Frontend** | Server-side rendering, Vanilla CSS, minimal Vanilla JS (No React/Vue) |
+| **Architecture** | MVC, Front Controller, PDO |
+| **Build Process** | **None.** No npm, no Webpack, no bundlers. |
+| **Markdown** | Parsedown (PHP), GitHub Markdown CSS, Easy Markdown Editor |
+
+## 🚀 Installation & Hosting Requirements
+
+WorkPages is highly optimized for standard European/Swiss Shared Hosting providers (e.g., Cyon, Hostpoint).
+
+**Requirements:**
+- PHP >= 8.0 (with extensions: `PDO`, `pdo_mysql`, `mbstring`, `json`)
+- MySQL 5.7+ or MariaDB 10.3+
+- Apache (with `mod_rewrite`) or Nginx
+
+**Quick Start:**
+1. Upload the repository files to your server via FTP/SFTP.
+2. Point your server's Document Root to the `/public` directory.
+3. Ensure write permissions for `/storage/` and `/config/`.
+4. Navigate to `https://your-domain.com/?r=install` in your browser.
+5. Follow the intuitive setup wizard.
+6. Log in and start working!
+
+*For detailed instructions, see [docs/INSTALL.md](docs/INSTALL.md).*
+
+---
+
+## 🔄 Updates & Operations
+
+Updating WorkPages is as simple as its installation:
+1. Back up your database and the `/storage/` + `/config/` directories.
+2. Upload the new release files (your config and storage will remain untouched).
+3. Log in as Admin and run the migrations via `?r=admin_migrate`.
+4. Check system health under `?r=admin_system`.
+
+---
+
+## 🤝 Contributing
+
+Contributions are highly welcome, but please respect the core philosophy of this project. **Before opening a PR, ensure your code aligns with these principles:**
+
+- Keep it PHP 8+ compatible.
+- **No frameworks:** Do not introduce external frameworks (Laravel, Symfony, etc.).
+- **No build tools:** Do not add Node.js dependencies, npm, or SPAs.
+- **Security first:** Use PDO Prepared Statements for *all* queries. All write actions must be `POST` requests with CSRF protection.
+- **Shared Hosting friendly:** Ensure changes do not require root server access or special daemons.
+
+## 📚 Documentation
+
+- [Installation Guide](docs/INSTALL.md)
+- [Configuration Reference](docs/CONFIG.md)
+- [REST API v1 Documentation](docs/api.md)
+- [Development Work Packages (AP1-AP31)](docs/APs.md)
+
+---
+
+## 📄 License & Credits
+
+WorkPages is open-source software licensed under the [MIT License](LICENSE).  
+Copyright (c) 2024-2026 WorkPages Contributors.
+
+**Open Source Libraries Used:**
+- [Parsedown](https://github.com/erusev/parsedown) (MIT)
+- [GitHub Markdown CSS](https://github.com/sindresorhus/github-markdown-css) (MIT)
+- [Easy Markdown Editor](https://github.com/Ionaru/easy-markdown-editor) (MIT)
