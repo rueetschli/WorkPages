@@ -50,6 +50,9 @@ class InstallController
             case 'admin':
                 $this->stepAdmin();
                 break;
+            case 'content':
+                $this->stepContent();
+                break;
             case 'done':
                 $this->stepDone();
                 break;
@@ -599,7 +602,90 @@ class InstallController
         }
     }
 
-    // ── Step 5: Done ─────────────────────────────────────────────────
+    // ── Step 5: Content / Templates (AP31) ────────────────────────────
+
+    private function stepContent(): void
+    {
+        $error = null;
+        $success = null;
+
+        // Ensure DB is available
+        if (file_exists($this->configFile)) {
+            $config = require $this->configFile;
+            DB::setConfig($config);
+        }
+
+        // Ensure TemplateService is loaded
+        if (!class_exists('TemplateService')) {
+            require_once APP_DIR . '/services/TemplateService.php';
+        }
+        if (!class_exists('Page')) {
+            require_once APP_DIR . '/models/Page.php';
+        }
+        if (!class_exists('I18nService')) {
+            require_once APP_DIR . '/services/I18nService.php';
+        }
+
+        // Scan available templates
+        $templates = TemplateService::scan();
+
+        // Group by language
+        $languages = [];
+        foreach ($templates as $tpl) {
+            $languages[$tpl['language']][] = $tpl;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            Security::csrfGuard();
+
+            $importChoice = $_POST['import_choice'] ?? 'none';
+
+            if ($importChoice === 'templates') {
+                $language = $_POST['language'] ?? 'de';
+                if (!preg_match('/^[a-z]{2}$/', $language)) {
+                    $language = 'de';
+                }
+
+                try {
+                    // Get admin user ID
+                    $adminUser = $this->getFirstAdminId();
+
+                    $filtered = array_filter($templates, fn($t) => $t['language'] === $language);
+                    $result = TemplateService::importAll($filtered, $adminUser);
+
+                    if (!empty($result['errors'])) {
+                        $error = 'Templates teilweise importiert. ' . count($result['errors']) . ' Fehler.';
+                        Logger::error('Installer: partial template import', ['errors' => $result['errors']]);
+                    } else {
+                        $success = $result['imported'] . ' Template(s) importiert.';
+                    }
+                } catch (Throwable $e) {
+                    $error = 'Template-Import fehlgeschlagen. Details im Log.';
+                    Logger::error('Installer: template import failed', ['error' => $e->getMessage()]);
+                }
+            } else {
+                $success = 'Keine Startinhalte importiert.';
+            }
+        }
+
+        $this->renderInstallView('content', [
+            'error'     => $error,
+            'success'   => $success,
+            'languages' => $languages,
+            'templates' => $templates,
+        ]);
+    }
+
+    /**
+     * Get the first admin user ID for template import attribution.
+     */
+    private function getFirstAdminId(): int
+    {
+        $row = DB::fetch("SELECT id FROM users WHERE role = 'admin' AND is_active = 1 ORDER BY id ASC LIMIT 1");
+        return $row ? (int) $row['id'] : 1;
+    }
+
+    // ── Step 6: Done ─────────────────────────────────────────────────
 
     private function stepDone(): void
     {

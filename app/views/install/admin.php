@@ -14,7 +14,7 @@ $esc = fn(string $v): string => htmlspecialchars($v, ENT_QUOTES, 'UTF-8');
 <?php if (!empty($success)): ?>
     <div class="alert alert-success"><?= $esc($success) ?></div>
     <div class="text-center mt-1">
-        <a href="?r=install&amp;step=done" class="btn btn-primary">Installation abschliessen</a>
+        <a href="?r=install&amp;step=content" class="btn btn-primary">Weiter: Startinhalte</a>
     </div>
 <?php else: ?>
     <form method="post" action="?r=install&amp;step=admin">
