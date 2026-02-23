@@ -1,6 +1,9 @@
 # WorkPages
 
+
 > 🌍 **Diese Dokumentation in anderen Sprachen lesen:** [🇩🇪 Deutsch](README.de.md)
+
+
 
 **The lightweight, self-hosted alternative to Jira and Confluence.** Built for shared hosting. No Docker, no build tools, no cloud lock-in.
 
