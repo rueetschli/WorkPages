@@ -1270,8 +1270,9 @@ select.form-input {
 /* --- 6.2 Login --- */
 .login-body {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     min-height: 100vh;
     background: var(--color-bg);
 }
@@ -1280,6 +1281,7 @@ select.form-input {
     width: 100%;
     max-width: 400px;
     padding: var(--sp-4);
+    margin: auto 0;
 }
 
 .login-card {
@@ -3494,6 +3496,8 @@ a.tag-ref:hover {
     box-shadow: var(--shadow-lg, 0 4px 16px rgba(0,0,0,0.12));
     z-index: 120;
     overflow: hidden;
+    max-height: min(70vh, 420px);
+    overflow-y: auto;
 }
 .team-switcher-dropdown.open {
     display: block;
@@ -3574,8 +3578,9 @@ a.tag-ref:hover {
    =================================================================== */
 @media (max-width: 768px) {
     .team-switcher-dropdown {
-        width: calc(100vw - 24px);
-        right: -8px;
+        width: min(320px, calc(100vw - 16px));
+        right: 0;
+        left: auto;
     }
     .team-switcher-label {
         max-width: 80px;
@@ -4169,11 +4174,33 @@ a.tag-ref:hover {
 
 /* --- Maintenance banner --- */
 .maintenance-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
     padding: var(--sp-2) var(--sp-4);
     font-size: var(--text-sm);
     font-weight: 500;
     text-align: center;
     line-height: var(--leading-normal);
+    z-index: 140;
+}
+
+body.has-maintenance .app-header {
+    top: var(--maintenance-banner-height, 40px);
+}
+
+body.has-maintenance .app-body {
+    padding-top: calc(var(--header-height) + var(--maintenance-banner-height, 40px));
+}
+
+body.has-maintenance .sidebar {
+    top: calc(var(--header-height) + var(--maintenance-banner-height, 40px));
+}
+
+body.login-body.has-maintenance {
+    min-height: calc(100vh - var(--maintenance-banner-height, 40px));
 }
 
 .maintenance-info {

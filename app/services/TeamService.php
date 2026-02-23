@@ -268,7 +268,7 @@ class TeamService
         // Global admin sees everything
         if ($globalRole === 'admin') {
             if ($filterTeamId !== null) {
-                return ["{$tableAlias}.team_id = ?", [$filterTeamId]];
+                return ["({$tableAlias}.team_id IS NULL OR {$tableAlias}.team_id = ?)", [$filterTeamId]];
             }
             return ['1=1', []];
         }
@@ -280,7 +280,7 @@ class TeamService
             if (!in_array($filterTeamId, $teamIds, true)) {
                 return ['0=1', []]; // No access
             }
-            return ["{$tableAlias}.team_id = ?", [$filterTeamId]];
+            return ["({$tableAlias}.team_id IS NULL OR {$tableAlias}.team_id = ?)", [$filterTeamId]];
         }
 
         // "Alle Teams": show global pages + pages in user's teams

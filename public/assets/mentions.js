@@ -294,6 +294,17 @@
             }
         }
 
+        function closestMentionsItem(target) {
+            var node = target;
+            while (node && node !== dropdown) {
+                if (node.classList && node.classList.contains('mentions-item')) {
+                    return node;
+                }
+                node = node.parentNode;
+            }
+            return null;
+        }
+
         // Input handler
         adapter.onInput(function() {
             var trigger = findTrigger(adapter);
@@ -344,7 +355,15 @@
             // Prevent textarea blur
             e.preventDefault();
 
-            var target = e.target.closest('.mentions-item');
+            var target = closestMentionsItem(e.target);
+            if (target) {
+                var index = parseInt(target.getAttribute('data-index'), 10);
+                selectItem(index);
+            }
+        });
+
+        dropdown.addEventListener('click', function(e) {
+            var target = closestMentionsItem(e.target);
             if (target) {
                 var index = parseInt(target.getAttribute('data-index'), 10);
                 selectItem(index);
@@ -353,7 +372,7 @@
 
         // Hover handler for visual feedback
         dropdown.addEventListener('mouseover', function(e) {
-            var target = e.target.closest('.mentions-item');
+            var target = closestMentionsItem(e.target);
             if (target) {
                 var index = parseInt(target.getAttribute('data-index'), 10);
                 selectedIndex = index;
@@ -438,6 +457,23 @@
         });
     }
 
+    function findCodeMirrorForTextarea(textarea) {
+        var container = textarea.closest('.EasyMDEContainer');
+        if (!container && textarea.nextElementSibling && textarea.nextElementSibling.classList) {
+            if (textarea.nextElementSibling.classList.contains('EasyMDEContainer')) {
+                container = textarea.nextElementSibling;
+            }
+        }
+        if (!container && textarea.parentElement) {
+            container = textarea.parentElement.querySelector('.EasyMDEContainer');
+        }
+        if (!container) {
+            return null;
+        }
+        var cmEl = container.querySelector('.CodeMirror');
+        return cmEl && cmEl.CodeMirror ? cmEl.CodeMirror : null;
+    }
+
     /**
      * Initialise all textareas with data-mentions attribute.
      */
@@ -447,12 +483,9 @@
             var textarea = textareas[i];
             initTextarea(textarea);
 
-            var container = textarea.closest('.EasyMDEContainer');
-            if (container) {
-                var cmEl = container.querySelector('.CodeMirror');
-                if (cmEl && cmEl.CodeMirror) {
-                    initCodeMirror(textarea, cmEl.CodeMirror);
-                }
+            var cm = findCodeMirrorForTextarea(textarea);
+            if (cm) {
+                initCodeMirror(textarea, cm);
             }
         }
     }

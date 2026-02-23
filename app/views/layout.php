@@ -89,7 +89,7 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
     })();
     </script>
 </head>
-<body>
+<body class="<?= $__sysMaintenance && $__sysMaintMsg !== '' ? 'has-maintenance' : '' ?>">
 
 <!-- Sidebar overlay for mobile -->
 <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -493,6 +493,18 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
 (function() {
     'use strict';
 
+    function updateMaintenanceBannerHeight() {
+        var banner = document.querySelector('.maintenance-banner');
+        if (!banner) {
+            document.body.style.removeProperty('--maintenance-banner-height');
+            return;
+        }
+        document.body.style.setProperty('--maintenance-banner-height', banner.offsetHeight + 'px');
+    }
+
+    updateMaintenanceBannerHeight();
+    window.addEventListener('resize', updateMaintenanceBannerHeight);
+
     /* -- Dark Mode Toggle -- */
     var toggle = document.getElementById('theme-toggle');
     if (toggle) {
@@ -568,6 +580,12 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
         teamSwitcherBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             teamSwitcherDropdown.classList.toggle('open');
+            if (teamSwitcherDropdown.classList.contains('open')) {
+                var rect = teamSwitcherDropdown.getBoundingClientRect();
+                if (rect.bottom > window.innerHeight) {
+                    teamSwitcherDropdown.scrollTop = 0;
+                }
+            }
         });
     }
 
