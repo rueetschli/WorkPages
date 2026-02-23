@@ -105,6 +105,7 @@
   "placeholders.board_description": "Kurze Beschreibung (optional)",
   "placeholders.comment": "Kommentar schreiben (Markdown wird unterstuetzt)...",
   "placeholders.add_task": "+ Task hinzufuegen...",
+  "placeholders.maintenance_message": "z.B. Wartungsarbeiten am Samstag 08:00-10:00 Uhr",
 
   "messages.login_subtitle": "Melden Sie sich an, um fortzufahren",
   "messages.login_failed": "Login fehlgeschlagen.",
@@ -323,6 +324,9 @@
   "admin.maintenance_info": "Information (blau)",
   "admin.maintenance_warning": "Warnung (gelb)",
   "admin.maintenance_critical": "Kritisch (rot)",
+  "admin.level_info": "Information (blau)",
+  "admin.level_warning": "Warnung (gelb)",
+  "admin.level_critical": "Kritisch (rot)",
   "admin.about_title": "Ueber WorkPages",
   "admin.version": "Version",
   "admin.license": "Lizenz",

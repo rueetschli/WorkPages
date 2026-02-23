@@ -105,6 +105,7 @@
   "placeholders.board_description": "Short description (optional)",
   "placeholders.comment": "Write a comment (Markdown supported)...",
   "placeholders.add_task": "+ Add task...",
+  "placeholders.maintenance_message": "e.g. Maintenance on Saturday 08:00-10:00",
 
   "messages.login_subtitle": "Sign in to continue",
   "messages.login_failed": "Login failed.",
@@ -323,6 +324,9 @@
   "admin.maintenance_info": "Information (blue)",
   "admin.maintenance_warning": "Warning (yellow)",
   "admin.maintenance_critical": "Critical (red)",
+  "admin.level_info": "Information (blue)",
+  "admin.level_warning": "Warning (yellow)",
+  "admin.level_critical": "Critical (red)",
   "admin.about_title": "About WorkPages",
   "admin.version": "Version",
   "admin.license": "License",

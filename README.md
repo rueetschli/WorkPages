@@ -135,6 +135,74 @@ WorkPages ist **kein SaaS-Produkt**. Es gibt kein Abo, kein Vendor Lock-in, kein
 - Systemweite CSS-Variablen fuer konsistentes Theming
 - Footer mit Version, Lizenz und Repository-Link
 
+### Multi-Board Support (AP21)
+- Mehrere Boards pro Team oder global
+- Board-Erstellung, -Bearbeitung und -Loeschung
+- Quick-Add direkt auf dem Board
+- Tasks zwischen Boards verschieben
+- Letztes Board merken
+
+### Information Hierarchy Redesign (AP22)
+- Page-Inhalt als primaeres Element (keine Box mehr)
+- Task-Beschreibung als primaeres Element im Detail
+- Activity Log als einklappbarer Bereich
+- Dashboard-Startseite mit Uebersichtskarten
+
+### Navigation Redesign (AP23)
+- Seitenleiste mit hierarchischem Seitenbaum (kollabierbar)
+- User-Dropdown-Menue mit Einstellungen, Sprache, API-Keys
+- Team-Switcher im Header
+- Mobile-optimierte Navigation mit Hamburger-Menue
+
+### Internationalisierung (AP24)
+- Komplettuebersetzung Deutsch/Englisch (de/en)
+- Sprachumschaltung im Benutzermenue
+- Admin-Seite fuer Sprachverwaltung und Uebersetzungsgrad
+- Systemstandard-Sprache konfigurierbar
+- Sprachauswahl auf der Login-Seite
+
+### Structure View (AP25)
+- Tasktypen: Epic, Feature, Task
+- Hierarchie: Epic > Feature > Task
+- Eltern-Kind-Beziehungen fuer Tasks
+- Strukturansicht pro Board mit Drag-and-Drop-Reihenfolge
+
+### Sprints (AP26)
+- Sprint-Erstellung und -Verwaltung pro Board
+- Sprint-Status: Planung, Aktiv, Abgeschlossen
+- Task-Zuweisung zu Sprints
+- Burndown-Chart und Velocity-Report
+
+### Saved Views (AP27)
+- Gespeicherte Filteransichten fuer die Task-Liste
+- Pro Benutzer konfigurierbar
+- Schnellzugriff auf haeufig genutzte Filter
+
+### System Health und Diagnostik (AP28)
+- Admin-Dashboard mit Systemstatus
+- PHP- und Datenbank-Informationen
+- Speicherplatz- und Logdatei-Uebersicht
+- Migrationsstatus-Pruefung
+
+### Backup und Operations (AP29)
+- Backup-Anleitungen fuer Datenbank und Dateien
+- Admin-Seite mit Backup-Empfehlungen
+
+### Page Move und Copy (AP30)
+- Seiten verschieben (Parent aendern)
+- Seiten kopieren (inkl. Inhalt)
+- Tasks kopieren
+
+### Templates (AP31)
+- Vordefinierte Seitenvorlagen
+- Template-Import und -Verwaltung fuer Admins
+- Demo-Inhalte beim Installer
+
+### Markdown Rendering
+- Markdown-Rendering via Parsedown mit GitHub Markdown CSS
+- Rich-Text-Editor (Easy Markdown Editor) fuer Pages und Tasks
+- @Mentions und #Tags in Markdown
+
 ## Technischer Stack
 
 | Komponente | Technologie |
@@ -144,7 +212,7 @@ WorkPages ist **kein SaaS-Produkt**. Es gibt kein Abo, kein Vendor Lock-in, kein
 | Frontend | Serverseitiges Rendering, Vanilla CSS, minimales Vanilla JS |
 | Architektur | MVC, Front Controller, PDO |
 | Build | Keiner. Kein npm, kein Webpack, kein Bundler |
-| Abhaengigkeiten | Keine externen PHP- oder JS-Libraries |
+| Markdown | Parsedown (PHP), GitHub Markdown CSS, Easy Markdown Editor |
 
 ## Hosting-Anforderungen
 
@@ -198,6 +266,16 @@ Die Konfigurationsdatei `config/config.php` wird vom Installer automatisch erste
 - config.php liegt ausserhalb des Document Root
 - Kein Tracking, keine Telemetrie, keine externen Requests
 
+## Credits und Quellen
+
+WorkPages nutzt folgende Open-Source-Bibliotheken:
+
+| Bibliothek | Lizenz | Quelle |
+|---|---|---|
+| Parsedown | MIT | [github.com/erusev/parsedown](https://github.com/erusev/parsedown) |
+| GitHub Markdown CSS | MIT | [github.com/sindresorhus/github-markdown-css](https://github.com/sindresorhus/github-markdown-css) |
+| Easy Markdown Editor | MIT | [github.com/Ionaru/easy-markdown-editor](https://github.com/Ionaru/easy-markdown-editor) |
+
 ## Lizenz
 
 WorkPages ist Open Source unter der [MIT License](LICENSE).
@@ -222,5 +300,5 @@ Beitraege sind willkommen. Bitte beachten Sie:
 
 - [Installation](docs/INSTALL.md)
 - [Konfiguration](docs/CONFIG.md)
-- [Arbeitspakete AP1-AP20](docs/APs.md)
+- [Arbeitspakete AP1-AP31](docs/APs.md)
 - [REST API v1](docs/api.md)

@@ -119,6 +119,7 @@ require_once APP_DIR . '/models/Task.php';
 require_once APP_DIR . '/models/PageTask.php';
 require_once APP_DIR . '/models/Comment.php';
 require_once APP_DIR . '/services/Markdown.php';
+require_once ROOT_DIR . '/public/assets/Parsedown.php';
 require_once APP_DIR . '/services/SearchService.php';
 require_once APP_DIR . '/services/ActivityService.php';
 require_once APP_DIR . '/services/Authz.php';

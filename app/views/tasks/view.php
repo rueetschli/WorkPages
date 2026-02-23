@@ -37,12 +37,12 @@ if ($canEdit) {
                 require APP_DIR . '/views/partials/watch_button.php';
             ?>
             <?php if ($canEdit): ?>
-            <a href="<?= Security::esc($baseUrl) ?>/?r=task_copy&amp;id=<?= (int) $task['id'] ?>" class="btn btn-secondary btn-sm-pad"><?= Security::esc(t('ap30.copy_task')) ?></a>
-            <a href="<?= Security::esc($baseUrl) ?>/?r=task_edit&amp;id=<?= (int) $task['id'] ?>" class="btn btn-primary"><?= Security::esc(t('actions.edit')) ?></a>
+            <a href="<?= Security::esc($baseUrl) ?>/?r=task_copy&amp;id=<?= (int) $task['id'] ?>" class="btn btn-secondary btn-sm-pad btn-responsive" title="<?= Security::esc(t('ap30.copy_task')) ?>"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg><span class="btn-label"><?= Security::esc(t('ap30.copy_task')) ?></span></a>
+            <a href="<?= Security::esc($baseUrl) ?>/?r=task_edit&amp;id=<?= (int) $task['id'] ?>" class="btn btn-primary btn-responsive" title="<?= Security::esc(t('actions.edit')) ?>"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span class="btn-label"><?= Security::esc(t('actions.edit')) ?></span></a>
             <form method="post" action="<?= Security::esc($baseUrl) ?>/?r=task_delete&amp;id=<?= (int) $task['id'] ?>"
                   class="inline-form" onsubmit="return confirm('<?= Security::esc(t('messages.confirm_delete_task')) ?>');">
                 <?= Security::csrfField() ?>
-                <button type="submit" class="btn btn-danger"><?= Security::esc(t('actions.delete')) ?></button>
+                <button type="submit" class="btn btn-danger btn-responsive" title="<?= Security::esc(t('actions.delete')) ?>"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg><span class="btn-label"><?= Security::esc(t('actions.delete')) ?></span></button>
             </form>
             <?php endif; ?>
         </div>
@@ -53,7 +53,7 @@ if ($canEdit) {
     <!-- AP22: Description is dominant -->
     <div class="task-description-primary">
         <?php if ($renderedContent !== ''): ?>
-            <div class="page-content-primary md-content">
+            <div class="page-content-primary markdown-body">
                 <?= $renderedContent ?>
             </div>
         <?php else: ?>

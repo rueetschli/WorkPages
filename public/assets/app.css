@@ -249,6 +249,53 @@
     background: var(--c-blue-700);
 }
 
+/* --- EasyMDE Dark Mode --- */
+[data-theme="dark"] .EasyMDEContainer .CodeMirror {
+    background: var(--color-surface);
+    color: var(--color-text);
+    border-color: var(--color-border);
+}
+[data-theme="dark"] .EasyMDEContainer .CodeMirror-cursor {
+    border-left-color: var(--color-text);
+}
+[data-theme="dark"] .EasyMDEContainer .editor-toolbar {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+}
+[data-theme="dark"] .EasyMDEContainer .editor-toolbar button {
+    color: var(--color-text-secondary);
+}
+[data-theme="dark"] .EasyMDEContainer .editor-toolbar button:hover,
+[data-theme="dark"] .EasyMDEContainer .editor-toolbar button.active {
+    background: var(--color-surface-hover);
+    color: var(--color-text);
+}
+[data-theme="dark"] .EasyMDEContainer .editor-toolbar i.separator {
+    border-left-color: var(--color-border);
+    border-right-color: var(--color-border);
+}
+[data-theme="dark"] .EasyMDEContainer .editor-preview {
+    background: var(--color-surface);
+    color: var(--color-text);
+}
+[data-theme="dark"] .EasyMDEContainer .editor-preview-side {
+    background: var(--color-surface);
+    color: var(--color-text);
+    border-color: var(--color-border);
+}
+[data-theme="dark"] .EasyMDEContainer .CodeMirror .CodeMirror-selected {
+    background: rgba(59, 130, 246, 0.3);
+}
+[data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-header {
+    color: var(--color-text);
+}
+[data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-link {
+    color: var(--c-blue-500);
+}
+[data-theme="dark"] .EasyMDEContainer .CodeMirror .cm-url {
+    color: var(--color-text-secondary);
+}
+
 
 /* ============================================================================
    3. RESET & BASE
@@ -1186,6 +1233,20 @@ select.form-input {
     flex-shrink: 0;
 }
 
+/* Responsive button icon/label pattern */
+.btn-icon {
+    display: none;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+.btn-responsive {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+}
+
 .page-link {
     font-weight: 500;
     color: var(--color-text);
@@ -1421,6 +1482,52 @@ select.form-input {
 .md-content table th {
     background: var(--color-bg-sunken);
     font-weight: 600;
+}
+
+/* --- GitHub Markdown CSS Integration --- */
+.markdown-body {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    color: var(--color-text);
+    background: transparent;
+    line-height: var(--leading-relaxed);
+}
+.markdown-body pre {
+    background: var(--c-gray-900);
+    color: #e5e7eb;
+}
+.markdown-body blockquote {
+    border-left-color: var(--color-primary);
+}
+.comment-body.markdown-body {
+    font-size: var(--text-sm);
+}
+.comment-body.markdown-body p:last-child {
+    margin-bottom: 0;
+}
+[data-theme="dark"] .markdown-body {
+    color-scheme: dark;
+    color: var(--color-text);
+}
+[data-theme="dark"] .markdown-body pre {
+    background: #080a0f;
+    border: 1px solid var(--color-border);
+}
+[data-theme="dark"] .markdown-body code {
+    background: var(--color-bg-sunken);
+}
+[data-theme="dark"] .markdown-body table th,
+[data-theme="dark"] .markdown-body table td {
+    border-color: var(--color-border);
+}
+[data-theme="dark"] .markdown-body table th {
+    background: var(--color-bg-sunken);
+}
+[data-theme="dark"] .markdown-body blockquote {
+    color: var(--color-text-secondary);
+}
+[data-theme="dark"] .markdown-body hr {
+    border-color: var(--color-border);
 }
 
 .page-meta {
@@ -2302,9 +2409,32 @@ body.sidebar-open {
         width: 100%;
     }
     .page-actions .btn {
-        flex: 1;
         min-width: 0;
         min-height: var(--touch-target-min);
+    }
+
+    /* -- Responsive icon-only buttons on mobile -- */
+    .btn-responsive .btn-label {
+        display: none;
+    }
+    .btn-responsive .btn-icon {
+        display: inline-block;
+    }
+    .btn-responsive {
+        flex: 0 0 auto;
+        padding: var(--sp-2);
+    }
+
+    /* -- Mobile header: hide team label, compact layout -- */
+    .team-switcher-label {
+        display: none;
+    }
+    .user-menu-name {
+        display: none;
+    }
+    .header-right {
+        gap: var(--sp-1);
+        padding-left: var(--sp-2);
     }
 
     /* -- Dashboard Cards -- */

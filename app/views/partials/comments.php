@@ -37,7 +37,7 @@ $canDeleteComment = Authz::can(Authz::COMMENT_DELETE);
                     </form>
                     <?php endif; ?>
                 </div>
-                <div class="comment-body md-content">
+                <div class="comment-body markdown-body">
                     <?= Markdown::render($comment['body_md']) ?>
                 </div>
             </div>
