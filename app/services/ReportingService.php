@@ -19,45 +19,46 @@ class ReportingService
     private static function buildFilterClauses(array $filters, int $userId, string $globalRole): array
     {
         $where  = [];
-        $params = [];
+        $whereParams = [];
+        $joinParams = [];
         $join   = '';
 
         // Team visibility
         $filterTeamId = !empty($filters['team_id']) ? (int) $filters['team_id'] : null;
         [$visSql, $visParams] = TeamService::taskVisibilityWhere($userId, $globalRole, 't', $filterTeamId);
         $where[] = $visSql;
-        $params  = array_merge($params, $visParams);
+        $whereParams = array_merge($whereParams, $visParams);
 
         // Date range on done_at (for throughput/cycle time reports)
         if (!empty($filters['from'])) {
             $where[]  = 't.done_at >= ?';
-            $params[] = $filters['from'] . ' 00:00:00';
+            $whereParams[] = $filters['from'] . ' 00:00:00';
         }
         if (!empty($filters['to'])) {
             $where[]  = 't.done_at <= ?';
-            $params[] = $filters['to'] . ' 23:59:59';
+            $whereParams[] = $filters['to'] . ' 23:59:59';
         }
 
         // Owner
         if (!empty($filters['owner_id'])) {
             $where[]  = 't.owner_id = ?';
-            $params[] = (int) $filters['owner_id'];
+            $whereParams[] = (int) $filters['owner_id'];
         }
 
         // Tag (join)
         if (!empty($filters['tag'])) {
             $join    .= ' INNER JOIN task_tags tt_filter ON tt_filter.task_id = t.id
                           INNER JOIN tags tg_filter ON tg_filter.id = tt_filter.tag_id AND tg_filter.name = ?';
-            $params[] = mb_strtolower(trim($filters['tag']), 'UTF-8');
+            $joinParams[] = mb_strtolower(trim($filters['tag']), 'UTF-8');
         }
 
         // Column
         if (!empty($filters['column_id'])) {
             $where[]  = 't.column_id = ?';
-            $params[] = (int) $filters['column_id'];
+            $whereParams[] = (int) $filters['column_id'];
         }
 
-        return [$where, $params, $join];
+        return [$where, array_merge($joinParams, $whereParams), $join];
     }
 
     /**
@@ -66,31 +67,32 @@ class ReportingService
     private static function buildOpenFilterClauses(array $filters, int $userId, string $globalRole): array
     {
         $where  = [];
-        $params = [];
+        $whereParams = [];
+        $joinParams = [];
         $join   = '';
 
         $filterTeamId = !empty($filters['team_id']) ? (int) $filters['team_id'] : null;
         [$visSql, $visParams] = TeamService::taskVisibilityWhere($userId, $globalRole, 't', $filterTeamId);
         $where[] = $visSql;
-        $params  = array_merge($params, $visParams);
+        $whereParams = array_merge($whereParams, $visParams);
 
         if (!empty($filters['owner_id'])) {
             $where[]  = 't.owner_id = ?';
-            $params[] = (int) $filters['owner_id'];
+            $whereParams[] = (int) $filters['owner_id'];
         }
 
         if (!empty($filters['tag'])) {
             $join    .= ' INNER JOIN task_tags tt_filter ON tt_filter.task_id = t.id
                           INNER JOIN tags tg_filter ON tg_filter.id = tt_filter.tag_id AND tg_filter.name = ?';
-            $params[] = mb_strtolower(trim($filters['tag']), 'UTF-8');
+            $joinParams[] = mb_strtolower(trim($filters['tag']), 'UTF-8');
         }
 
         if (!empty($filters['column_id'])) {
             $where[]  = 't.column_id = ?';
-            $params[] = (int) $filters['column_id'];
+            $whereParams[] = (int) $filters['column_id'];
         }
 
-        return [$where, $params, $join];
+        return [$where, array_merge($joinParams, $whereParams), $join];
     }
 
     // ── Overview KPIs ─────────────────────────────────────────────────
@@ -396,13 +398,13 @@ class ReportingService
     {
         [$where, $params, $join] = self::buildOpenFilterClauses($filters, $userId, $globalRole);
 
-        $whereSql = 'WHERE ' . implode(' AND ', $where);
+        $joinSql = ' AND (' . implode(' AND ', $where) . ')';
 
         return DB::fetchAll(
             "SELECT bc.id AS column_id, bc.name AS column_name, bc.category, bc.position,
                     COUNT(t.id) AS task_count
              FROM board_columns bc
-             LEFT JOIN tasks t ON t.column_id = bc.id AND ({$whereSql})
+             LEFT JOIN tasks t ON t.column_id = bc.id{$join}{$joinSql}
              GROUP BY bc.id, bc.name, bc.category, bc.position
              ORDER BY bc.position ASC",
             $params

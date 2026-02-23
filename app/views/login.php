@@ -45,7 +45,7 @@ $__loginCurrentLang = I18nService::getCurrentLanguage();
     })();
     </script>
 </head>
-<body class="login-body">
+<body class="login-body<?= $__loginMaintenance && $__loginMaintMsg !== '' ? ' has-maintenance' : '' ?>">
 
 <?php if ($__loginMaintenance && $__loginMaintMsg !== ''): ?>
 <div class="maintenance-banner maintenance-<?= Security::esc($__loginMaintLevel) ?>">
@@ -105,6 +105,17 @@ $__loginCurrentLang = I18nService::getCurrentLanguage();
         <?php endif; ?>
     </div>
 </div>
+
+<script>
+(function() {
+    var banner = document.querySelector('.maintenance-banner');
+    if (!banner) return;
+    document.body.style.setProperty('--maintenance-banner-height', banner.offsetHeight + 'px');
+    window.addEventListener('resize', function() {
+        document.body.style.setProperty('--maintenance-banner-height', banner.offsetHeight + 'px');
+    });
+})();
+</script>
 
 </body>
 </html>

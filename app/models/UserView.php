@@ -37,10 +37,17 @@ class UserView
      */
     public static function allForUser(int $userId): array
     {
-        return DB::fetchAll(
-            'SELECT * FROM user_views WHERE user_id = ? ORDER BY view_type ASC, name ASC',
-            [$userId]
-        );
+        try {
+            return DB::fetchAll(
+                'SELECT * FROM user_views WHERE user_id = ? ORDER BY view_type ASC, name ASC',
+                [$userId]
+            );
+        } catch (PDOException $e) {
+            if (self::isMissingTableError($e)) {
+                return [];
+            }
+            throw $e;
+        }
     }
 
     /**
@@ -259,11 +266,18 @@ class UserView
      */
     public static function countForUser(int $userId): int
     {
-        $row = DB::fetch(
-            'SELECT COUNT(*) AS cnt FROM user_views WHERE user_id = ?',
-            [$userId]
-        );
-        return (int) ($row['cnt'] ?? 0);
+        try {
+            $row = DB::fetch(
+                'SELECT COUNT(*) AS cnt FROM user_views WHERE user_id = ?',
+                [$userId]
+            );
+            return (int) ($row['cnt'] ?? 0);
+        } catch (PDOException $e) {
+            if (self::isMissingTableError($e)) {
+                return 0;
+            }
+            throw $e;
+        }
     }
 
     /**
@@ -272,5 +286,11 @@ class UserView
     public static function isValidType(string $type): bool
     {
         return in_array($type, self::TYPES, true);
+    }
+
+    private static function isMissingTableError(PDOException $e): bool
+    {
+        return ($e->getCode() === '42S02')
+            || (strpos($e->getMessage(), '1146') !== false && strpos($e->getMessage(), 'user_views') !== false);
     }
 }

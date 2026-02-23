@@ -36,13 +36,44 @@ class Board
      * Get boards visible to a user.
      * Admin sees all. Others see boards for their teams + global boards (team_id IS NULL).
      */
-    public static function allVisibleTo(int $userId, string $globalRole): array
+    public static function allVisibleTo(int $userId, string $globalRole, ?int $filterTeamId = null): array
     {
         if ($globalRole === 'admin') {
+            if ($filterTeamId !== null) {
+                return DB::fetchAll(
+                    'SELECT b.*, t.name AS team_name
+                     FROM boards b
+                     LEFT JOIN teams t ON t.id = b.team_id
+                     WHERE b.team_id IS NULL OR b.team_id = ?
+                     ORDER BY t.name ASC, b.name ASC',
+                    [$filterTeamId]
+                );
+            }
             return self::all();
         }
 
         $teamIds = TeamUser::getTeamIds($userId);
+
+        if ($filterTeamId !== null) {
+            if (!in_array($filterTeamId, $teamIds, true)) {
+                return DB::fetchAll(
+                    'SELECT b.*, t.name AS team_name
+                     FROM boards b
+                     LEFT JOIN teams t ON t.id = b.team_id
+                     WHERE b.team_id IS NULL
+                     ORDER BY b.name ASC'
+                );
+            }
+
+            return DB::fetchAll(
+                'SELECT b.*, t.name AS team_name
+                 FROM boards b
+                 LEFT JOIN teams t ON t.id = b.team_id
+                 WHERE b.team_id IS NULL OR b.team_id = ?
+                 ORDER BY t.name ASC, b.name ASC',
+                [$filterTeamId]
+            );
+        }
 
         if (empty($teamIds)) {
             return DB::fetchAll(

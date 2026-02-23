@@ -13,8 +13,9 @@ class BoardsController
 
         $userId     = (int) $_SESSION['user_id'];
         $globalRole = $_SESSION['user_role'] ?? 'viewer';
+        $activeTeamId = TeamService::getActiveTeamId();
 
-        $boards = Board::allVisibleTo($userId, $globalRole);
+        $boards = Board::allVisibleTo($userId, $globalRole, $activeTeamId);
 
         // Group boards by team
         $grouped = ['global' => []];
