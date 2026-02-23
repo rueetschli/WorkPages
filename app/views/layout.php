@@ -436,6 +436,14 @@ unset($_SESSION['_flash_success'], $_SESSION['_flash_error'], $_SESSION['_flash_
                         <?= Security::esc(t('nav.admin.backup')) ?>
                     </a>
                 </li>
+                <!-- AP31: Templates -->
+                <li>
+                    <a href="<?= Security::esc($baseUrl) ?>/?r=admin_templates"
+                       class="nav-link <?= $currentRoute === 'admin_templates' ? 'active' : '' ?>">
+                        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></span>
+                        <?= Security::esc(t('nav.admin.templates')) ?>
+                    </a>
+                </li>
             </ul>
         </div>
         <?php endif; ?>

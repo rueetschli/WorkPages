@@ -176,6 +176,9 @@ require_once APP_DIR . '/models/UserView.php';
 // AP24: Internationalization (i18n)
 require_once APP_DIR . '/services/I18nService.php';
 
+// AP31: Templates
+require_once APP_DIR . '/services/TemplateService.php';
+
 /**
  * Global translation shortcut.
  * Usage in views: <?= t('actions.save') ?>
@@ -401,6 +404,12 @@ $routes = [
     // AP29: Backup & Operations
     'admin_backup'              => ['controller' => 'AdminBackupController', 'action' => 'index'],
     'admin_backup_save'         => ['controller' => 'AdminBackupController', 'action' => 'save'],
+
+    // AP31: Templates & Demo Content
+    'admin_templates'              => ['controller' => 'AdminTemplatesController', 'action' => 'index'],
+    'admin_templates_import'       => ['controller' => 'AdminTemplatesController', 'action' => 'import'],
+    'admin_templates_import_all'   => ['controller' => 'AdminTemplatesController', 'action' => 'importAll'],
+    'admin_templates_refresh'      => ['controller' => 'AdminTemplatesController', 'action' => 'refresh'],
 ];
 
 if (!isset($routes[$route])) {

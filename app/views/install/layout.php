@@ -181,7 +181,7 @@ $appName = 'WorkPages';
     </div>
 
     <?php
-    $steps = ['environment' => 'Umgebung', 'database' => 'Datenbank', 'schema' => 'Schema', 'admin' => 'Admin', 'done' => 'Fertig'];
+    $steps = ['environment' => 'Umgebung', 'database' => 'Datenbank', 'schema' => 'Schema', 'admin' => 'Admin', 'content' => 'Inhalte', 'done' => 'Fertig'];
     $stepKeys = array_keys($steps);
     $currentIdx = array_search($step, $stepKeys, true);
     if ($step !== 'locked'):
