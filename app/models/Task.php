@@ -98,9 +98,13 @@ class Task
             : 'task';
         $parentTaskId = !empty($data['parent_task_id']) ? (int) $data['parent_task_id'] : null;
 
+        // Initialize positions
+        $position = self::maxPosition($columnId) + 1000;
+        $structurePosition = self::maxStructurePosition($boardId ?? 0, $parentTaskId) + 1000;
+
         DB::query(
-            'INSERT INTO tasks (title, description_md, column_id, owner_id, due_date, created_by, team_id, board_id, task_type, parent_task_id, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
+            'INSERT INTO tasks (title, description_md, column_id, owner_id, due_date, created_by, team_id, board_id, task_type, parent_task_id, position, structure_position, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
             [
                 $data['title'],
                 $data['description_md'] ?? null,
@@ -112,6 +116,8 @@ class Task
                 $boardId,
                 $taskType,
                 $parentTaskId,
+                $position,
+                $structurePosition,
             ]
         );
 
@@ -471,14 +477,15 @@ class Task
 
         $columns = BoardColumn::allOrdered();
         foreach ($columns as $col) {
+            $maxPos = self::maxPosition((int) $col['id']);
             $tasks = DB::fetchAll(
-                'SELECT id FROM tasks WHERE column_id = ? ORDER BY updated_at DESC, id ASC',
+                'SELECT id FROM tasks WHERE column_id = ? AND position = 0 ORDER BY updated_at ASC, id ASC',
                 [(int) $col['id']]
             );
-            $pos = 1000;
+            $pos = $maxPos + 1000;
             foreach ($tasks as $task) {
                 DB::query(
-                    'UPDATE tasks SET position = ? WHERE id = ? AND position = 0',
+                    'UPDATE tasks SET position = ? WHERE id = ?',
                     [$pos, (int) $task['id']]
                 );
                 $pos += 1000;
