@@ -12,6 +12,7 @@
 
 ---
 <img src="https://github.com/user-attachments/assets/fab1a333-428b-4e35-8f79-4da031a9ab9e" align="right" width="280" alt="Mobile Ansicht">
+
 ## 🎮 Live Demo
 
 Want to see WorkPages in action before installing it? You can test the full functionality in our live demo environment. 
