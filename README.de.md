@@ -6,7 +6,8 @@
 [![PHP Version](https://img.shields.io/badge/PHP-%3E%3D%208.0-8892BF.svg)](#)
 
 ---
-<img src="https://github.com/user-attachments/assets/fab1a333-428b-4e35-8f79-4da031a9ab9e" align="right" width="280" alt="Mobile Ansicht">
+<img src="https://github.com/user-attachments/assets/fab1a333-428b-4e35-8f79-4da031a9ab9e" align="right" width="200" alt="Mobile Ansicht">
+
 ## 🎮 Live Demo
 
 Möchtest du WorkPages in Aktion sehen, bevor du es auf deinem eigenen Server installierst? Teste den kompletten Funktionsumfang direkt in unserer Live-Demo.
